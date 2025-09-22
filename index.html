@@ -69,71 +69,138 @@
         </div>
     </div>
 
-    <!-- หน้า Dashboard (ซ่อนไว้ก่อน) -->
+    <!-- หน้า Dashboard (ใหม่) -->
     <div id="dashboard-page" class="page">
         <div class="container">
             <header class="header">
-                <h1>สวัสดี <span id="display-name">ผู้เล่น</span>!</h1>
-                <div class="user-stats">
-                    <div class="stars-count">
-                        <span class="star-icon">⭐</span>
-                        <span id="total-stars">0</span>
-                    </div>
-                </div>
+                <h1>สวัสดี <span id="display-name">ผู้เล่น</span>! 👋</h1>
+                <button class="btn btn-ghost logout-btn" style="position: absolute; top: 20px; right: 20px;">
+                    ออกจากระบบ
+                </button>
             </header>
 
             <main class="dashboard-content">
-                <!-- Character Display -->
+                <!-- Character Display Area -->
                 <section class="character-section">
-                    <div class="character-display">
-                        <div class="character-avatar">👵</div>
-                        <button class="btn btn-secondary" id="customize-character">
-                            แต่งตัวละคร
+                    <div id="character-display-area">
+                        <!-- Character จะถูกสร้างที่นี่โดย JavaScript -->
+                    </div>
+                </section>
+
+                <!-- Action Buttons -->
+                <section class="action-buttons">
+                    <div class="action-grid">
+                        <button class="action-card shop-card" id="open-shop">
+                            <div class="action-icon">🛒</div>
+                            <h3>ร้านค้า</h3>
+                            <p>ซื้อเสื้อผ้าและสัตว์เลี้ยง</p>
+                            <div class="action-badge">ใหม่!</div>
+                        </button>
+                        
+                        <button class="action-card games-card" id="open-games">
+                            <div class="action-icon">🎮</div>
+                            <h3>เล่นเกม</h3>
+                            <p>ทดสอบความจำและสมาธิ</p>
+                            <div class="action-badge games-available">4 เกม</div>
+                        </button>
+                        
+                        <button class="action-card stats-card" id="view-stats">
+                            <div class="action-icon">📊</div>
+                            <h3>สถิติ</h3>
+                            <p>ดูผลการเล่นของคุณ</p>
+                        </button>
+                        
+                        <button class="action-card customize-card" id="customize-character">
+                            <div class="action-icon">✨</div>
+                            <h3>แต่งตัว</h3>
+                            <p>ปรับแต่งตัวละครของคุณ</p>
                         </button>
                     </div>
                 </section>
 
-                <!-- Mini Games Menu -->
-                <section class="games-menu">
-                    <h2>เลือกเกมที่ต้องการเล่น</h2>
+                <!-- Mini Games Selection (ซ่อนไว้ในตอนแรก) -->
+                <section class="games-menu" id="games-selection" style="display: none;">
+                    <div class="games-header">
+                        <h2>เลือกเกมที่ต้องการเล่น</h2>
+                        <button class="btn btn-secondary back-to-main">← กลับหน้าหลัก</button>
+                    </div>
+                    
                     <div class="games-grid">
-                        <button class="game-card" data-game="memory">
+                        <button class="game-card memory-game" data-game="memory">
                             <div class="game-icon">🧩</div>
                             <h3>เกมจำภาพ</h3>
-                            <p>ทดสอบความจำ</p>
+                            <p>ทดสอบความจำระยะสั้น</p>
+                            <div class="game-difficulty">ง่าย</div>
                         </button>
                         
-                        <button class="game-card" data-game="pattern">
+                        <button class="game-card pattern-game" data-game="pattern">
                             <div class="game-icon">🔄</div>
                             <h3>เกมจำลำดับ</h3>
                             <p>จำรูปแบบและลำดับ</p>
+                            <div class="game-difficulty">ปานกลาง</div>
                         </button>
                         
-                        <button class="game-card" data-game="attention">
+                        <button class="game-card attention-game" data-game="attention">
                             <div class="game-icon">👁️</div>
                             <h3>เกมสมาธิ</h3>
-                            <p>ทดสอบการมองเห็น</p>
+                            <p>ทดสอบการสังเกต</p>
+                            <div class="game-difficulty">ง่าย</div>
                         </button>
                         
-                        <button class="game-card" data-game="logic">
+                        <button class="game-card logic-game" data-game="logic">
                             <div class="game-icon">💭</div>
                             <h3>เกมตรรกะ</h3>
                             <p>ใช้เหตุผลแก้ปัญหา</p>
+                            <div class="game-difficulty">ยาก</div>
                         </button>
                     </div>
                 </section>
 
-                <!-- Quick Stats -->
+                <!-- Shop Section (ซ่อนไว้ในตอนแรก) -->
+                <section class="shop-menu" id="shop-section" style="display: none;">
+                    <div class="shop-header">
+                        <h2>ร้านค้า</h2>
+                        <div class="player-coins">
+                            <span class="coin-icon">⭐</span>
+                            <span id="player-coins">0</span> เหรียญ
+                        </div>
+                        <button class="btn btn-secondary back-to-main">← กลับหน้าหลัก</button>
+                    </div>
+                    
+                    <div class="shop-categories">
+                        <button class="shop-tab active" data-category="clothes">👕 เสื้อผ้า</button>
+                        <button class="shop-tab" data-category="accessories">👒 เครื่องประดับ</button>
+                        <button class="shop-tab" data-category="pets">🐕 สัตว์เลี้ยง</button>
+                    </div>
+                    
+                    <div class="shop-items" id="shop-items">
+                        <!-- ไอเทมร้านค้าจะถูกสร้างโดย JavaScript -->
+                    </div>
+                </section>
+
+                <!-- Quick Stats (แสดงเสมอ) -->
                 <section class="quick-stats">
-                    <h3>สถิติเร็ว</h3>
+                    <h3>สถิติด่วน</h3>
                     <div class="stats-grid">
                         <div class="stat-item">
+                            <span class="stat-icon">🎯</span>
                             <span class="stat-label">เล่นวันนี้</span>
                             <span class="stat-value" id="today-games">0</span>
                         </div>
                         <div class="stat-item">
+                            <span class="stat-icon">📈</span>
                             <span class="stat-label">คะแนนเฉลี่ย</span>
                             <span class="stat-value" id="avg-score">0%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon">🏆</span>
+                            <span class="stat-label">เกมที่เล่น</span>
+                            <span class="stat-value" id="total-games-played">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-icon">⭐</span>
+                            <span class="stat-label">เหรียญทั้งหมด</span>
+                            <span class="stat-value" id="total-earned-coins">0</span>
                         </div>
                     </div>
                 </section>
