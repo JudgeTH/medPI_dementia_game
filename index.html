@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#4CAF50">
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="เกมฝึกสมอง">
+    
+    <title>เกมฝึกสมองสำหรับผู้สูงอายุ</title>
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/reset.css">
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+    <!-- หน้า Login/Welcome -->
+    <div id="login-page" class="page active">
+        <div class="container">
+            <!-- Header -->
+            <header class="header">
+                <h1 class="game-title">🧠 เกมฝึกสมอง</h1>
+                <p class="game-subtitle">สำหรับผู้สูงอายุ</p>
+            </header>
+
+            <!-- Login Form -->
+            <main class="login-form">
+                <div class="welcome-card">
+                    <div class="character-preview">
+                        <div class="character-simple">👵</div>
+                    </div>
+                    
+                    <h2>ยินดีต้อนรับ!</h2>
+                    <p>กรุณาใส่ชื่อของคุณเพื่อเริ่มเล่นเกม</p>
+                    
+                    <form id="login-form">
+                        <div class="input-group">
+                            <label for="player-name">ชื่อของคุณ:</label>
+                            <input 
+                                type="text" 
+                                id="player-name" 
+                                name="playerName" 
+                                placeholder="ใส่ชื่อของคุณ..."
+                                required
+                                minlength="2"
+                                maxlength="20"
+                            >
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-large">
+                            เริ่มเล่นเกม
+                        </button>
+                    </form>
+                </div>
+            </main>
+
+            <!-- Footer -->
+            <footer class="footer">
+                <p>พัฒนาเพื่อติดตามสุขภาพสมองของผู้สูงอายุ</p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- หน้า Dashboard (ซ่อนไว้ก่อน) -->
+    <div id="dashboard-page" class="page">
+        <div class="container">
+            <header class="header">
+                <h1>สวัสดี <span id="display-name">ผู้เล่น</span>!</h1>
+                <div class="user-stats">
+                    <div class="stars-count">
+                        <span class="star-icon">⭐</span>
+                        <span id="total-stars">0</span>
+                    </div>
+                </div>
+            </header>
+
+            <main class="dashboard-content">
+                <!-- Character Display -->
+                <section class="character-section">
+                    <div class="character-display">
+                        <div class="character-avatar">👵</div>
+                        <button class="btn btn-secondary" id="customize-character">
+                            แต่งตัวละคร
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Mini Games Menu -->
+                <section class="games-menu">
+                    <h2>เลือกเกมที่ต้องการเล่น</h2>
+                    <div class="games-grid">
+                        <button class="game-card" data-game="memory">
+                            <div class="game-icon">🧩</div>
+                            <h3>เกมจำภาพ</h3>
+                            <p>ทดสอบความจำ</p>
+                        </button>
+                        
+                        <button class="game-card" data-game="pattern">
+                            <div class="game-icon">🔄</div>
+                            <h3>เกมจำลำดับ</h3>
+                            <p>จำรูปแบบและลำดับ</p>
+                        </button>
+                        
+                        <button class="game-card" data-game="attention">
+                            <div class="game-icon">👁️</div>
+                            <h3>เกมสมาธิ</h3>
+                            <p>ทดสอบการมองเห็น</p>
+                        </button>
+                        
+                        <button class="game-card" data-game="logic">
+                            <div class="game-icon">💭</div>
+                            <h3>เกมตรรกะ</h3>
+                            <p>ใช้เหตุผลแก้ปัญหา</p>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Quick Stats -->
+                <section class="quick-stats">
+                    <h3>สถิติเร็ว</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">เล่นวันนี้</span>
+                            <span class="stat-value" id="today-games">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">คะแนนเฉลี่ย</span>
+                            <span class="stat-value" id="avg-score">0%</span>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>กำลังโหลด...</p>
+    </div>
+
+    <!-- JavaScript Files -->
+    <script src="js/utils/constants.js"></script>
+    <script src="js/utils/helpers.js"></script>
+    <script src="js/utils/storage.js"></script>
+    <script src="js/dataManager.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/character.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
