@@ -1,10 +1,11 @@
 /* ========================================
-   Main App Controller for Elderly Cognitive Game
+   Main App Controller - Final Fixed Version
    ======================================== */
 
 class GameApp {
     constructor() {
         this.currentPage = 'login';
+        this.currentView = 'main';
         this.isFirstTime = false;
         this.pendingName = null;
         
@@ -27,10 +28,10 @@ class GameApp {
         this.setupEventListeners();
         
         // ตรวจสอบว่ามี user login อยู่หรือไม่
-        // ระบบ auth จะ auto login ถ้ามี user เก่า
-        const currentUser = window.gameAuth.getCurrentUser();
+        const currentUser = window.gameAuth ? window.gameAuth.getCurrentUser() : null;
         if (currentUser) {
             console.log(`👋 ยินดีต้อนรับกลับ: ${currentUser.displayName}`);
+            this.showDashboard();
         } else {
             console.log('🆕 ผู้ใช้ใหม่ - กรุณาใส่ชื่อ');
         }
@@ -43,35 +44,73 @@ class GameApp {
             loginForm.addEventListener('submit', (e) => this.handleLogin(e));
         }
 
-        // Game Cards ในหน้า Dashboard
-        const gameCards = document.querySelectorAll('.game-card');
-        gameCards.forEach(card => {
-            card.addEventListener('click', (e) => this.handleGameSelect(e));
-        });
+        // Action Buttons
+        this.setupActionButtons();
 
-        // ปุ่มแต่งตัวละคร
-        const customizeBtn = document.getElementById('customize-character');
-        if (customizeBtn) {
-            customizeBtn.addEventListener('click', () => this.openCharacterCustomization());
-        }
-
-        // ปุ่มต่างๆ ที่อาจจะมีภายหลัง
+        // Dynamic Event Listeners
         this.setupDynamicListeners();
+    }
+
+    setupActionButtons() {
+        // ใช้ setTimeout เพื่อให้แน่ใจว่า DOM โหลดเสร็จ
+        setTimeout(() => {
+            const shopBtn = document.getElementById('open-shop');
+            if (shopBtn) {
+                shopBtn.addEventListener('click', () => this.showShop());
+            }
+
+            const gamesBtn = document.getElementById('open-games');
+            if (gamesBtn) {
+                gamesBtn.addEventListener('click', () => this.showGamesMenu());
+            }
+
+            const statsBtn = document.getElementById('view-stats');
+            if (statsBtn) {
+                statsBtn.addEventListener('click', () => this.showStats());
+            }
+
+            const customizeBtn = document.getElementById('customize-character');
+            if (customizeBtn) {
+                customizeBtn.addEventListener('click', () => this.showCustomization());
+            }
+        }, 100);
     }
 
     setupDynamicListeners() {
         // Event delegation สำหรับปุ่มที่สร้างภายหลัง
         document.addEventListener('click', (e) => {
-            if (e.target.matches('.gender-select-btn')) {
-                this.handleGenderSelect(e);
-            }
-            
-            if (e.target.matches('.logout-btn')) {
-                this.handleLogout();
-            }
-            
-            if (e.target.matches('.back-btn')) {
-                this.goBack();
+            try {
+                // ปุ่มเลือกเพศ
+                if (e.target.closest('.gender-select-btn')) {
+                    this.handleGenderSelect(e);
+                    return;
+                }
+                
+                // ปุ่ม logout
+                if (e.target.matches('.logout-btn')) {
+                    this.handleLogout();
+                    return;
+                }
+                
+                // ปุ่มกลับ
+                if (e.target.matches('.back-btn')) {
+                    this.goBack();
+                    return;
+                }
+
+                // ปุ่มกลับหน้าหลัก
+                if (e.target.matches('.back-to-main')) {
+                    this.showMainView();
+                    return;
+                }
+
+                // ปุ่มเกม
+                if (e.target.closest('.game-card')) {
+                    this.handleGameSelect(e);
+                    return;
+                }
+            } catch (error) {
+                console.error('Event handling error:', error);
             }
         });
     }
@@ -81,6 +120,11 @@ class GameApp {
         e.preventDefault();
         
         const nameInput = document.getElementById('player-name');
+        if (!nameInput) {
+            this.showMessage('ไม่พบช่องใส่ชื่อ', 'error');
+            return;
+        }
+
         const name = nameInput.value.trim();
         
         if (name.length < 2) {
@@ -91,23 +135,35 @@ class GameApp {
         try {
             this.showLoading(true);
             
+            // ตรวจสอบว่า gameAuth พร้อมใช้งาน
+            if (!window.gameAuth) {
+                throw new Error('ระบบยังไม่พร้อม กรุณาลองใหม่');
+            }
+            
             // ลอง login
             const result = window.gameAuth.login(name);
+            
+            if (!result) {
+                throw new Error('ไม่สามารถเข้าสู่ระบบได้');
+            }
             
             if (result.needGender) {
                 // ผู้ใช้ใหม่ - ต้องเลือกเพศ
                 this.pendingName = name;
                 this.showGenderSelection();
-            } else if (result.isNew) {
+            } else if (result.isNew && result.user) {
                 // ผู้ใช้ใหม่ที่เลือกเพศแล้ว
                 this.showMessage(`ยินดีต้อนรับ ${result.user.displayName}! 🎉`, 'success');
                 this.navigateToDashboard();
-            } else {
+            } else if (result.user) {
                 // ผู้ใช้เก่า
                 this.showMessage(`ยินดีต้อนรับกลับ ${result.user.displayName}! 👋`, 'success');
                 this.navigateToDashboard();
+            } else {
+                throw new Error('ข้อมูลผู้ใช้ไม่ถูกต้อง');
             }
         } catch (error) {
+            console.error('Login error:', error);
             this.showMessage(error.message, 'error');
         } finally {
             this.showLoading(false);
@@ -117,6 +173,10 @@ class GameApp {
     // แสดงหน้าเลือกเพศ
     showGenderSelection() {
         const loginCard = document.querySelector('.welcome-card');
+        if (!loginCard) {
+            this.showMessage('ไม่พบหน้า Login', 'error');
+            return;
+        }
         
         loginCard.innerHTML = `
             <div class="character-preview">
@@ -147,26 +207,54 @@ class GameApp {
         this.addGenderSelectionStyles();
     }
 
-    // จัดการการเลือกเพศ
+    // จัดการการเลือกเพศ - แก้ไขให้ปลอดภัย
     handleGenderSelect(e) {
-        const gender = e.currentTarget.dataset.gender;
-        
-        if (!this.pendingName || !gender) return;
-
         try {
+            console.log('Gender select clicked');
+            
+            const button = e.target.closest('.gender-select-btn');
+            if (!button) {
+                console.log('Button not found');
+                return;
+            }
+
+            const gender = button.getAttribute('data-gender') || button.dataset.gender;
+            console.log('Selected gender:', gender);
+            
+            if (!this.pendingName) {
+                console.log('No pending name');
+                this.showMessage('ไม่พบชื่อที่บันทึกไว้', 'error');
+                return;
+            }
+
+            if (!gender) {
+                console.log('No gender selected');
+                this.showMessage('กรุณาเลือกเพศ', 'error');
+                return;
+            }
+
             this.showLoading(true);
+            
+            // ตรวจสอบว่า gameAuth พร้อมใช้งาน
+            if (!window.gameAuth) {
+                throw new Error('ระบบยังไม่พร้อม กรุณาลองใหม่');
+            }
             
             // สร้างผู้ใช้ใหม่พร้อมเพศ
             const result = window.gameAuth.login(this.pendingName, gender);
+            console.log('Login result:', result);
             
-            if (result.user) {
+            if (result && result.user) {
                 this.showMessage(`สร้างตัวละครสำเร็จ! ยินดีต้อนรับ ${result.user.displayName} 🎉`, 'success');
+                this.pendingName = null; // เคลียร์ก่อน navigate
                 this.navigateToDashboard();
+            } else {
+                throw new Error('ไม่สามารถสร้างตัวละครได้');
             }
         } catch (error) {
-            this.showMessage(error.message, 'error');
+            console.error('Gender selection error:', error);
+            this.showMessage(error.message || 'เกิดข้อผิดพลาดในการเลือกเพศ', 'error');
         } finally {
-            this.pendingName = null;
             this.showLoading(false);
         }
     }
@@ -174,34 +262,143 @@ class GameApp {
     // ไปหน้า Dashboard
     navigateToDashboard() {
         setTimeout(() => {
-            document.getElementById('login-page').classList.remove('active');
-            document.getElementById('dashboard-page').classList.add('active');
-            this.currentPage = 'dashboard';
+            const loginPage = document.getElementById('login-page');
+            const dashboardPage = document.getElementById('dashboard-page');
             
-            // อัพเดทข้อมูลในหน้า dashboard
-            window.gameAuth.updateDashboard();
+            if (loginPage && dashboardPage) {
+                loginPage.classList.remove('active');
+                dashboardPage.classList.add('active');
+                this.currentPage = 'dashboard';
+                
+                // แสดงตัวละครและอัพเดทข้อมูล
+                this.showDashboard();
+            } else {
+                this.showMessage('ไม่พบหน้า Dashboard', 'error');
+            }
         }, 1000);
+    }
+
+    // แสดง Dashboard
+    showDashboard() {
+        // อัพเดทข้อมูลในหน้า dashboard
+        if (window.gameAuth) {
+            window.gameAuth.updateDashboard();
+        }
+        
+        // แสดงตัวละคร
+        this.setupCharacterDisplay();
+        
+        // แสดงหน้าหลัก
+        this.showMainView();
+        
+        // ตั้งค่า Action Buttons อีกครั้ง
+        setTimeout(() => {
+            this.setupActionButtons();
+        }, 500);
+    }
+
+    // ตั้งค่าการแสดงตัวละคร
+    setupCharacterDisplay() {
+        const characterArea = document.getElementById('character-display-area');
+        if (!characterArea) {
+            console.log('Character display area not found');
+            return;
+        }
+
+        // สร้างและแสดงตัวละคร
+        if (window.characterSystem) {
+            try {
+                const characterContainer = window.characterSystem.setupCharacterContainer();
+                characterArea.innerHTML = '';
+                characterArea.appendChild(characterContainer);
+                
+                // โหลดข้อมูลตัวละคร
+                const user = window.gameAuth ? window.gameAuth.getCurrentUser() : null;
+                if (user) {
+                    window.characterSystem.loadCharacter(user);
+                }
+            } catch (error) {
+                console.error('Character setup error:', error);
+                characterArea.innerHTML = '<div style="text-align: center; padding: 40px;"><h3>ตัวละครกำลังโหลด... 👴</h3></div>';
+            }
+        } else {
+            console.log('Character system not available');
+            characterArea.innerHTML = '<div style="text-align: center; padding: 40px;"><h3>ตัวละครกำลังโหลด... 👴</h3></div>';
+        }
+    }
+
+    // แสดงหน้าหลัก
+    showMainView() {
+        this.currentView = 'main';
+        
+        const actionButtons = document.querySelector('.action-buttons');
+        const gamesSelection = document.getElementById('games-selection');
+        const shopSection = document.getElementById('shop-section');
+        
+        if (actionButtons) actionButtons.style.display = 'block';
+        if (gamesSelection) gamesSelection.style.display = 'none';
+        if (shopSection) shopSection.style.display = 'none';
+    }
+
+    // แสดงเมนูเกม
+    showGamesMenu() {
+        this.currentView = 'games';
+        
+        const actionButtons = document.querySelector('.action-buttons');
+        const gamesSelection = document.getElementById('games-selection');
+        const shopSection = document.getElementById('shop-section');
+        
+        if (actionButtons) actionButtons.style.display = 'none';
+        if (shopSection) shopSection.style.display = 'none';
+        if (gamesSelection) gamesSelection.style.display = 'block';
+    }
+
+    // แสดงร้านค้า
+    showShop() {
+        this.currentView = 'shop';
+        
+        const actionButtons = document.querySelector('.action-buttons');
+        const gamesSelection = document.getElementById('games-selection');
+        const shopSection = document.getElementById('shop-section');
+        
+        if (actionButtons) actionButtons.style.display = 'none';
+        if (gamesSelection) gamesSelection.style.display = 'none';
+        if (shopSection) shopSection.style.display = 'block';
+        
+        this.showMessage('ร้านค้ากำลังพัฒนา... 🛒', 'info');
+    }
+
+    // แสดงสถิติ
+    showStats() {
+        this.showMessage('หน้าสถิติกำลังพัฒนา... 📊', 'info');
+    }
+
+    // แสดงการปรับแต่ง
+    showCustomization() {
+        this.showMessage('ระบบปรับแต่งตัวละครกำลังพัฒนา... ✨', 'info');
     }
 
     // จัดการการเลือกเกม
     handleGameSelect(e) {
-        const gameType = e.currentTarget.dataset.game;
-        
-        if (!gameType) return;
+        try {
+            const gameCard = e.target.closest('.game-card');
+            const gameType = gameCard ? gameCard.getAttribute('data-game') || gameCard.dataset.game : null;
+            
+            if (!gameType) return;
 
-        this.showMessage(`เตรียมเริ่มเกม: ${this.getGameName(gameType)}`, 'info');
-        
-        // ในอนาคตจะไปหน้าเกม
-        setTimeout(() => {
-            this.startGame(gameType);
-        }, 1000);
+            this.showMessage(`เตรียมเริ่มเกม: ${this.getGameName(gameType)}`, 'info');
+            
+            setTimeout(() => {
+                this.startGame(gameType);
+            }, 1000);
+        } catch (error) {
+            console.error('Game select error:', error);
+        }
     }
 
-    // เริ่มเกม (ตอนนี้เป็น placeholder)
+    // เริ่มเกม
     startGame(gameType) {
         this.showMessage(`เกม ${this.getGameName(gameType)} กำลังพัฒนา... 🚧`, 'info');
-        
-        // TODO: ไปหน้าเกมจริง
         console.log(`Starting game: ${gameType}`);
     }
 
@@ -216,17 +413,12 @@ class GameApp {
         return gameNames[gameType] || gameType;
     }
 
-    // เปิดหน้าแต่งตัวละคร
-    openCharacterCustomization() {
-        this.showMessage('ระบบแต่งตัวละครกำลังพัฒนา... 👗', 'info');
-        
-        // TODO: เปิดหน้าแต่งตัวละคร
-    }
-
     // Logout
     handleLogout() {
         if (confirm('คุณต้องการออกจากระบบหรือไม่?')) {
-            window.gameAuth.logout();
+            if (window.gameAuth) {
+                window.gameAuth.logout();
+            }
             this.currentPage = 'login';
             this.showMessage('ออกจากระบบเรียบร้อย', 'success');
         }
@@ -235,41 +427,49 @@ class GameApp {
     // กลับหน้าก่อน
     goBack() {
         if (this.currentPage === 'login') {
-            // รีเซ็ต login form
-            const loginCard = document.querySelector('.welcome-card');
-            loginCard.innerHTML = `
-                <div class="character-preview">
-                    <div class="character-simple">👵</div>
+            this.resetLoginForm();
+        } else if (this.currentView !== 'main') {
+            this.showMainView();
+        }
+    }
+
+    // รีเซ็ต login form
+    resetLoginForm() {
+        const loginCard = document.querySelector('.welcome-card');
+        if (!loginCard) return;
+        
+        loginCard.innerHTML = `
+            <div class="character-preview">
+                <div class="character-simple">👵</div>
+            </div>
+            
+            <h2>ยินดีต้อนรับ!</h2>
+            <p>กรุณาใส่ชื่อของคุณเพื่อเริ่มเล่นเกม</p>
+            
+            <form id="login-form">
+                <div class="input-group">
+                    <label for="player-name">ชื่อของคุณ:</label>
+                    <input 
+                        type="text" 
+                        id="player-name" 
+                        name="playerName" 
+                        placeholder="ใส่ชื่อของคุณ..."
+                        required
+                        minlength="2"
+                        maxlength="20"
+                    >
                 </div>
                 
-                <h2>ยินดีต้อนรับ!</h2>
-                <p>กรุณาใส่ชื่อของคุณเพื่อเริ่มเล่นเกม</p>
-                
-                <form id="login-form">
-                    <div class="input-group">
-                        <label for="player-name">ชื่อของคุณ:</label>
-                        <input 
-                            type="text" 
-                            id="player-name" 
-                            name="playerName" 
-                            placeholder="ใส่ชื่อของคุณ..."
-                            required
-                            minlength="2"
-                            maxlength="20"
-                        >
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary btn-large">
-                        เริ่มเล่นเกม
-                    </button>
-                </form>
-            `;
-            
-            // ตั้งค่า event listener ใหม่
-            const loginForm = document.getElementById('login-form');
-            if (loginForm) {
-                loginForm.addEventListener('submit', (e) => this.handleLogin(e));
-            }
+                <button type="submit" class="btn btn-primary btn-large">
+                    เริ่มเล่นเกม
+                </button>
+            </form>
+        `;
+        
+        // ตั้งค่า event listener ใหม่
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', (e) => this.handleLogin(e));
         }
     }
 
@@ -287,17 +487,23 @@ class GameApp {
 
     // แสดงข้อความ
     showMessage(message, type = 'info') {
-        // สร้าง toast notification แบบง่าย
+        console.log(`${type.toUpperCase()}: ${message}`);
+        
+        const colors = {
+            error: '#f44336',
+            success: '#4caf50',
+            info: '#2196f3',
+            warning: '#ff9800'
+        };
+        
         const toast = document.createElement('div');
         toast.className = `toast toast-${type}`;
         toast.textContent = message;
-        
-        // เพิ่ม CSS inline
         toast.style.cssText = `
             position: fixed;
             top: 20px;
             right: 20px;
-            background: ${type === 'error' ? '#f44336' : type === 'success' ? '#4caf50' : '#2196f3'};
+            background: ${colors[type] || colors.info};
             color: white;
             padding: 16px 24px;
             border-radius: 8px;
@@ -308,16 +514,15 @@ class GameApp {
             transition: transform 0.3s ease;
             max-width: 400px;
             word-wrap: break-word;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         `;
         
         document.body.appendChild(toast);
         
-        // แสดง toast
         setTimeout(() => {
             toast.style.transform = 'translateX(0)';
         }, 100);
         
-        // ซ่อน toast
         setTimeout(() => {
             toast.style.transform = 'translateX(100%)';
             setTimeout(() => {
@@ -365,23 +570,9 @@ class GameApp {
                 box-shadow: 0 4px 12px rgba(76, 175, 80, 0.2);
             }
             
-            .gender-select-btn:active {
-                transform: translateY(0);
-            }
-            
             .gender-icon {
                 font-size: 3rem;
                 line-height: 1;
-            }
-            
-            .gender-select-btn.male:hover {
-                border-color: #2196F3;
-                box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
-            }
-            
-            .gender-select-btn.female:hover {
-                border-color: #E91E63;
-                box-shadow: 0 4px 12px rgba(233, 30, 99, 0.2);
             }
         `;
         
@@ -390,4 +581,6 @@ class GameApp {
 }
 
 // เริ่มต้นแอพ
-window.gameApp = new GameApp();
+document.addEventListener('DOMContentLoaded', () => {
+    window.gameApp = new GameApp();
+});
