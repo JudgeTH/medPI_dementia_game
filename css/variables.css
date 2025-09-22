@@ -1,0 +1,132 @@
+/* ========================================
+   CSS Variables for Elderly Cognitive Game
+   ======================================== */
+
+   :root {
+    /* === Primary Colors === */
+    --primary-color: #4CAF50;      /* เขียวอ่อน - เป็นมิตรกับตา */
+    --primary-dark: #388E3C;       /* เขียวเข้ม */
+    --primary-light: #81C784;      /* เขียวอ่อนมาก */
+    
+    /* === Secondary Colors === */
+    --secondary-color: #2196F3;    /* ฟ้าอ่อน */
+    --secondary-dark: #1976D2;     /* ฟ้าเข้ม */
+    --secondary-light: #64B5F6;    /* ฟ้าอ่อนมาก */
+    
+    /* === Accent Colors === */
+    --accent-color: #FF9800;       /* ส้ม */
+    --accent-light: #FFB74D;       /* ส้มอ่อน */
+    --success-color: #4CAF50;      /* เขียว */
+    --warning-color: #FFC107;      /* เหลือง */
+    --error-color: #F44336;        /* แดง */
+    
+    /* === Neutral Colors === */
+    --white: #FFFFFF;
+    --light-gray: #F5F5F5;
+    --gray: #9E9E9E;
+    --dark-gray: #616161;
+    --black: #212121;
+    
+    /* === Background Colors === */
+    --bg-primary: #FAFAFA;         /* พื้นหลังหลัก */
+    --bg-secondary: #FFFFFF;       /* พื้นหลังการ์ด */
+    --bg-card: #FFFFFF;
+    --bg-overlay: rgba(0, 0, 0, 0.7);
+    
+    /* === Text Colors (High Contrast) === */
+    --text-primary: #212121;       /* ข้อความหลัก */
+    --text-secondary: #757575;     /* ข้อความรอง */
+    --text-disabled: #BDBDBD;      /* ข้อความปิด */
+    --text-light: #FFFFFF;         /* ข้อความบนพื้นเข้ม */
+    
+    /* === Typography (Large for elderly) === */
+    --font-family-primary: 'Prompt', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-family-display: 'Prompt', Georgia, serif;
+    
+    --font-size-xs: 14px;
+    --font-size-sm: 16px;
+    --font-size-base: 18px;        /* ขนาดพื้นฐานใหญ่ขึ้น */
+    --font-size-lg: 22px;
+    --font-size-xl: 28px;
+    --font-size-2xl: 36px;
+    --font-size-3xl: 48px;
+    
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-bold: 600;
+    
+    --line-height-tight: 1.2;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.8;
+    
+    /* === Spacing === */
+    --spacing-xs: 4px;
+    --spacing-sm: 8px;
+    --spacing-md: 16px;
+    --spacing-lg: 24px;
+    --spacing-xl: 32px;
+    --spacing-2xl: 48px;
+    --spacing-3xl: 64px;
+    
+    /* === Border Radius === */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
+    --radius-full: 50%;
+    
+    /* === Shadows === */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+    --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 8px 15px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+    
+    /* === Interactive States === */
+    --hover-scale: 1.05;
+    --active-scale: 0.95;
+    --focus-outline: 3px solid var(--primary-light);
+    
+    /* === Timing Functions === */
+    --transition-fast: 150ms ease;
+    --transition-normal: 250ms ease;
+    --transition-slow: 400ms ease;
+    
+    /* === Button Sizes (Large for elderly) === */
+    --btn-height-sm: 44px;         /* ขั้นต่ำ 44px สำหรับ touch */
+    --btn-height-md: 56px;         /* ขนาดมาตรฐาน */
+    --btn-height-lg: 68px;         /* ขนาดใหญ่ */
+    
+    --btn-padding-sm: var(--spacing-sm) var(--spacing-md);
+    --btn-padding-md: var(--spacing-md) var(--spacing-lg);
+    --btn-padding-lg: var(--spacing-lg) var(--spacing-xl);
+    
+    /* === Game Specific Colors === */
+    --game-memory: #E91E63;        /* ชมพู */
+    --game-pattern: #9C27B0;       /* ม่วง */
+    --game-attention: #FF9800;     /* ส้ม */
+    --game-logic: #607D8B;         /* เทาน้ำเงิน */
+    
+    /* === Star System === */
+    --star-gold: #FFD700;
+    --star-silver: #C0C0C0;
+    --star-bronze: #CD7F32;
+    
+    /* === Responsive Breakpoints === */
+    --breakpoint-mobile: 480px;
+    --breakpoint-tablet: 768px;
+    --breakpoint-desktop: 1024px;
+    --breakpoint-large: 1200px;
+    
+    /* === Character Colors === */
+    --character-skin-1: #FDBCB4;
+    --character-skin-2: #EEA47F;
+    --character-skin-3: #D08B5B;
+    --character-hair-1: #8B4513;
+    --character-hair-2: #A0522D;
+    --character-hair-3: #D2691E;
+    
+    /* === Accessibility === */
+    --min-touch-target: 44px;
+    --focus-visible-outline: 2px solid var(--primary-color);
+    --focus-visible-offset: 2px;
+}
