@@ -1,74 +1,76 @@
 /* ========================================
-   Image Character System — Safari/LINE proof
+   Image Character System — Safari/LINE Proof
+   Slots: head, face, body, pet only
    ======================================== */
 
 class ImageCharacterSystem {
   constructor() {
     this.sceneBg = 'green';
 
-    // ใช้ path แบบ "root-absolute" ทันที เพื่อความชัวร์บน WebKit/LINE
+    // ใช้ root-absolute paths เพื่อความเสถียรบน Safari/LINE
     this.imagePaths = {
       base: {
-        male: '/assets/images/characters/base/elderly_male_base.png',
-        female: '/assets/images/characters/base/elderly_female_base.png'
+        male:   '/assets/images/characters/base/elderly_male_base.png',
+        female: '/assets/images/characters/base/elderly_female_base.png',
       },
       equipment: {
         head: {
-          'hat_01': '/assets/images/characters/equipment/head/hat_01.png',
-          'hat_02': '/assets/images/characters/equipment/head/hat_02.png',
-          'cap_01': '/assets/images/characters/equipment/head/cap_01.png',
-          'beret_01': '/assets/images/characters/equipment/head/beret_01.png'
+          'hat_01':    '/assets/images/characters/equipment/head/hat_01.png',
+          'hat_02':    '/assets/images/characters/equipment/head/hat_02.png',
+          'cap_01':    '/assets/images/characters/equipment/head/cap_01.png',
+          'beret_01':  '/assets/images/characters/equipment/head/beret_01.png',
         },
         face: {
-          'glasses_01': '/assets/images/characters/equipment/face/glasses_01.png',
-          'glasses_02': '/assets/images/characters/equipment/face/glasses_02.png',
-          'sunglasses_01': '/assets/images/characters/equipment/face/sunglasses_01.png'
+          'glasses_01':     '/assets/images/characters/equipment/face/glasses_01.png',
+          'glasses_02':     '/assets/images/characters/equipment/face/glasses_02.png',
+          'sunglasses_01':  '/assets/images/characters/equipment/face/sunglasses_01.png',
         },
         body: {
-          'shirt_male_01': '/assets/images/characters/equipment/body/shirt_male_01.png',
-          'shirt_male_02': '/assets/images/characters/equipment/body/shirt_male_02.png',
-          'dress_female_01': '/assets/images/characters/equipment/body/dress_female_01.png',
-          'dress_female_02': '/assets/images/characters/equipment/body/dress_female_02.png',
-          'sweater_01': '/assets/images/characters/equipment/body/sweater_01.png'
+          'shirt_male_01':    '/assets/images/characters/equipment/body/shirt_male_01.png',
+          'shirt_male_02':    '/assets/images/characters/equipment/body/shirt_male_02.png',
+          'dress_female_01':  '/assets/images/characters/equipment/body/dress_female_01.png',
+          'dress_female_02':  '/assets/images/characters/equipment/body/dress_female_02.png',
+          'sweater_01':       '/assets/images/characters/equipment/body/sweater_01.png',
         },
-
         pet: {
-          'cat_01': '/assets/images/characters/pets/cat_01.png',
-          'dog_01': '/assets/images/characters/pets/dog_01.png',
-          'bird_01': '/assets/images/characters/pets/bird_01.png'
-        }
-      }
+          'cat_01':  '/assets/images/characters/pets/cat_01.png',
+          'dog_01':  '/assets/images/characters/pets/dog_01.png',
+          'bird_01': '/assets/images/characters/pets/bird_01.png',
+        },
+      },
     };
 
+    // เหลือเฉพาะ 4 หมวด
     this.equipmentData = {
       head: {
-        'hat_01': { name: 'หมวกไหมพรม', price: 50, gender: 'both' },
-        'hat_02': { name: 'หมวกกันแดด', price: 30, gender: 'both' },
-        'cap_01': { name: 'หมวกแก๊ป', price: 40, gender: 'both' },
-        'beret_01': { name: 'หมวกเบเร่', price: 80, gender: 'female' }
+        'hat_01':   { name: 'หมวกไหมพรม',        price: 50, gender: 'both' },
+        'hat_02':   { name: 'หมวกกันแดด',        price: 30, gender: 'both' },
+        'cap_01':   { name: 'หมวกแก๊ป',          price: 40, gender: 'both' },
+        'beret_01': { name: 'หมวกเบเร่',         price: 80, gender: 'female' },
       },
       face: {
-        'glasses_01': { name: 'แว่นตาอ่านหนังสือ', price: 35, gender: 'both' },
-        'glasses_02': { name: 'แว่นตาทรงสี่เหลี่ยม', price: 40, gender: 'both' },
-        'sunglasses_01': { name: 'แว่นกันแดด', price: 60, gender: 'both' }
+        'glasses_01':    { name: 'แว่นตาอ่านหนังสือ', price: 35, gender: 'both' },
+        'glasses_02':    { name: 'แว่นทรงสี่เหลี่ยม', price: 40, gender: 'both' },
+        'sunglasses_01': { name: 'แว่นกันแดด',       price: 60, gender: 'both' },
       },
       body: {
-        'shirt_male_01': { name: 'เสื้อเชิ้ตสีฟ้า', price: 0, gender: 'male' },
-        'shirt_male_02': { name: 'เสื้อโปโลสีเขียว', price: 45, gender: 'male' },
-        'dress_female_01': { name: 'ชุดเดรสสีม่วง', price: 0, gender: 'female' },
-        'dress_female_02': { name: 'ชุดเดรสลายดอก', price: 60, gender: 'female' },
-        'sweater_01': { name: 'เสื้อกันหนาว', price: 70, gender: 'both' }
+        'shirt_male_01':   { name: 'เสื้อเชิ้ตสีฟ้า', price: 0,  gender: 'male' },
+        'shirt_male_02':   { name: 'เสื้อโปโลสีเขียว', price: 45, gender: 'male' },
+        'dress_female_01': { name: 'เดรสสีม่วง',      price: 0,  gender: 'female' },
+        'dress_female_02': { name: 'เดรสลายดอก',     price: 60, gender: 'female' },
+        'sweater_01':      { name: 'เสื้อกันหนาว',    price: 70, gender: 'both' },
       },
       pet: {
-        'cat_01': { name: 'แมวน้อยสีส้ม', price: 200, gender: 'both' },
-        'dog_01': { name: 'สุนัขน้อยสีน้ำตาล', price: 250, gender: 'both' },
-        'bird_01': { name: 'นกแก้วเล็ก', price: 180, gender: 'both' }
-      }
+        'cat_01':  { name: 'แมวน้อยสีส้ม',       price: 200, gender: 'both' },
+        'dog_01':  { name: 'สุนัขน้อยสีน้ำตาล',   price: 250, gender: 'both' },
+        'bird_01': { name: 'นกแก้วเล็ก',         price: 180, gender: 'both' },
+      },
     };
 
+    // default equipment เหลือเฉพาะ 4 slot
     this.defaultEquipment = {
-      male:   { head:null, face:'glasses_01', body:'shirt_male_01', accessory:null, weapon:'walking_stick_01', shoes:'comfort_shoes_01', pet:null },
-      female: { head:null, face:null,        body:'dress_female_01', accessory:'necklace_01', weapon:null, shoes:'comfort_shoes_01',  pet:null }
+      male:   { head: null, face: 'glasses_01', body: 'shirt_male_01',  pet: null },
+      female: { head: null, face: null,         body: 'dress_female_01', pet: null },
     };
 
     this.currentCharacter = null;
@@ -78,15 +80,10 @@ class ImageCharacterSystem {
     this.isInitialized = false;
   }
 
-  /* ---------- path resolve & loader ที่ทนสุด ---------- */
+  /* ---------- Loader แบบทน Safari/LINE ---------- */
   makeCandidates(src) {
-    // as-is, root-absolute, origin-absolute
     const clean = src.replace(/^\.?\//, '');
-    return [
-      src,
-      '/' + clean,
-      `${window.location.origin}/${clean}`
-    ];
+    return [ src, '/' + clean, `${window.location.origin}/${clean}` ];
   }
 
   preloadOnce(url) {
@@ -94,12 +91,7 @@ class ImageCharacterSystem {
       const img = new Image();
       img.loading = 'eager';
       img.decoding = 'sync';
-
-      const to = setTimeout(() => {
-        // ให้ถือว่าใช้ได้ เพื่อไม่ให้ทั้งระบบพัง — เดี๋ยว onload จริงค่อยวาด
-        resolve(url);
-      }, 12000);
-
+      const to = setTimeout(() => resolve(url), 12000); // อย่า fail ทั้งระบบ
       img.onload  = () => { clearTimeout(to); resolve(url); };
       img.onerror = () => { clearTimeout(to); reject(new Error('img-error')); };
       img.src = url;
@@ -107,21 +99,19 @@ class ImageCharacterSystem {
   }
 
   async loadImage(src) {
-    // cache
     if (this.imageCache.has(src)) return this.imageCache.get(src);
-
     const candidates = this.makeCandidates(src);
     for (const u of candidates) {
       try {
         const ok = await this.preloadOnce(u);
         this.imageCache.set(src, ok);
         return ok;
-      } catch (_) { /* try next */ }
+      } catch { /* try next */ }
     }
     return null;
   }
 
-  /* ---------- public API ---------- */
+  /* ---------- Public API ---------- */
   setSceneBackground(color) {
     this.sceneBg = (color === 'blue') ? 'blue' : 'green';
     const el = document.getElementById('image-character-container');
@@ -146,12 +136,12 @@ class ImageCharacterSystem {
             <div class="character-container" id="character-container">
               <div class="character-shadow"></div>
               <div class="character-layer base-layer"><img id="character-base" class="character-image base-image" alt="Base"></div>
+
+              <!-- ONLY 4 SLOTS -->
               <div class="character-layer body-layer"><img id="equip-body" class="character-image equipment-image" alt="Body"></div>
-              <div class="character-layer shoes-layer"><img id="equip-shoes" class="character-image equipment-image" alt="Shoes"></div>
-              <div class="character-layer accessory-layer"><img id="equip-accessory" class="character-image equipment-image" alt="Accessory"></div>
               <div class="character-layer head-layer"><img id="equip-head" class="character-image equipment-image" alt="Head"></div>
               <div class="character-layer face-layer"><img id="equip-face" class="character-image equipment-image" alt="Face"></div>
-              <div class="character-layer weapon-layer"><img id="equip-weapon" class="character-image equipment-image" alt="Weapon"></div>
+
               <div class="character-layer effects-layer"><div id="emotion-effects" class="emotion-effects"></div></div>
             </div>
 
@@ -167,6 +157,7 @@ class ImageCharacterSystem {
             </div>
           </div>
 
+          <!-- pet แยก container -->
           <div class="pet-container" id="pet-container" style="display:none;">
             <img id="pet-image" class="pet-image" alt="Pet">
           </div>
@@ -229,13 +220,15 @@ class ImageCharacterSystem {
       baseImg.loading = 'eager';
       baseImg.decoding = 'sync';
     } else {
-      baseImg.src = this.getPlaceholderDataUrl();
+      baseImg.src = this.getPlaceholderDataUrl(); // placeholder เฉพาะ base เท่านั้น
       baseImg.style.display = 'block';
     }
   }
 
   async loadAllEquipment(equipment) {
-    const tasks = Object.keys(equipment).map(slot => {
+    // โหลดเฉพาะ 4 slot เท่านั้น
+    const SLOTS = ['head', 'face', 'body', 'pet'];
+    const tasks = SLOTS.map(slot => {
       const id = equipment[slot];
       return id ? this.loadEquipmentItem(slot, id) : (this.hideEquipmentSlot(slot), Promise.resolve());
     });
@@ -251,19 +244,22 @@ class ImageCharacterSystem {
     const path = this.imagePaths.equipment[slot]?.[equipmentId];
     if (!path) { this.hideEquipmentSlot(slot); return; }
 
-    const okUrl = await this.loadImage(path);
-    if (okUrl) {
+    try {
+      const okUrl = await this.loadImage(path);
+      if (!okUrl) { this.hideEquipmentSlot(slot); return; }
+
       el.src = okUrl;
       el.style.display = 'block';
       el.loading = 'eager';
       el.decoding = 'sync';
+
       if (slot === 'pet') {
         const pc = document.getElementById('pet-container');
         if (pc) pc.style.display = 'block';
       }
-    } else {
-      el.src = this.getPlaceholderDataUrl();
-      el.style.display = 'block';
+    } catch {
+      // สำคัญ: ซ่อนทันที ห้ามวาง placeholder บัง base
+      this.hideEquipmentSlot(slot);
     }
   }
 
@@ -271,7 +267,10 @@ class ImageCharacterSystem {
     const el = slot === 'pet'
       ? document.getElementById('pet-image')
       : document.getElementById(`equip-${slot}`);
-    if (el) el.style.display = 'none';
+    if (el) {
+      el.style.display = 'none';
+      el.removeAttribute('src'); // กัน render ค้าง/บัง
+    }
     if (slot === 'pet') {
       const pc = document.getElementById('pet-container');
       if (pc) pc.style.display = 'none';
@@ -279,6 +278,7 @@ class ImageCharacterSystem {
   }
 
   getPlaceholderDataUrl() {
+    // ใช้กับ base เท่านั้น
     return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='192' viewBox='0 0 128 192'%3E%3Crect width='128' height='192' fill='%23F3F4F6' stroke='%23E5E7EB' stroke-width='2' rx='10'/%3E%3Ccircle cx='64' cy='60' r='20' fill='%23D1D5DB'/%3E%3Crect x='44' y='85' width='40' height='60' fill='%23D1D5DB' rx='6'/%3E%3Crect x='49' y='150' width='10' height='30' fill='%23D1D5DB'/%3E%3Crect x='69' y='150' width='10' height='30' fill='%23D1D5DB'/%3E%3C/svg%3E";
   }
 
@@ -324,7 +324,10 @@ class ImageCharacterSystem {
     }, 50);
   }
 
-  stopCurrentAnimation() { if (this.animationInterval) clearInterval(this.animationInterval); this.animationInterval = null; }
+  stopCurrentAnimation() {
+    if (this.animationInterval) clearInterval(this.animationInterval);
+    this.animationInterval = null;
+  }
 
   showLoading(show) {
     const el = document.getElementById('character-loading');
@@ -336,7 +339,7 @@ class ImageCharacterSystem {
     if (c) c.innerHTML = `<div class="character-error"><h3>😞 เกิดข้อผิดพลาด</h3><p>${msg}</p><button onclick="location.reload()" class="retry-btn">ลองใหม่</button></div>`;
   }
 
-  /* — minimal styles, พื้นหลังสีอ่อน ไม่มีการ์ดขาว — */
+  /* — minimal styles: พื้นหลังสีอ่อน, ไม่มีการ์ดขาวทับ — */
   addResponsiveStyles() {
     if (document.getElementById('character-responsive-styles')) return;
     const style = document.createElement('style');
@@ -351,7 +354,7 @@ class ImageCharacterSystem {
       .character-container{position:relative;width:128px;height:192px;transition:all .3s ease}
       .character-shadow{position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);width:80px;height:20px;background:rgba(0,0,0,.12);border-radius:50%;animation:shadowPulse 3s ease-in-out infinite}
       .character-layer{position:absolute;top:0;left:0;width:100%;height:100%}
-      .base-layer{z-index:1}.shoes-layer{z-index:2}.body-layer{z-index:3}.accessory-layer{z-index:4}.head-layer{z-index:5}.face-layer{z-index:6}.weapon-layer{z-index:7}.effects-layer{z-index:8}
+      .base-layer{z-index:1}.body-layer{z-index:3}.head-layer{z-index:5}.face-layer{z-index:6}.effects-layer{z-index:8}
       .character-image{width:100%;height:100%;object-fit:contain;display:none;transition:opacity .3s ease}
       .character-image.base-image{display:block}
       .character-info.in-stage{background:transparent;box-shadow:none;padding:0;max-width:220px}
