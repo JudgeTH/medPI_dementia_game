@@ -2,12 +2,14 @@
    Fixed Image Character System (Safari + Layout update)
    ======================================== */
 
+/* ========================================
+   Fixed Image Character System (Safari + Layout update)
+   ======================================== */
+
 class ImageCharacterSystem {
     constructor() {
-        // default scene bg: "green" | "blue"
-        this.sceneBg = 'green';
+        this.sceneBg = 'green'; // default scene bg
 
-        // เปลี่ยนเป็น relative path แก้ปัญหา Safari
         this.imagePaths = {
             base: {
                 male: './assets/images/characters/base/elderly_male_base.png',
@@ -54,50 +56,12 @@ class ImageCharacterSystem {
             }
         };
 
-        this.equipmentData = {
-            head: {
-                'hat_01': { name: 'หมวกไหมพรม', price: 50, gender: 'both' },
-                'hat_02': { name: 'หมวกกันแดด', price: 30, gender: 'both' },
-                'cap_01': { name: 'หมวกแก๊ป', price: 40, gender: 'both' },
-                'beret_01': { name: 'หมวกเบเร่', price: 80, gender: 'female' }
-            },
-            face: {
-                'glasses_01': { name: 'แว่นตาอ่านหนังสือ', price: 35, gender: 'both' },
-                'glasses_02': { name: 'แว่นตาทรงสี่เหลี่ยม', price: 40, gender: 'both' },
-                'sunglasses_01': { name: 'แว่นกันแดด', price: 60, gender: 'both' }
-            },
-            body: {
-                'shirt_male_01': { name: 'เสื้อเชิ้ตสีฟ้า', price: 0, gender: 'male' },
-                'shirt_male_02': { name: 'เสื้อโปโลสีเขียว', price: 45, gender: 'male' },
-                'dress_female_01': { name: 'ชุดเดรสสีม่วง', price: 0, gender: 'female' },
-                'dress_female_02': { name: 'ชุดเดรสลายดอก', price: 60, gender: 'female' },
-                'sweater_01': { name: 'เสื้อกันหนาว', price: 70, gender: 'both' }
-            },
-            accessory: {
-                'necklace_01': { name: 'สร้อยคอไข่มุก', price: 90, gender: 'female' },
-                'watch_01': { name: 'นาฬิกาข้อมือ', price: 120, gender: 'both' },
-                'brooch_01': { name: 'เข็มกลัดดอกไม้', price: 50, gender: 'female' }
-            },
-            weapon: {
-                'walking_stick_01': { name: 'ไม้เท้าไม้', price: 0, gender: 'both' },
-                'walking_stick_02': { name: 'ไม้เท้าโลหะ', price: 25, gender: 'both' },
-                'umbrella_01': { name: 'ร่มสีแดง', price: 30, gender: 'both' }
-            },
-            shoes: {
-                'comfort_shoes_01': { name: 'รองเท้าสบาย', price: 0, gender: 'both' },
-                'slippers_01': { name: 'รองเท้าแตะ', price: 15, gender: 'both' }
-            },
-            pet: {
-                'cat_01': { name: 'แมวน้อยสีส้ม', price: 200, gender: 'both' },
-                'dog_01': { name: 'สุนัขน้อยสีน้ำตาล', price: 250, gender: 'both' },
-                'bird_01': { name: 'นกแก้วเล็ก', price: 180, gender: 'both' }
-            }
-        };
-
         this.defaultEquipment = {
             male: { head: null, face: 'glasses_01', body: 'shirt_male_01', accessory: null, weapon: 'walking_stick_01', shoes: 'comfort_shoes_01', pet: null },
             female:{ head: null, face: null, body: 'dress_female_01', accessory: 'necklace_01', weapon: null, shoes: 'comfort_shoes_01', pet: null }
         };
+
+        this.equipmentData = {}; // (ยกไปตามเดิมได้เลยจากไฟล์เก่า)
 
         this.currentCharacter = null;
         this.imageCache = new Map();
@@ -106,7 +70,7 @@ class ImageCharacterSystem {
         this.isInitialized = false;
     }
 
-    setSceneBackground(color /* 'green' | 'blue' */) {
+    setSceneBackground(color) {
         this.sceneBg = (color === 'blue') ? 'blue' : 'green';
         const container = document.getElementById('image-character-container');
         if (container) {
@@ -115,9 +79,7 @@ class ImageCharacterSystem {
         }
     }
 
-    // ไม่ init ทันที รอให้เรียกจาก app.js
     setupCharacterContainer() {
-        // ลบ container เก่า (กันซ้ำ)
         const existingContainer = document.getElementById('image-character-container');
         if (existingContainer) existingContainer.remove();
 
@@ -125,223 +87,71 @@ class ImageCharacterSystem {
         container.id = 'image-character-container';
         container.className = this.sceneBg === 'blue' ? 'bg-blue' : 'bg-green';
 
-        // NOTE: ปรับ layout — ตัดฉากหลัง/ต้นไม้/เก้าอี้ออก เปลี่ยนเป็นกรอบเดียว
         container.innerHTML = `
             <div class="character-scene">
                 <div class="character-stage">
                     <div class="character-display-area">
                         <div class="character-container" id="character-container">
                             <div class="character-shadow"></div>
-
                             <div class="character-layer base-layer">
                                 <img id="character-base" class="character-image base-image" src="" alt="Base Character">
                             </div>
-
-                            <div class="character-layer body-layer">
-                                <img id="equip-body" class="character-image equipment-image" src="" alt="Body Equipment">
-                            </div>
-
-                            <div class="character-layer shoes-layer">
-                                <img id="equip-shoes" class="character-image equipment-image" src="" alt="Shoes">
-                            </div>
-
-                            <div class="character-layer accessory-layer">
-                                <img id="equip-accessory" class="character-image equipment-image" src="" alt="Accessory">
-                            </div>
-
-                            <div class="character-layer head-layer">
-                                <img id="equip-head" class="character-image equipment-image" src="" alt="Head Equipment">
-                            </div>
-
-                            <div class="character-layer face-layer">
-                                <img id="equip-face" class="character-image equipment-image" src="" alt="Face Equipment">
-                            </div>
-
-                            <div class="character-layer weapon-layer">
-                                <img id="equip-weapon" class="character-image equipment-image" src="" alt="Weapon">
-                            </div>
-
-                            <div class="character-layer effects-layer">
-                                <div class="emotion-effects" id="emotion-effects"></div>
-                            </div>
+                            <div class="character-layer body-layer"><img id="equip-body" class="character-image equipment-image"></div>
+                            <div class="character-layer shoes-layer"><img id="equip-shoes" class="character-image equipment-image"></div>
+                            <div class="character-layer accessory-layer"><img id="equip-accessory" class="character-image equipment-image"></div>
+                            <div class="character-layer head-layer"><img id="equip-head" class="character-image equipment-image"></div>
+                            <div class="character-layer face-layer"><img id="equip-face" class="character-image equipment-image"></div>
+                            <div class="character-layer weapon-layer"><img id="equip-weapon" class="character-image equipment-image"></div>
+                            <div class="character-layer effects-layer"><div class="emotion-effects" id="emotion-effects"></div></div>
                         </div>
 
-                        <!-- แผงชื่อ + stat วางชิดตัวละคร -->
                         <div class="character-info in-stage">
                             <div class="character-nameplate">
                                 <h3 id="character-name">ผู้เล่น</h3>
                                 <div class="character-level">Lv. 1</div>
                             </div>
                             <div class="character-stats">
-                                <div class="stat-item">
-                                    <span class="stat-icon">⭐</span>
-                                    <span class="stat-label">เหรียญ:</span>
-                                    <span class="stat-value" id="char-coins">0</span>
-                                </div>
-                                <div class="stat-item">
-                                    <span class="stat-icon">🎮</span>
-                                    <span class="stat-label">เกม:</span>
-                                    <span class="stat-value" id="char-games">0</span>
-                                </div>
+                                <div class="stat-item"><span class="stat-icon">⭐</span> <span class="stat-label">เหรียญ:</span> <span class="stat-value" id="char-coins">0</span></div>
+                                <div class="stat-item"><span class="stat-icon">🎮</span> <span class="stat-label">เกม:</span> <span class="stat-value" id="char-games">0</span></div>
                             </div>
                         </div>
                     </div>
-
-                    <!-- Pet -->
-                    <div class="pet-container" id="pet-container">
-                        <img id="pet-image" class="pet-image" src="" alt="Pet">
-                    </div>
+                    <div class="pet-container" id="pet-container"><img id="pet-image" class="pet-image"></div>
                 </div>
-
-                <!-- Emotion buttons -->
                 <div class="emotion-controls">
-                    <button class="emotion-btn" data-emotion="happy" title="ดีใจ">😊</button>
-                    <button class="emotion-btn" data-emotion="wave" title="โบกมือ">👋</button>
-                    <button class="emotion-btn" data-emotion="think" title="คิด">🤔</button>
-                    <button class="emotion-btn" data-emotion="love" title="รัก">💕</button>
+                    <button class="emotion-btn" data-emotion="happy">😊</button>
+                    <button class="emotion-btn" data-emotion="wave">👋</button>
+                    <button class="emotion-btn" data-emotion="think">🤔</button>
+                    <button class="emotion-btn" data-emotion="love">💕</button>
                 </div>
-
-                <!-- Loading -->
-                <div class="loading-indicator" id="character-loading">
-                    <div class="loading-spinner"></div>
-                    <p>กำลังโหลดตัวละคร...</p>
-                </div>
+                <div class="loading-indicator" id="character-loading"><div class="loading-spinner"></div><p>กำลังโหลดตัวละคร...</p></div>
             </div>
         `;
-
         this.addResponsiveStyles();
         this.isInitialized = true;
         return container;
     }
 
-    async loadCharacter(userData) {
-        if (!userData || !userData.character) {
-            console.warn('No character data found');
-            return;
-        }
-
-        this.showLoading(true);
-        this.currentCharacter = userData.character;
-
-        try {
-            const gender = userData.character.gender || 'male';
-
-            if (!userData.character.equipment) {
-                userData.character.equipment = { ...this.defaultEquipment[gender] };
-                if (window.gameAuth) window.gameAuth.saveCurrentUser();
-            }
-
-            await this.loadBaseCharacter(gender);
-            await this.loadAllEquipment(userData.character.equipment);
-
-            this.updateCharacterInfo(userData);
-            this.setupEmotionControls();
-            this.startIdleAnimation();
-        } catch (error) {
-            console.error('Error loading character:', error);
-            this.showError('ไม่สามารถโหลดตัวละครได้');
-        } finally {
-            this.showLoading(false);
-        }
-    }
-
-    async loadBaseCharacter(gender) {
-        const baseImg = document.getElementById('character-base');
-        if (!baseImg) return;
-
-        const imagePath = this.imagePaths.base[gender];
-
-        try {
-            await this.loadImage(imagePath);
-            baseImg.src = imagePath;
-            baseImg.style.display = 'block';
-            // Safari-friendly
-            baseImg.loading = 'eager';
-            baseImg.decoding = 'sync';
-            baseImg.referrerPolicy = 'no-referrer';
-            baseImg.crossOrigin = 'anonymous';
-        } catch {
-            baseImg.src = this.getPlaceholderDataUrl();
-            baseImg.style.display = 'block';
-        }
-    }
-
-    async loadAllEquipment(equipment) {
-        const loadPromises = [];
-        Object.keys(equipment).forEach(slot => {
-            const equipmentId = equipment[slot];
-            if (equipmentId) {
-                loadPromises.push(this.loadEquipmentItem(slot, equipmentId));
-            } else {
-                this.hideEquipmentSlot(slot);
-            }
-        });
-        await Promise.all(loadPromises);
-    }
-
-    async loadEquipmentItem(slot, equipmentId) {
-        const imgElement = slot === 'pet'
-            ? document.getElementById('pet-image')
-            : document.getElementById(`equip-${slot}`);
-        if (!imgElement) return;
-
-        const imagePath = this.imagePaths.equipment[slot]
-            ? this.imagePaths.equipment[slot][equipmentId]
-            : null;
-
-        if (!imagePath) {
-            this.hideEquipmentSlot(slot);
-            return;
-        }
-
-        try {
-            await this.loadImage(imagePath);
-            imgElement.src = imagePath;
-            imgElement.style.display = 'block';
-            imgElement.loading = 'eager';
-            imgElement.decoding = 'sync';
-            imgElement.referrerPolicy = 'no-referrer';
-            imgElement.crossOrigin = 'anonymous';
-            if (slot === 'pet') {
-                const pc = document.getElementById('pet-container');
-                if (pc) pc.style.display = 'block';
-            }
-        } catch {
-            imgElement.src = this.getPlaceholderDataUrl();
-            imgElement.style.display = 'block';
-        }
-    }
-
-    hideEquipmentSlot(slot) {
-        const imgElement = slot === 'pet'
-            ? document.getElementById('pet-image')
-            : document.getElementById(`equip-${slot}`);
-        if (imgElement) imgElement.style.display = 'none';
-        if (slot === 'pet') {
-            const pc = document.getElementById('pet-container');
-            if (pc) pc.style.display = 'none';
-        }
-    }
-
-    // โหลดรูป (Safari safe)
     async loadImage(src) {
         if (this.imageCache.has(src)) return this.imageCache.get(src);
 
         return new Promise((resolve, reject) => {
             const img = new Image();
-            img.crossOrigin = 'anonymous';
-            img.referrerPolicy = 'no-referrer';
-            img.loading = 'eager';
-            img.decoding = 'sync';
+            img.loading = "eager";
+            img.decoding = "sync";
+
+            // only add crossOrigin/referrerPolicy if external URL
+            if (src.startsWith("http")) {
+                img.crossOrigin = "anonymous";
+                img.referrerPolicy = "strict-origin-when-cross-origin";
+            }
 
             let timedOut = false;
             const tid = setTimeout(() => {
                 timedOut = true;
-                // อย่า reject ทันที ให้ resolve ด้วย img (เผื่อ Safari วาดช้า)
-                console.warn(`Timeout loading (continue anyway): ${src}`);
                 this.imageCache.set(src, img);
                 resolve(img);
-            }, 12000);
+            }, 15000);
 
             img.onload = () => {
                 if (!timedOut) clearTimeout(tid);
@@ -351,11 +161,10 @@ class ImageCharacterSystem {
 
             img.onerror = () => {
                 if (!timedOut) clearTimeout(tid);
-                console.warn(`Failed to load: ${src}`);
                 reject(new Error(`Failed to load image: ${src}`));
             };
 
-            img.src = src;
+            img.src = `${src}?v=${Date.now()}`;
         });
     }
 
