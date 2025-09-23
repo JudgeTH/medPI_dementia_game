@@ -1,54 +1,41 @@
 /* ========================================
-   Image Character System — Stable Everywhere (Chrome/Safari/Firefox)
-   Focus: make images show again, zero CORS tricks
+   Image Character System — Safari/LINE proof
    ======================================== */
 
 class ImageCharacterSystem {
   constructor() {
     this.sceneBg = 'green';
 
+    // ใช้ path แบบ "root-absolute" ทันที เพื่อความชัวร์บน WebKit/LINE
     this.imagePaths = {
       base: {
-        male: './assets/images/characters/base/elderly_male_base.png',
-        female: './assets/images/characters/base/elderly_female_base.png'
+        male: '/assets/images/characters/base/elderly_male_base.png',
+        female: '/assets/images/characters/base/elderly_female_base.png'
       },
       equipment: {
         head: {
-          'hat_01': './assets/images/characters/equipment/head/hat_01.png',
-          'hat_02': './assets/images/characters/equipment/head/hat_02.png',
-          'cap_01': './assets/images/characters/equipment/head/cap_01.png',
-          'beret_01': './assets/images/characters/equipment/head/beret_01.png'
+          'hat_01': '/assets/images/characters/equipment/head/hat_01.png',
+          'hat_02': '/assets/images/characters/equipment/head/hat_02.png',
+          'cap_01': '/assets/images/characters/equipment/head/cap_01.png',
+          'beret_01': '/assets/images/characters/equipment/head/beret_01.png'
         },
         face: {
-          'glasses_01': './assets/images/characters/equipment/face/glasses_01.png',
-          'glasses_02': './assets/images/characters/equipment/face/glasses_02.png',
-          'sunglasses_01': './assets/images/characters/equipment/face/sunglasses_01.png'
+          'glasses_01': '/assets/images/characters/equipment/face/glasses_01.png',
+          'glasses_02': '/assets/images/characters/equipment/face/glasses_02.png',
+          'sunglasses_01': '/assets/images/characters/equipment/face/sunglasses_01.png'
         },
         body: {
-          'shirt_male_01': './assets/images/characters/equipment/body/shirt_male_01.png',
-          'shirt_male_02': './assets/images/characters/equipment/body/shirt_male_02.png',
-          'dress_female_01': './assets/images/characters/equipment/body/dress_female_01.png',
-          'dress_female_02': './assets/images/characters/equipment/body/dress_female_02.png',
-          'sweater_01': './assets/images/characters/equipment/body/sweater_01.png'
+          'shirt_male_01': '/assets/images/characters/equipment/body/shirt_male_01.png',
+          'shirt_male_02': '/assets/images/characters/equipment/body/shirt_male_02.png',
+          'dress_female_01': '/assets/images/characters/equipment/body/dress_female_01.png',
+          'dress_female_02': '/assets/images/characters/equipment/body/dress_female_02.png',
+          'sweater_01': '/assets/images/characters/equipment/body/sweater_01.png'
         },
-        accessory: {
-          'necklace_01': './assets/images/characters/equipment/accessory/necklace_01.png',
-          'watch_01': './assets/images/characters/equipment/accessory/watch_01.png',
-          'brooch_01': './assets/images/characters/equipment/accessory/brooch_01.png'
-        },
-        weapon: {
-          'walking_stick_01': './assets/images/characters/equipment/weapon/walking_stick_01.png',
-          'walking_stick_02': './assets/images/characters/equipment/weapon/walking_stick_02.png',
-          'umbrella_01': './assets/images/characters/equipment/weapon/umbrella_01.png'
-        },
-        shoes: {
-          'comfort_shoes_01': './assets/images/characters/equipment/shoes/comfort_shoes_01.png',
-          'slippers_01': './assets/images/characters/equipment/shoes/slippers_01.png'
-        },
+
         pet: {
-          'cat_01': './assets/images/characters/pets/cat_01.png',
-          'dog_01': './assets/images/characters/pets/dog_01.png',
-          'bird_01': './assets/images/characters/pets/bird_01.png'
+          'cat_01': '/assets/images/characters/pets/cat_01.png',
+          'dog_01': '/assets/images/characters/pets/dog_01.png',
+          'bird_01': '/assets/images/characters/pets/bird_01.png'
         }
       }
     };
@@ -72,20 +59,6 @@ class ImageCharacterSystem {
         'dress_female_02': { name: 'ชุดเดรสลายดอก', price: 60, gender: 'female' },
         'sweater_01': { name: 'เสื้อกันหนาว', price: 70, gender: 'both' }
       },
-      accessory: {
-        'necklace_01': { name: 'สร้อยคอไข่มุก', price: 90, gender: 'female' },
-        'watch_01': { name: 'นาฬิกาข้อมือ', price: 120, gender: 'both' },
-        'brooch_01': { name: 'เข็มกลัดดอกไม้', price: 50, gender: 'female' }
-      },
-      weapon: {
-        'walking_stick_01': { name: 'ไม้เท้าไม้', price: 0, gender: 'both' },
-        'walking_stick_02': { name: 'ไม้เท้าโลหะ', price: 25, gender: 'both' },
-        'umbrella_01': { name: 'ร่มสีแดง', price: 30, gender: 'both' }
-      },
-      shoes: {
-        'comfort_shoes_01': { name: 'รองเท้าสบาย', price: 0, gender: 'both' },
-        'slippers_01': { name: 'รองเท้าแตะ', price: 15, gender: 'both' }
-      },
       pet: {
         'cat_01': { name: 'แมวน้อยสีส้ม', price: 200, gender: 'both' },
         'dog_01': { name: 'สุนัขน้อยสีน้ำตาล', price: 250, gender: 'both' },
@@ -94,8 +67,8 @@ class ImageCharacterSystem {
     };
 
     this.defaultEquipment = {
-      male: { head: null, face: 'glasses_01', body: 'shirt_male_01', accessory: null, weapon: 'walking_stick_01', shoes: 'comfort_shoes_01', pet: null },
-      female:{ head: null, face: null, body: 'dress_female_01', accessory: 'necklace_01', weapon: null, shoes: 'comfort_shoes_01', pet: null }
+      male:   { head:null, face:'glasses_01', body:'shirt_male_01', accessory:null, weapon:'walking_stick_01', shoes:'comfort_shoes_01', pet:null },
+      female: { head:null, face:null,        body:'dress_female_01', accessory:'necklace_01', weapon:null, shoes:'comfort_shoes_01',  pet:null }
     };
 
     this.currentCharacter = null;
@@ -105,59 +78,62 @@ class ImageCharacterSystem {
     this.isInitialized = false;
   }
 
-  /* ---------- helpers ---------- */
-  resolveSrc(src) {
-    // แปลงเป็น absolute URL จากหน้า index.html เสมอ
-    try { return new URL(src, window.location.href).href; }
-    catch { return src; }
+  /* ---------- path resolve & loader ที่ทนสุด ---------- */
+  makeCandidates(src) {
+    // as-is, root-absolute, origin-absolute
+    const clean = src.replace(/^\.?\//, '');
+    return [
+      src,
+      '/' + clean,
+      `${window.location.origin}/${clean}`
+    ];
   }
 
-  async preload(srcAbs) {
-    // preload รูปแบบพื้นฐานที่สุด — ไม่มี CORS/Policy พิเศษ
+  preloadOnce(url) {
     return new Promise((resolve, reject) => {
       const img = new Image();
       img.loading = 'eager';
       img.decoding = 'sync';
 
       const to = setTimeout(() => {
-        // อย่า fail ทั้งหมด: resolve เพื่อให้ set src ต่อได้
-        console.warn('Image load timeout:', srcAbs);
-        resolve(srcAbs);
+        // ให้ถือว่าใช้ได้ เพื่อไม่ให้ทั้งระบบพัง — เดี๋ยว onload จริงค่อยวาด
+        resolve(url);
       }, 12000);
 
-      img.onload = () => { clearTimeout(to); resolve(srcAbs); };
-      img.onerror = () => { clearTimeout(to); reject(new Error('img-error:' + srcAbs)); };
-      img.src = srcAbs;
+      img.onload  = () => { clearTimeout(to); resolve(url); };
+      img.onerror = () => { clearTimeout(to); reject(new Error('img-error')); };
+      img.src = url;
     });
   }
 
   async loadImage(src) {
-    const abs = this.resolveSrc(src);
-    if (this.imageCache.has(abs)) return this.imageCache.get(abs);
+    // cache
+    if (this.imageCache.has(src)) return this.imageCache.get(src);
 
-    try {
-      const finalUrl = await this.preload(abs);
-      this.imageCache.set(abs, finalUrl);
-      return finalUrl;
-    } catch (e) {
-      console.warn('preload failed -> use placeholder:', abs, e?.message || e);
-      return null;
+    const candidates = this.makeCandidates(src);
+    for (const u of candidates) {
+      try {
+        const ok = await this.preloadOnce(u);
+        this.imageCache.set(src, ok);
+        return ok;
+      } catch (_) { /* try next */ }
     }
+    return null;
   }
 
   /* ---------- public API ---------- */
   setSceneBackground(color) {
     this.sceneBg = (color === 'blue') ? 'blue' : 'green';
-    const container = document.getElementById('image-character-container');
-    if (container) {
-      container.classList.toggle('bg-blue', this.sceneBg === 'blue');
-      container.classList.toggle('bg-green', this.sceneBg !== 'blue');
+    const el = document.getElementById('image-character-container');
+    if (el) {
+      el.classList.toggle('bg-blue',  this.sceneBg === 'blue');
+      el.classList.toggle('bg-green', this.sceneBg !== 'blue');
     }
   }
 
   setupCharacterContainer() {
-    const existing = document.getElementById('image-character-container');
-    if (existing) existing.remove();
+    const ex = document.getElementById('image-character-container');
+    if (ex) ex.remove();
 
     const container = document.createElement('div');
     container.id = 'image-character-container';
@@ -169,17 +145,13 @@ class ImageCharacterSystem {
           <div class="character-display-area">
             <div class="character-container" id="character-container">
               <div class="character-shadow"></div>
-
-              <div class="character-layer base-layer">
-                <img id="character-base" class="character-image base-image" alt="Base">
-              </div>
+              <div class="character-layer base-layer"><img id="character-base" class="character-image base-image" alt="Base"></div>
               <div class="character-layer body-layer"><img id="equip-body" class="character-image equipment-image" alt="Body"></div>
               <div class="character-layer shoes-layer"><img id="equip-shoes" class="character-image equipment-image" alt="Shoes"></div>
               <div class="character-layer accessory-layer"><img id="equip-accessory" class="character-image equipment-image" alt="Accessory"></div>
               <div class="character-layer head-layer"><img id="equip-head" class="character-image equipment-image" alt="Head"></div>
               <div class="character-layer face-layer"><img id="equip-face" class="character-image equipment-image" alt="Face"></div>
               <div class="character-layer weapon-layer"><img id="equip-weapon" class="character-image equipment-image" alt="Weapon"></div>
-
               <div class="character-layer effects-layer"><div id="emotion-effects" class="emotion-effects"></div></div>
             </div>
 
@@ -250,9 +222,7 @@ class ImageCharacterSystem {
     const baseImg = document.getElementById('character-base');
     if (!baseImg) return;
 
-    const src = this.imagePaths.base[gender];
-    const okUrl = await this.loadImage(src);
-
+    const okUrl = await this.loadImage(this.imagePaths.base[gender]);
     if (okUrl) {
       baseImg.src = okUrl;
       baseImg.style.display = 'block';
@@ -278,11 +248,10 @@ class ImageCharacterSystem {
       : document.getElementById(`equip-${slot}`);
     if (!el) return;
 
-    const raw = this.imagePaths.equipment[slot]?.[equipmentId];
-    if (!raw) { this.hideEquipmentSlot(slot); return; }
+    const path = this.imagePaths.equipment[slot]?.[equipmentId];
+    if (!path) { this.hideEquipmentSlot(slot); return; }
 
-    const okUrl = await this.loadImage(raw);
-
+    const okUrl = await this.loadImage(path);
     if (okUrl) {
       el.src = okUrl;
       el.style.display = 'block';
@@ -355,10 +324,7 @@ class ImageCharacterSystem {
     }, 50);
   }
 
-  stopCurrentAnimation() {
-    if (this.animationInterval) clearInterval(this.animationInterval);
-    this.animationInterval = null;
-  }
+  stopCurrentAnimation() { if (this.animationInterval) clearInterval(this.animationInterval); this.animationInterval = null; }
 
   showLoading(show) {
     const el = document.getElementById('character-loading');
@@ -367,37 +333,27 @@ class ImageCharacterSystem {
 
   showError(msg) {
     const c = document.getElementById('image-character-container');
-    if (c) {
-      c.innerHTML = `<div class="character-error"><h3>😞 เกิดข้อผิดพลาด</h3><p>${msg}</p><button onclick="location.reload()" class="retry-btn">ลองใหม่</button></div>`;
-    }
+    if (c) c.innerHTML = `<div class="character-error"><h3>😞 เกิดข้อผิดพลาด</h3><p>${msg}</p><button onclick="location.reload()" class="retry-btn">ลองใหม่</button></div>`;
   }
 
-  /* ---------- minimal styles (keep simple, no white card) ---------- */
+  /* — minimal styles, พื้นหลังสีอ่อน ไม่มีการ์ดขาว — */
   addResponsiveStyles() {
     if (document.getElementById('character-responsive-styles')) return;
     const style = document.createElement('style');
     style.id = 'character-responsive-styles';
     style.textContent = `
-      #image-character-container{
-        --bg-green:#EFFFF4; --bg-blue:#EAF6FF;
-        width:100%; height:500px; position:relative; border-radius:20px;
-        overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.06); margin-bottom:30px;
-      }
+      #image-character-container{--bg-green:#EFFFF4;--bg-blue:#EAF6FF;width:100%;height:500px;position:relative;border-radius:20px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.06);margin-bottom:30px}
       #image-character-container.bg-green{background:var(--bg-green)}
       #image-character-container.bg-blue{background:var(--bg-blue)}
-
       .character-scene{width:100%;height:100%;position:relative}
       .character-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
-
       .character-display-area{display:flex;align-items:center;gap:16px;z-index:10;background:transparent;box-shadow:none;padding:0}
       .character-container{position:relative;width:128px;height:192px;transition:all .3s ease}
       .character-shadow{position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);width:80px;height:20px;background:rgba(0,0,0,.12);border-radius:50%;animation:shadowPulse 3s ease-in-out infinite}
-
       .character-layer{position:absolute;top:0;left:0;width:100%;height:100%}
       .base-layer{z-index:1}.shoes-layer{z-index:2}.body-layer{z-index:3}.accessory-layer{z-index:4}.head-layer{z-index:5}.face-layer{z-index:6}.weapon-layer{z-index:7}.effects-layer{z-index:8}
       .character-image{width:100%;height:100%;object-fit:contain;display:none;transition:opacity .3s ease}
       .character-image.base-image{display:block}
-
       .character-info.in-stage{background:transparent;box-shadow:none;padding:0;max-width:220px}
       .character-nameplate{margin:0 0 6px 0;padding-bottom:6px;border-bottom:1px solid #E8E8E8}
       .character-nameplate h3{margin:0;font-size:1.15rem;color:#2C3E50;font-weight:800}
@@ -407,28 +363,17 @@ class ImageCharacterSystem {
       .stat-icon{font-size:1rem;min-width:20px}
       .stat-label{color:#34495E;flex:1}
       .stat-value{font-weight:800;color:#E67E22}
-
       .pet-container{position:absolute;bottom:40px;right:40px;display:none;z-index:5}
       .pet-image{width:64px;height:64px;object-fit:contain;animation:petFloat 3s ease-in-out infinite}
-
       .emotion-controls{position:absolute;bottom:15px;right:15px;display:flex;gap:8px;z-index:15}
       .emotion-btn{width:44px;height:44px;border-radius:50%;border:2px solid #3498DB;background:rgba(255,255,255,.95);font-size:1.2rem;cursor:pointer;transition:all .3s ease;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,.2)}
       .emotion-btn:hover{transform:scale(1.1);background:#3498DB;color:#fff}
-
       .loading-indicator{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:none;flex-direction:column;align-items:center;gap:15px;z-index:20;background:rgba(255,255,255,.95);padding:25px;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.3)}
       .loading-spinner{width:32px;height:32px;border:3px solid #E8E8E8;border-top:3px solid #3498DB;border-radius:50%;animation:spin 1s linear infinite}
-
       @keyframes shadowPulse{0%,100%{transform:translateX(-50%) scale(1);opacity:.25}50%{transform:translateX(-50%) scale(1.1);opacity:.4}}
       @keyframes petFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
       @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
-
-      @media (max-width:768px){
-        #image-character-container{height:360px;margin-bottom:20px}
-        .character-container{width:96px;height:144px}
-        .character-display-area{gap:12px}
-        .character-nameplate h3{font-size:1rem}
-        .stat-item{font-size:.8rem;gap:4px}
-      }
+      @media (max-width:768px){#image-character-container{height:360px;margin-bottom:20px}.character-container{width:96px;height:144px}.character-display-area{gap:12px}.character-nameplate h3{font-size:1rem}.stat-item{font-size:.8rem;gap:4px}}
     `;
     document.head.appendChild(style);
   }
