@@ -1,9 +1,12 @@
 /* ========================================
-   Fixed Image Character System - แก้ปัญหา Mobile + Safari + Duplicate
+   Fixed Image Character System (Safari + Layout update)
    ======================================== */
 
 class ImageCharacterSystem {
     constructor() {
+        // default scene bg: "green" | "blue"
+        this.sceneBg = 'green';
+
         // เปลี่ยนเป็น relative path แก้ปัญหา Safari
         this.imagePaths = {
             base: {
@@ -92,24 +95,8 @@ class ImageCharacterSystem {
         };
 
         this.defaultEquipment = {
-            male: {
-                head: null,
-                face: 'glasses_01',
-                body: 'shirt_male_01',
-                accessory: null,
-                weapon: 'walking_stick_01',
-                shoes: 'comfort_shoes_01',
-                pet: null
-            },
-            female: {
-                head: null,
-                face: null,
-                body: 'dress_female_01',
-                accessory: 'necklace_01',
-                weapon: null,
-                shoes: 'comfort_shoes_01',
-                pet: null
-            }
+            male: { head: null, face: 'glasses_01', body: 'shirt_male_01', accessory: null, weapon: 'walking_stick_01', shoes: 'comfort_shoes_01', pet: null },
+            female:{ head: null, face: null, body: 'dress_female_01', accessory: 'necklace_01', weapon: null, shoes: 'comfort_shoes_01', pet: null }
         };
 
         this.currentCharacter = null;
@@ -119,64 +106,84 @@ class ImageCharacterSystem {
         this.isInitialized = false;
     }
 
-    // แก้ปัญหา: ไม่ init ทันที รอให้เรียกจาก app.js
-    setupCharacterContainer() {
-        // ลบ container เก่าก่อน (แก้ปัญหาตัวละครซ้ำ)
-        const existingContainer = document.getElementById('image-character-container');
-        if (existingContainer) {
-            existingContainer.remove();
+    setSceneBackground(color /* 'green' | 'blue' */) {
+        this.sceneBg = (color === 'blue') ? 'blue' : 'green';
+        const container = document.getElementById('image-character-container');
+        if (container) {
+            container.classList.toggle('bg-blue', this.sceneBg === 'blue');
+            container.classList.toggle('bg-green', this.sceneBg !== 'blue');
         }
+    }
+
+    // ไม่ init ทันที รอให้เรียกจาก app.js
+    setupCharacterContainer() {
+        // ลบ container เก่า (กันซ้ำ)
+        const existingContainer = document.getElementById('image-character-container');
+        if (existingContainer) existingContainer.remove();
 
         const container = document.createElement('div');
         container.id = 'image-character-container';
+        container.className = this.sceneBg === 'blue' ? 'bg-blue' : 'bg-green';
+
+        // NOTE: ปรับ layout — ตัดฉากหลัง/ต้นไม้/เก้าอี้ออก เปลี่ยนเป็นกรอบเดียว
         container.innerHTML = `
             <div class="character-scene">
-                <!-- Background -->
-                <div class="scene-background">
-                    <div class="sky-layer"></div>
-                    <div class="ground-layer"></div>
-                    <div class="environment-objects">
-                        <div class="env-object tree"></div>
-                        <div class="env-object bench"></div>
-                        <div class="env-object flowers"></div>
-                    </div>
-                </div>
+                <div class="character-stage">
+                    <div class="character-display-area">
+                        <div class="character-container" id="character-container">
+                            <div class="character-shadow"></div>
 
-                <!-- Character Display -->
-                <div class="character-display-area">
-                    <div class="character-container" id="character-container">
-                        <div class="character-shadow"></div>
+                            <div class="character-layer base-layer">
+                                <img id="character-base" class="character-image base-image" src="" alt="Base Character">
+                            </div>
 
-                        <div class="character-layer base-layer">
-                            <img id="character-base" class="character-image base-image" src="" alt="Base Character">
+                            <div class="character-layer body-layer">
+                                <img id="equip-body" class="character-image equipment-image" src="" alt="Body Equipment">
+                            </div>
+
+                            <div class="character-layer shoes-layer">
+                                <img id="equip-shoes" class="character-image equipment-image" src="" alt="Shoes">
+                            </div>
+
+                            <div class="character-layer accessory-layer">
+                                <img id="equip-accessory" class="character-image equipment-image" src="" alt="Accessory">
+                            </div>
+
+                            <div class="character-layer head-layer">
+                                <img id="equip-head" class="character-image equipment-image" src="" alt="Head Equipment">
+                            </div>
+
+                            <div class="character-layer face-layer">
+                                <img id="equip-face" class="character-image equipment-image" src="" alt="Face Equipment">
+                            </div>
+
+                            <div class="character-layer weapon-layer">
+                                <img id="equip-weapon" class="character-image equipment-image" src="" alt="Weapon">
+                            </div>
+
+                            <div class="character-layer effects-layer">
+                                <div class="emotion-effects" id="emotion-effects"></div>
+                            </div>
                         </div>
 
-                        <div class="character-layer body-layer">
-                            <img id="equip-body" class="character-image equipment-image" src="" alt="Body Equipment">
-                        </div>
-
-                        <div class="character-layer shoes-layer">
-                            <img id="equip-shoes" class="character-image equipment-image" src="" alt="Shoes">
-                        </div>
-
-                        <div class="character-layer accessory-layer">
-                            <img id="equip-accessory" class="character-image equipment-image" src="" alt="Accessory">
-                        </div>
-
-                        <div class="character-layer head-layer">
-                            <img id="equip-head" class="character-image equipment-image" src="" alt="Head Equipment">
-                        </div>
-
-                        <div class="character-layer face-layer">
-                            <img id="equip-face" class="character-image equipment-image" src="" alt="Face Equipment">
-                        </div>
-
-                        <div class="character-layer weapon-layer">
-                            <img id="equip-weapon" class="character-image equipment-image" src="" alt="Weapon">
-                        </div>
-
-                        <div class="character-layer effects-layer">
-                            <div class="emotion-effects" id="emotion-effects"></div>
+                        <!-- แผงชื่อ + stat วางชิดตัวละคร -->
+                        <div class="character-info in-stage">
+                            <div class="character-nameplate">
+                                <h3 id="character-name">ผู้เล่น</h3>
+                                <div class="character-level">Lv. 1</div>
+                            </div>
+                            <div class="character-stats">
+                                <div class="stat-item">
+                                    <span class="stat-icon">⭐</span>
+                                    <span class="stat-label">เหรียญ:</span>
+                                    <span class="stat-value" id="char-coins">0</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-icon">🎮</span>
+                                    <span class="stat-label">เกม:</span>
+                                    <span class="stat-value" id="char-games">0</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -186,27 +193,7 @@ class ImageCharacterSystem {
                     </div>
                 </div>
 
-                <!-- Info (แก้: responsive สำหรับมือถือ) -->
-                <div class="character-info">
-                    <div class="character-nameplate">
-                        <h3 id="character-name">ผู้เล่น</h3>
-                        <div class="character-level">Lv. 1</div>
-                    </div>
-                    <div class="character-stats">
-                        <div class="stat-item">
-                            <span class="stat-icon">⭐</span>
-                            <span class="stat-label">เหรียญ:</span>
-                            <span class="stat-value" id="char-coins">0</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-icon">🎮</span>
-                            <span class="stat-label">เกม:</span>
-                            <span class="stat-value" id="char-games">0</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Emotions (แก้: responsive) -->
+                <!-- Emotion buttons -->
                 <div class="emotion-controls">
                     <button class="emotion-btn" data-emotion="happy" title="ดีใจ">😊</button>
                     <button class="emotion-btn" data-emotion="wave" title="โบกมือ">👋</button>
@@ -222,9 +209,7 @@ class ImageCharacterSystem {
             </div>
         `;
 
-        // เพิ่ม CSS แก้ปัญหา mobile + Safari
         this.addResponsiveStyles();
-        
         this.isInitialized = true;
         return container;
     }
@@ -270,9 +255,12 @@ class ImageCharacterSystem {
             await this.loadImage(imagePath);
             baseImg.src = imagePath;
             baseImg.style.display = 'block';
-            console.log('Base character loaded:', imagePath);
-        } catch (error) {
-            console.warn(`Base character image not found: ${imagePath}`);
+            // Safari-friendly
+            baseImg.loading = 'eager';
+            baseImg.decoding = 'sync';
+            baseImg.referrerPolicy = 'no-referrer';
+            baseImg.crossOrigin = 'anonymous';
+        } catch {
             baseImg.src = this.getPlaceholderDataUrl();
             baseImg.style.display = 'block';
         }
@@ -310,12 +298,15 @@ class ImageCharacterSystem {
             await this.loadImage(imagePath);
             imgElement.src = imagePath;
             imgElement.style.display = 'block';
+            imgElement.loading = 'eager';
+            imgElement.decoding = 'sync';
+            imgElement.referrerPolicy = 'no-referrer';
+            imgElement.crossOrigin = 'anonymous';
             if (slot === 'pet') {
                 const pc = document.getElementById('pet-container');
                 if (pc) pc.style.display = 'block';
             }
-        } catch (error) {
-            console.warn(`Equipment image not found: ${imagePath}`);
+        } catch {
             imgElement.src = this.getPlaceholderDataUrl();
             imgElement.style.display = 'block';
         }
@@ -332,40 +323,44 @@ class ImageCharacterSystem {
         }
     }
 
-    // แก้ปัญหา Safari: เพิ่ม error handling ดีขึ้น
+    // โหลดรูป (Safari safe)
     async loadImage(src) {
         if (this.imageCache.has(src)) return this.imageCache.get(src);
-        
+
         return new Promise((resolve, reject) => {
             const img = new Image();
-            
-            // แก้ Safari: เพิ่ม crossOrigin และ retry
             img.crossOrigin = 'anonymous';
-            
+            img.referrerPolicy = 'no-referrer';
+            img.loading = 'eager';
+            img.decoding = 'sync';
+
+            let timedOut = false;
+            const tid = setTimeout(() => {
+                timedOut = true;
+                // อย่า reject ทันที ให้ resolve ด้วย img (เผื่อ Safari วาดช้า)
+                console.warn(`Timeout loading (continue anyway): ${src}`);
+                this.imageCache.set(src, img);
+                resolve(img);
+            }, 12000);
+
             img.onload = () => {
+                if (!timedOut) clearTimeout(tid);
                 this.imageCache.set(src, img);
                 resolve(img);
             };
-            
+
             img.onerror = () => {
+                if (!timedOut) clearTimeout(tid);
                 console.warn(`Failed to load: ${src}`);
                 reject(new Error(`Failed to load image: ${src}`));
             };
-            
-            // Timeout สำหรับ Safari
-            setTimeout(() => {
-                if (!img.complete) {
-                    reject(new Error(`Timeout loading: ${src}`));
-                }
-            }, 10000);
-            
+
             img.src = src;
         });
     }
 
-    // แก้ปัญหา Safari: เปลี่ยน encoding
     getPlaceholderDataUrl() {
-        return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='192' viewBox='0 0 128 192'%3E%3Crect width='128' height='192' fill='%23F0F0F0' stroke='%23DDDDDD' stroke-width='2' rx='8'/%3E%3Ccircle cx='64' cy='60' r='20' fill='%23CCCCCC'/%3E%3Crect x='44' y='85' width='40' height='60' fill='%23CCCCCC' rx='4'/%3E%3Crect x='49' y='150' width='10' height='30' fill='%23CCCCCC'/%3E%3Crect x='69' y='150' width='10' height='30' fill='%23CCCCCC'/%3E%3C/svg%3E";
+        return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='192' viewBox='0 0 128 192'%3E%3Crect width='128' height='192' fill='%23F3F4F6' stroke='%23E5E7EB' stroke-width='2' rx='10'/%3E%3Ccircle cx='64' cy='60' r='20' fill='%23D1D5DB'/%3E%3Crect x='44' y='85' width='40' height='60' fill='%23D1D5DB' rx='6'/%3E%3Crect x='49' y='150' width='10' height='30' fill='%23D1D5DB'/%3E%3Crect x='69' y='150' width='10' height='30' fill='%23D1D5DB'/%3E%3C/svg%3E";
     }
 
     updateCharacterInfo(userData) {
@@ -457,105 +452,45 @@ class ImageCharacterSystem {
         }
     }
 
-    // เพิ่ม CSS แก้ปัญหา Mobile Layout + Safari
+    // CSS ใหม่ (ตัด gradient/ฉากหลังออก, วางชื่อชิดตัวละคร, การ์ด stat ในกรอบเดียวกัน)
     addResponsiveStyles() {
         if (document.getElementById('character-responsive-styles')) return;
-        
+
         const style = document.createElement('style');
         style.id = 'character-responsive-styles';
         style.textContent = `
             #image-character-container {
+                --bg-green: #EFFFF4; /* เขียวอ่อนจาง */
+                --bg-blue:  #EAF6FF; /* ฟ้าอ่อนจาง  */
                 width: 100%;
                 height: 500px;
                 position: relative;
                 border-radius: 20px;
                 overflow: hidden;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
                 margin-bottom: 30px;
-                background: linear-gradient(to bottom, #87CEEB 0%, #98FB98 100%);
             }
+            #image-character-container.bg-green { background: var(--bg-green); }
+            #image-character-container.bg-blue  { background: var(--bg-blue);  }
 
-            .character-scene {
-                width: 100%;
-                height: 100%;
-                position: relative;
-            }
-
-            .scene-background {
+            .character-scene { width: 100%; height: 100%; position: relative; }
+            .character-stage {
                 position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                z-index: 1;
-            }
-
-            .sky-layer {
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                height: 70%;
-                background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 50%, #98FB98 100%);
-            }
-
-            .ground-layer {
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                height: 30%;
-                background: linear-gradient(to bottom, #98FB98 0%, #90EE90 50%, #7CFC00 100%);
-            }
-
-            .environment-objects {
-                position: absolute;
-                width: 100%;
-                height: 100%;
-            }
-
-            .env-object {
-                position: absolute;
-                font-size: 2rem;
-                z-index: 2;
-            }
-
-            .env-object.tree {
-                bottom: 25%;
-                left: 10%;
-                font-size: 3rem;
-            }
-
-            .env-object.tree::before {
-                content: '🌳';
-            }
-
-            .env-object.bench {
-                bottom: 30%;
-                right: 20%;
-                font-size: 2rem;
-            }
-
-            .env-object.bench::before {
-                content: '🪑';
-            }
-
-            .env-object.flowers {
-                bottom: 28%;
-                right: 50%;
-                font-size: 1.5rem;
-            }
-
-            .env-object.flowers::before {
-                content: '🌸🌼🌻';
+                inset: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
 
             .character-display-area {
-                position: absolute;
-                bottom: 20%;
-                left: 50%;
-                transform: translateX(-50%);
+                display: flex;
+                align-items: center;
+                gap: 16px; /* ชื่ออยู่ใกล้ตัวละคร */
                 z-index: 10;
+                padding: 14px 18px;
+                border-radius: 16px;
+                background: rgba(255,255,255,0.9); /* การ์ดรวม */
+                box-shadow: 0 6px 18px rgba(0,0,0,0.08);
             }
 
             .character-container {
@@ -572,19 +507,12 @@ class ImageCharacterSystem {
                 transform: translateX(-50%);
                 width: 80px;
                 height: 20px;
-                background: rgba(0,0,0,0.3);
+                background: rgba(0,0,0,0.12);
                 border-radius: 50%;
                 animation: shadowPulse 3s ease-in-out infinite;
             }
 
-            .character-layer {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-            }
-
+            .character-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
             .base-layer { z-index: 1; }
             .shoes-layer { z-index: 2; }
             .body-layer { z-index: 3; }
@@ -595,463 +523,135 @@ class ImageCharacterSystem {
             .effects-layer { z-index: 8; }
 
             .character-image {
-                width: 100%;
-                height: 100%;
-                object-fit: contain;
-                display: none;
+                width: 100%; height: 100%; object-fit: contain; display: none;
                 transition: opacity 0.3s ease;
-                /* แก้ Safari rendering */
-                -webkit-transform: translateZ(0);
-                transform: translateZ(0);
-                image-rendering: -webkit-optimize-contrast;
-                image-rendering: crisp-edges;
+                -webkit-transform: translateZ(0); transform: translateZ(0);
+                image-rendering: -webkit-optimize-contrast; image-rendering: crisp-edges;
             }
+            .character-image.base-image { display: block; }
+            .equipment-image { transition: all 0.3s ease; }
 
-            .character-image.base-image {
-                display: block;
+            /* การ์ด stat อยู่ในกรอบเดียว (ชิดตัวละคร) */
+            .character-info.in-stage {
+                background: transparent;
+                box-shadow: none;
+                padding: 0;
+                max-width: 220px;
             }
+            .character-nameplate { margin: 0 0 6px 0; padding-bottom: 6px; border-bottom: 1px solid #E8E8E8; }
+            .character-nameplate h3 { margin: 0; font-size: 1.15rem; color: #2C3E50; font-weight: 800; }
+            .character-level { font-size: 0.8rem; color: #7F8C8D; margin-top: 2px; }
+            .character-stats { display: flex; flex-direction: column; gap: 6px; }
+            .stat-item { display: flex; align-items: center; gap: 6px; font-size: 0.9rem; }
+            .stat-icon { font-size: 1rem; min-width: 20px; }
+            .stat-label { color: #34495E; flex: 1; }
+            .stat-value { font-weight: 800; color: #E67E22; }
 
-            .equipment-image {
-                transition: all 0.3s ease;
-            }
+            /* Pet */
+            .pet-container { position: absolute; bottom: 40px; right: 40px; display: none; z-index: 5; }
+            .pet-image { width: 64px; height: 64px; object-fit: contain; animation: petFloat 3s ease-in-out infinite; }
 
-            .pet-container {
-                position: absolute;
-                bottom: -20px;
-                right: -60px;
-                display: none;
-                z-index: 5;
-            }
-
-            .pet-image {
-                width: 64px;
-                height: 64px;
-                object-fit: contain;
-                animation: petFloat 3s ease-in-out infinite;
-            }
-
-            .character-info {
-                position: absolute;
-                top: 15px;
-                left: 15px;
-                background: rgba(255,255,255,0.95);
-                border-radius: 12px;
-                padding: 12px;
-                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-                z-index: 15;
-                backdrop-filter: blur(10px);
-                max-width: 180px;
-            }
-
-            .character-nameplate {
-                text-align: center;
-                margin-bottom: 8px;
-                border-bottom: 1px solid #E8E8E8;
-                padding-bottom: 6px;
-            }
-
-            .character-nameplate h3 {
-                margin: 0;
-                font-size: 1.1rem;
-                color: #2C3E50;
-                font-weight: bold;
-            }
-
-            .character-level {
-                font-size: 0.8rem;
-                color: #7F8C8D;
-                margin-top: 3px;
-            }
-
-            .character-stats {
-                display: flex;
-                flex-direction: column;
-                gap: 6px;
-            }
-
-            .stat-item {
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                font-size: 0.85rem;
-            }
-
-            .stat-icon {
-                font-size: 1rem;
-                min-width: 20px;
-            }
-
-            .stat-label {
-                color: #34495E;
-                flex: 1;
-            }
-
-            .stat-value {
-                font-weight: bold;
-                color: #E67E22;
-            }
-
-            .emotion-controls {
-                position: absolute;
-                bottom: 15px;
-                right: 15px;
-                display: flex;
-                gap: 8px;
-                z-index: 15;
-            }
-
+            /* Emotion controls */
+            .emotion-controls { position: absolute; bottom: 15px; right: 15px; display: flex; gap: 8px; z-index: 15; }
             .emotion-btn {
-                width: 44px;
-                height: 44px;
-                border-radius: 50%;
-                border: 2px solid #3498DB;
-                background: rgba(255,255,255,0.95);
-                font-size: 1.2rem;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-                backdrop-filter: blur(10px);
-                /* แก้ Safari touch */
+                width: 44px; height: 44px; border-radius: 50%; border: 2px solid #3498DB;
+                background: rgba(255,255,255,0.95); font-size: 1.2rem; cursor: pointer;
+                transition: all 0.3s ease; display: flex; align-items: center; justify-content: center;
+                box-shadow: 0 3px 8px rgba(0,0,0,0.2); backdrop-filter: blur(10px);
                 -webkit-tap-highlight-color: transparent;
             }
-
-            .emotion-btn:hover {
-                transform: scale(1.1);
-                background: #3498DB;
-                color: white;
-                box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4);
-            }
-
-            .emotion-btn:active {
-                transform: scale(0.95);
-            }
+            .emotion-btn:hover { transform: scale(1.1); background: #3498DB; color: white; box-shadow: 0 4px 12px rgba(52, 152, 219, 0.4); }
+            .emotion-btn:active { transform: scale(0.95); }
 
             .loading-indicator {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                display: none;
-                flex-direction: column;
-                align-items: center;
-                gap: 15px;
-                z-index: 20;
-                background: rgba(255,255,255,0.95);
-                padding: 25px;
-                border-radius: 12px;
-                box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+                position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                display: none; flex-direction: column; align-items: center; gap: 15px; z-index: 20;
+                background: rgba(255,255,255,0.95); padding: 25px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.3);
             }
-
-            .loading-spinner {
-                width: 32px;
-                height: 32px;
-                border: 3px solid #E8E8E8;
-                border-top: 3px solid #3498DB;
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
-            }
-
-            .loading-indicator p {
-                margin: 0;
-                color: #34495E;
-                font-size: 1rem;
-                font-weight: 500;
-            }
+            .loading-spinner { width: 32px; height: 32px; border: 3px solid #E8E8E8; border-top: 3px solid #3498DB; border-radius: 50%; animation: spin 1s linear infinite; }
+            .loading-indicator p { margin: 0; color: #34495E; font-size: 1rem; font-weight: 500; }
 
             .character-error {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                text-align: center;
-                background: rgba(255,255,255,0.95);
-                padding: 25px;
-                border-radius: 12px;
-                box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-                z-index: 20;
-                max-width: 280px;
+                position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+                text-align: center; background: rgba(255,255,255,0.95); padding: 25px; border-radius: 12px;
+                box-shadow: 0 8px 20px rgba(0,0,0,0.3); z-index: 20; max-width: 280px;
             }
+            .character-error h3 { margin: 0 0 12px 0; color: #E74C3C; font-size: 1.3rem; }
+            .character-error p { margin: 0 0 16px 0; color: #7F8C8D; font-size: 0.95rem; }
+            .retry-btn { background: #3498DB; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; transition: background 0.3s ease; }
+            .retry-btn:hover { background: #2980B9; }
 
-            .character-error h3 {
-                margin: 0 0 12px 0;
-                color: #E74C3C;
-                font-size: 1.3rem;
+            /* Animations */
+            @keyframes shadowPulse { 0%,100%{transform:translateX(-50%) scale(1);opacity:.25} 50%{transform:translateX(-50%) scale(1.1);opacity:.4} }
+            @keyframes petFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+            @keyframes spin { 0%{transform:rotate(0)} 100%{transform:rotate(360deg)} }
+            .bounce-animation { animation: happyBounce .6s ease infinite; }
+            .wave-animation { animation: waveMotion 1s ease-in-out 3; }
+            .think-animation { animation: thinkSway 2s ease-in-out infinite; }
+            .love-animation { animation: loveFloat 1s ease-in-out infinite; }
+
+            @keyframes happyBounce { 0%,100%{transform:translateY(0) scale(1)} 25%{transform:translateY(-10px) scale(1.03)} 75%{transform:translateY(-5px) scale(1.01)} }
+            @keyframes waveMotion { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-6deg)} 75%{transform:rotate(6deg)} }
+            @keyframes thinkSway { 0%,100%{transform:translateX(0)} 50%{transform:translateX(3px)} }
+            @keyframes loveFloat { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(-6px) scale(1.02)} }
+
+            .effect-hearts,.effect-sparkles,.effect-thought,.effect-love {
+                position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-size: 1rem;
+                animation: effectFloat 2s ease-in-out infinite; pointer-events: none;
             }
+            @keyframes effectFloat { 0%,100%{transform:translateX(-50%) translateY(0);opacity:1} 50%{transform:translateX(-50%) translateY(-15px);opacity:.7} }
 
-            .character-error p {
-                margin: 0 0 16px 0;
-                color: #7F8C8D;
-                font-size: 0.95rem;
-            }
-
-            .retry-btn {
-                background: #3498DB;
-                color: white;
-                border: none;
-                padding: 8px 16px;
-                border-radius: 6px;
-                cursor: pointer;
-                font-size: 0.9rem;
-                transition: background 0.3s ease;
-            }
-
-            .retry-btn:hover {
-                background: #2980B9;
-            }
-
-            /* Keyframe Animations */
-            @keyframes shadowPulse {
-                0%, 100% { 
-                    transform: translateX(-50%) scale(1); 
-                    opacity: 0.3; 
-                }
-                50% { 
-                    transform: translateX(-50%) scale(1.1); 
-                    opacity: 0.5; 
-                }
-            }
-
-            @keyframes petFloat {
-                0%, 100% { transform: translateY(0px); }
-                50% { transform: translateY(-8px); }
-            }
-
-            @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-            }
-
-            .bounce-animation {
-                animation: happyBounce 0.6s ease infinite;
-            }
-
-            .wave-animation {
-                animation: waveMotion 1s ease-in-out 3;
-            }
-
-            .think-animation {
-                animation: thinkSway 2s ease-in-out infinite;
-            }
-
-            .love-animation {
-                animation: loveFloat 1s ease-in-out infinite;
-            }
-
-            @keyframes happyBounce {
-                0%, 100% { transform: translateY(0px) scale(1); }
-                25% { transform: translateY(-10px) scale(1.03); }
-                75% { transform: translateY(-5px) scale(1.01); }
-            }
-
-            @keyframes waveMotion {
-                0%, 100% { transform: rotate(0deg); }
-                25% { transform: rotate(-6deg); }
-                75% { transform: rotate(6deg); }
-            }
-
-            @keyframes thinkSway {
-                0%, 100% { transform: translateX(0px); }
-                50% { transform: translateX(3px); }
-            }
-
-            @keyframes loveFloat {
-                0%, 100% { transform: translateY(0px) scale(1); }
-                50% { transform: translateY(-6px) scale(1.02); }
-            }
-
-            .effect-hearts, .effect-sparkles, .effect-thought, .effect-love {
-                position: absolute;
-                top: -30px;
-                left: 50%;
-                transform: translateX(-50%);
-                font-size: 1rem;
-                animation: effectFloat 2s ease-in-out infinite;
-                pointer-events: none;
-            }
-
-            @keyframes effectFloat {
-                0%, 100% { 
-                    transform: translateX(-50%) translateY(0px); 
-                    opacity: 1; 
-                }
-                50% { 
-                    transform: translateX(-50%) translateY(-15px); 
-                    opacity: 0.7; 
-                }
-            }
-
-            /* แก้ปัญหา Mobile Layout - สำคัญมาก */
+            /* Mobile */
             @media (max-width: 768px) {
-                #image-character-container {
-                    height: 350px;
-                    margin-bottom: 20px;
-                }
-
-                .character-container {
-                    width: 96px;
-                    height: 144px;
-                }
-
-                .character-info {
-                    top: 8px;
-                    left: 8px;
-                    padding: 8px;
-                    max-width: 140px;
-                    border-radius: 8px;
-                }
-
-                .character-nameplate h3 {
-                    font-size: 0.9rem;
-                }
-
-                .character-level {
-                    font-size: 0.7rem;
-                }
-
-                .stat-item {
-                    font-size: 0.75rem;
-                    gap: 4px;
-                }
-
-                .stat-icon {
-                    font-size: 0.85rem;
-                    min-width: 16px;
-                }
-
-                .emotion-controls {
-                    bottom: 8px;
-                    right: 8px;
-                    gap: 6px;
-                }
-
-                .emotion-btn {
-                    width: 36px;
-                    height: 36px;
-                    font-size: 1rem;
-                    border-width: 1px;
-                }
-
-                .pet-image {
-                    width: 48px;
-                    height: 48px;
-                }
-
-                .pet-container {
-                    right: -45px;
-                    bottom: -15px;
-                }
-
-                .env-object {
-                    font-size: 1.5rem;
-                }
-
-                .env-object.tree {
-                    font-size: 2rem;
-                }
-
-                .loading-indicator {
-                    padding: 20px;
-                    max-width: 250px;
-                }
-
-                .character-error {
-                    padding: 20px;
-                    max-width: 250px;
-                }
-            }
-
-            /* แก้ปัญหา Mobile Layout สำหรับ Action Buttons */
-            @media (max-width: 768px) {
-                .action-grid {
-                    grid-template-columns: 1fr 1fr !important;
-                    gap: 12px !important;
-                }
-
-                .action-card {
-                    min-height: 100px !important;
-                    padding: 12px !important;
-                }
-
-                .action-icon {
-                    font-size: 2rem !important;
-                    margin-bottom: 8px !important;
-                }
-
-                .action-card h3 {
-                    font-size: 1rem !important;
-                    margin: 4px 0 !important;
-                }
-
-                .action-card p {
-                    font-size: 0.8rem !important;
-                    line-height: 1.2 !important;
-                }
-
-                .action-badge {
-                    font-size: 0.7rem !important;
-                    padding: 2px 6px !important;
-                }
+                #image-character-container { height: 360px; margin-bottom: 20px; }
+                .character-container { width: 96px; height: 144px; }
+                .character-display-area { padding: 10px 12px; gap: 12px; }
+                .character-nameplate h3 { font-size: 1rem; }
+                .character-level { font-size: .75rem; }
+                .stat-item { font-size: .8rem; gap: 4px; }
+                .stat-icon { font-size: .9rem; min-width: 16px; }
+                .emotion-controls { bottom: 8px; right: 8px; gap: 6px; }
+                .emotion-btn { width: 36px; height: 36px; font-size: 1rem; border-width: 1px; }
+                .pet-image { width: 48px; height: 48px; }
+                .pet-container { right: 20px; bottom: 20px; }
             }
 
             /* Safari specific fixes */
-            @supports (-webkit-appearance: none) {
-                .character-image {
-                    -webkit-transform: translate3d(0,0,0);
-                    transform: translate3d(0,0,0);
-                    -webkit-backface-visibility: hidden;
-                    backface-visibility: hidden;
-                }
+            @supports (-webkit-appearance:none) {
+                .character-image { -webkit-transform: translate3d(0,0,0); transform: translate3d(0,0,0); -webkit-backface-visibility: hidden; backface-visibility: hidden; }
             }
-
-            /* High DPI displays */
-            @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 2dppx) {
-                .character-image {
-                    image-rendering: auto;
-                }
+            @media (-webkit-min-device-pixel-ratio:2),(min-resolution:2dppx) {
+                .character-image { image-rendering: auto; }
             }
         `;
-        
         document.head.appendChild(style);
     }
 
-    // Utility methods
-    getAllEquipmentData() {
-        return this.equipmentData;
-    }
+    // Utilities
+    getAllEquipmentData(){ return this.equipmentData; }
+    getCurrentEquipment(){ return this.currentCharacter ? this.currentCharacter.equipment : null; }
 
-    getCurrentEquipment() {
-        return this.currentCharacter ? this.currentCharacter.equipment : null;
-    }
-
-    canAfford(category, itemId) {
+    canAfford(category,itemId){
         const user = window.gameAuth ? window.gameAuth.getCurrentUser() : null;
         if (!user) return false;
-
-        const itemData = this.equipmentData[category] ? this.equipmentData[category][itemId] : null;
+        const itemData = this.equipmentData[category]?.[itemId];
         if (!itemData) return false;
-
         return user.stats.totalStars >= itemData.price;
     }
 
-    async equipItem(category, itemId) {
-        if (!this.currentCharacter) return { success: false, message: 'ไม่พบข้อมูลตัวละคร' };
-
+    async equipItem(category,itemId){
+        if (!this.currentCharacter) return { success:false, message:'ไม่พบข้อมูลตัวละคร' };
         const user = window.gameAuth ? window.gameAuth.getCurrentUser() : null;
-        if (!user) return { success: false, message: 'ไม่พบข้อมูลผู้เล่น' };
-
-        const itemData = this.equipmentData[category] ? this.equipmentData[category][itemId] : null;
-        if (!itemData) return { success: false, message: 'ไม่พบอุปกรณ์นี้' };
+        if (!user) return { success:false, message:'ไม่พบข้อมูลผู้เล่น' };
+        const itemData = this.equipmentData[category]?.[itemId];
+        if (!itemData) return { success:false, message:'ไม่พบอุปกรณ์นี้' };
 
         const userGender = user.character.gender;
         if (itemData.gender !== 'both' && itemData.gender !== userGender) {
-            return { success: false, message: 'อุปกรณ์นี้ไม่เหมาะกับเพศของคุณ' };
+            return { success:false, message:'อุปกรณ์นี้ไม่เหมาะกับเพศของคุณ' };
         }
-
         if (itemData.price > 0 && user.stats.totalStars < itemData.price) {
-            return { success: false, message: 'เงินไม่พอ' };
+            return { success:false, message:'เงินไม่พอ' };
         }
 
         if (!user.character.equipment) user.character.equipment = {};
@@ -1063,21 +663,20 @@ class ImageCharacterSystem {
         await this.loadEquipmentItem(category, itemId);
         this.updateCharacterInfo(user);
 
-        return { success: true, message: `ใส่ ${itemData.name} เรียบร้อย!` };
+        return { success:true, message:`ใส่ ${itemData.name} เรียบร้อย!` };
     }
 
-    unequipItem(category) {
+    unequipItem(category){
         if (!this.currentCharacter) return false;
         const user = window.gameAuth ? window.gameAuth.getCurrentUser() : null;
         if (!user || !user.character.equipment) return false;
-
         user.character.equipment[category] = null;
         window.gameAuth.saveCurrentUser();
         this.hideEquipmentSlot(category);
         return true;
     }
 
-    destroy() {
+    destroy(){
         this.stopCurrentAnimation();
         const container = document.getElementById('image-character-container');
         if (container) container.remove();
@@ -1087,5 +686,10 @@ class ImageCharacterSystem {
     }
 }
 
-// แก้ปัญหา: ไม่สร้าง instance ทันที
+// ไม่สร้าง instance ทันที
 window.characterSystem = new ImageCharacterSystem();
+
+/* ===== วิธีเลือกสีพื้นหลังที่ต้องการ =====
+   เรียกหลังจาก setupCharacterContainer():
+   window.characterSystem.setSceneBackground('green'); // หรือ 'blue'
+*/
