@@ -1,5 +1,6 @@
 /* ========================================
    Simple Authentication System for Elderly
+   (Fixed: gender sync with character + update for existing users)
    ======================================== */
 
 class SimpleAuth {
@@ -81,7 +82,7 @@ class SimpleAuth {
         localStorage.setItem('elderlyGame_allUsers', JSON.stringify(allUsers));
     }
 
-    // สร้างผู้ใช้ใหม่
+    // ====== จุดสำคัญ: สร้างตัวละครตามเพศ และฝัง gender ไว้ใน character ด้วย ======
     createUser(displayName, gender) {
         const deviceId = this.generateDeviceId();
         const username = this.checkDuplicateName(displayName);
@@ -90,9 +91,12 @@ class SimpleAuth {
             id: Date.now().toString() + deviceId,
             username: username,
             displayName: displayName,
-            gender: gender,
+            gender: gender, // เก็บที่ระดับ user ด้วย
             deviceId: deviceId,
-            character: this.generateCharacter(gender),
+            character: {
+                ...this.generateCharacter(gender),
+                gender: gender      // 👈 สำคัญ: ให้ character มี gender ด้วย (character.js ใช้อ่านจากตรงนี้)
+            },
             stats: {
                 totalGames: 0,
                 totalStars: 0,
@@ -115,7 +119,7 @@ class SimpleAuth {
         return user;
     }
 
-    // สร้างตัวละครตามเพศ
+    // สร้างโครง character เบื้องต้นตามเพศ
     generateCharacter(gender) {
         const characters = {
             male: {
@@ -148,11 +152,29 @@ class SimpleAuth {
         }
     }
 
-    // โหลดผู้ใช้ปัจจุบัน
+    // โหลดผู้ใช้ปัจจุบัน + ซ่อมค่า character.gender ถ้าขาด
     loadUser() {
         const userData = localStorage.getItem(this.storageKey);
         if (userData) {
             this.currentUser = JSON.parse(userData);
+
+            // 👇 Compatibility fix: ถ้า user เก่าไม่มี character.gender ให้เติมจาก user.gender
+            if (this.currentUser && this.currentUser.character) {
+                if (!this.currentUser.character.gender) {
+                    const g = this.currentUser.gender || 'male';
+                    this.currentUser.character = {
+                        ...this.generateCharacter(g),
+                        gender: g
+                    };
+                }
+            } else if (this.currentUser) {
+                // กรณีไม่มี character เลย
+                const g = this.currentUser.gender || 'male';
+                this.currentUser.character = {
+                    ...this.generateCharacter(g),
+                    gender: g
+                };
+            }
             
             // อัพเดท last login
             this.currentUser.stats.lastLoginAt = new Date().toISOString();
@@ -177,7 +199,7 @@ class SimpleAuth {
         return false;
     }
 
-    // Login ด้วยชื่อเฉยๆ
+    // Login ด้วยชื่อ (และอาจมี gender ถ้าเป็นผู้ใช้ใหม่ หรืออยากสลับเพศ)
     login(name, gender = null) {
         const trimmedName = name.trim();
         
@@ -185,23 +207,33 @@ class SimpleAuth {
             throw new Error('กรุณาใส่ชื่อให้ครบ (อย่างน้อย 2 ตัวอักษร)');
         }
 
-        // ถ้าเป็นผู้ใช้เก่า (มีชื่อเดียวกันและ device เดียวกัน)
+        // หา user เก่าจากชื่อ + device
         const deviceId = this.generateDeviceId();
         const existingUser = this.findExistingUser(trimmedName, deviceId);
         
         if (existingUser) {
             this.currentUser = existingUser;
             this.currentUser.stats.lastLoginAt = new Date().toISOString();
+
+            // 👇 ถ้ามีการส่ง gender ใหม่เข้ามา และต่างจากเดิม → อัปเดตให้ทันที
+            if (gender && this.currentUser.gender !== gender) {
+                this.currentUser.gender = gender;
+                this.currentUser.character = {
+                    ...this.generateCharacter(gender),
+                    gender: gender
+                };
+            }
+
             this.saveCurrentUser();
             return { isNew: false, user: this.currentUser };
         }
 
-        // ถ้าเป็นผู้ใช้ใหม่ ต้องเลือกเพศ
+        // ถ้าเป็นผู้ใช้ใหม่ แต่ยังไม่ได้เลือกเพศ → ให้เลือกเพศก่อน
         if (!gender) {
             return { isNew: true, needGender: true };
         }
 
-        // สร้างผู้ใช้ใหม่
+        // ผู้ใช้ใหม่ + มี gender แล้ว → สร้างเลย
         const newUser = this.createUser(trimmedName, gender);
         return { isNew: true, user: newUser };
     }
@@ -225,16 +257,16 @@ class SimpleAuth {
             displayNameEl.textContent = this.currentUser.displayName;
         }
 
-        // อัพเดทจำนวนดาว
+        // อัพเดทจำนวนดาว (ถ้ามี element นี้ในหน้า)
         const totalStarsEl = document.getElementById('total-stars');
         if (totalStarsEl) {
             totalStarsEl.textContent = this.currentUser.stats.totalStars;
         }
 
-        // อัพเดทตัวละคร
+        // อัพเดทตัวละครอีโมจิ (ถ้ามี element ตัวนี้)
         const characterAvatars = document.querySelectorAll('.character-avatar');
         characterAvatars.forEach(avatar => {
-            avatar.textContent = this.currentUser.character.emoji;
+            avatar.textContent = this.currentUser.character?.emoji || '👴';
         });
 
         // อัพเดทสถิติ
@@ -242,13 +274,11 @@ class SimpleAuth {
         const avgScoreEl = document.getElementById('avg-score');
         
         if (todayGamesEl) {
-            // คำนวณเกมที่เล่นวันนี้ (อาจจะเพิ่ม logic นี้ภายหลัง)
             todayGamesEl.textContent = '0';
         }
 
         if (avgScoreEl) {
-            // คำนวณคะแนนเฉลี่ย
-            const scores = Object.values(this.currentUser.stats.bestScores);
+            const scores = Object.values(this.currentUser.stats.bestScores || {});
             const avgScore = scores.length > 0 ? 
                 Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
             avgScoreEl.textContent = avgScore + '%';
@@ -265,7 +295,8 @@ class SimpleAuth {
         document.getElementById('login-page').classList.add('active');
         
         // เคลียร์ form
-        document.getElementById('player-name').value = '';
+        const nameInput = document.getElementById('player-name');
+        if (nameInput) nameInput.value = '';
     }
 
     // ดึงข้อมูลผู้ใช้ปัจจุบัน
@@ -278,12 +309,12 @@ class SimpleAuth {
         if (!this.currentUser) return;
 
         // อัพเดทคะแนนสูงสุด
-        if (score > this.currentUser.stats.bestScores[gameType]) {
+        if (score > (this.currentUser.stats.bestScores?.[gameType] || 0)) {
             this.currentUser.stats.bestScores[gameType] = score;
         }
 
         // เพิ่มดาว
-        this.currentUser.stats.totalStars += stars;
+        this.currentUser.stats.totalStars += (stars || 0);
         this.currentUser.stats.totalGames += 1;
 
         // บันทึกข้อมูล
