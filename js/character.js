@@ -339,48 +339,90 @@ class ImageCharacterSystem {
     if (c) c.innerHTML = `<div class="character-error"><h3>😞 เกิดข้อผิดพลาด</h3><p>${msg}</p><button onclick="location.reload()" class="retry-btn">ลองใหม่</button></div>`;
   }
 
-  /* — minimal styles: พื้นหลังสีอ่อน, ไม่มีการ์ดขาวทับ — */
-  addResponsiveStyles() {
-    if (document.getElementById('character-responsive-styles')) return;
-    const style = document.createElement('style');
-    style.id = 'character-responsive-styles';
-    style.textContent = `
-      #image-character-container{--bg-green:#EFFFF4;--bg-blue:#EAF6FF;width:100%;height:500px;position:relative;border-radius:20px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.06);margin-bottom:30px}
-      #image-character-container.bg-green{background:var(--bg-green)}
-      #image-character-container.bg-blue{background:var(--bg-blue)}
-      .character-scene{width:100%;height:100%;position:relative}
-      .character-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
-      .character-display-area{display:flex;align-items:center;gap:16px;z-index:10;background:transparent;box-shadow:none;padding:0}
-      .character-container{position:relative;width:128px;height:192px;transition:all .3s ease}
-      .character-shadow{position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);width:80px;height:20px;background:rgba(0,0,0,.12);border-radius:50%;animation:shadowPulse 3s ease-in-out infinite}
-      .character-layer{position:absolute;top:0;left:0;width:100%;height:100%}
-      .base-layer{z-index:1}.body-layer{z-index:3}.head-layer{z-index:5}.face-layer{z-index:6}.effects-layer{z-index:8}
-      .character-image{width:100%;height:100%;object-fit:contain;display:none;transition:opacity .3s ease}
-      .character-image.base-image{display:block}
-      .character-info.in-stage{background:transparent;box-shadow:none;padding:0;max-width:220px}
-      .character-nameplate{margin:0 0 6px 0;padding-bottom:6px;border-bottom:1px solid #E8E8E8}
-      .character-nameplate h3{margin:0;font-size:1.15rem;color:#2C3E50;font-weight:800}
-      .character-level{font-size:.8rem;color:#7F8C8D;margin-top:2px}
-      .character-stats{display:flex;flex-direction:column;gap:6px}
-      .stat-item{display:flex;align-items:center;gap:6px;font-size:.9rem}
-      .stat-icon{font-size:1rem;min-width:20px}
-      .stat-label{color:#34495E;flex:1}
-      .stat-value{font-weight:800;color:#E67E22}
-      .pet-container{position:absolute;bottom:40px;right:40px;display:none;z-index:5}
-      .pet-image{width:64px;height:64px;object-fit:contain;animation:petFloat 3s ease-in-out infinite}
-      .emotion-controls{position:absolute;bottom:15px;right:15px;display:flex;gap:8px;z-index:15}
-      .emotion-btn{width:44px;height:44px;border-radius:50%;border:2px solid #3498DB;background:rgba(255,255,255,.95);font-size:1.2rem;cursor:pointer;transition:all .3s ease;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 8px rgba(0,0,0,.2)}
-      .emotion-btn:hover{transform:scale(1.1);background:#3498DB;color:#fff}
-      .loading-indicator{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:none;flex-direction:column;align-items:center;gap:15px;z-index:20;background:rgba(255,255,255,.95);padding:25px;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.3)}
-      .loading-spinner{width:32px;height:32px;border:3px solid #E8E8E8;border-top:3px solid #3498DB;border-radius:50%;animation:spin 1s linear infinite}
-      @keyframes shadowPulse{0%,100%{transform:translateX(-50%) scale(1);opacity:.25}50%{transform:translateX(-50%) scale(1.1);opacity:.4}}
-      @keyframes petFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
-      @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
-      @media (max-width:768px){#image-character-container{height:360px;margin-bottom:20px}.character-container{width:96px;height:144px}.character-display-area{gap:12px}.character-nameplate h3{font-size:1rem}.stat-item{font-size:.8rem;gap:4px}}
-    `;
-    document.head.appendChild(style);
-  }
+  /* — minimal styles + NEW layout (info-left, character-right, bigger char) — */
+addResponsiveStyles() {
+  if (document.getElementById('character-responsive-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'character-responsive-styles';
+  style.textContent = `
+    #image-character-container{--bg-green:#EFFFF4;--bg-blue:#EAF6FF;width:100%;height:500px;position:relative;border-radius:20px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.06);margin-bottom:30px}
+    #image-character-container.bg-green{background:var(--bg-green)}
+    #image-character-container.bg-blue{background:var(--bg-blue)}
+
+    .character-scene{width:100%;height:100%;position:relative}
+    .character-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+
+    /* ====== DISPLAY AREA : info ซ้าย / ตัวละคร ขวา ====== */
+    .character-display-area{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:16px; z-index:10; padding:0 20px; width:92%; max-width:980px;
+      background:transparent; box-shadow:none;
+    }
+    /* บังคับลำดับ: info ก่อน, character ทีหลัง */
+    .character-info.in-stage{ order:1; }
+    .character-container{ order:2; }
+
+    /* ====== CHARACTER (ใหญ่ขึ้น) ====== */
+    .character-container{ position:relative; width:180px; height:270px; transition:all .3s ease; }
+    .character-shadow{ position:absolute; bottom:-12px; left:50%; transform:translateX(-50%);
+      width:110px; height:24px; background:rgba(0,0,0,.12); border-radius:50%;
+      animation:shadowPulse 3s ease-in-out infinite;
+    }
+    .character-layer{ position:absolute; top:0; left:0; width:100%; height:100% }
+    .base-layer{z-index:1} .body-layer{z-index:3} .head-layer{z-index:5} .face-layer{z-index:6} .effects-layer{z-index:8}
+    .character-image{ width:100%; height:100%; object-fit:contain; display:none; transition:opacity .3s ease }
+    .character-image.base-image{ display:block }
+
+    /* ====== INFO (เล็กลง ชิดซ้าย) ====== */
+    .character-info.in-stage{
+      background:transparent; box-shadow:none; padding:0; max-width:260px; text-align:left;
+    }
+    .character-nameplate{ margin:0 0 6px 0; padding-bottom:6px; border-bottom:1px solid #E8E8E8 }
+    .character-nameplate h3{ margin:0; font-size:1rem; color:#2C3E50; font-weight:800 }      /* เล็กลง */
+    .character-level{ font-size:.75rem; color:#7F8C8D; margin-top:2px }
+    .character-stats{ display:flex; flex-direction:column; gap:6px }
+    .stat-item{ display:flex; align-items:center; gap:6px; font-size:.85rem }                /* เล็กลงนิด */
+    .stat-icon{ font-size:1rem; min-width:20px }
+    .stat-label{ color:#34495E; flex:1 }
+    .stat-value{ font-weight:800; color:#E67E22 }
+
+    /* ====== PET ติดขวาล่างใกล้ตัวละคร ====== */
+    .pet-container{ position:absolute; right:40px; bottom:40px; display:none; z-index:5 }
+    .pet-image{ width:70px; height:70px; object-fit:contain; animation:petFloat 3s ease-in-out infinite }
+
+    .emotion-controls{ position:absolute; bottom:16px; right:20px; display:flex; gap:8px; z-index:15 }
+    .emotion-btn{ width:44px; height:44px; border-radius:50%; border:2px solid #3498DB; background:rgba(255,255,255,.95); font-size:1.2rem; cursor:pointer; transition:all .3s ease; display:flex; align-items:center; justify-content:center; box-shadow:0 3px 8px rgba(0,0,0,.2) }
+    .emotion-btn:hover{ transform:scale(1.1); background:#3498DB; color:#fff }
+
+    .loading-indicator{ position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); display:none; flex-direction:column; align-items:center; gap:15px; z-index:20; background:rgba(255,255,255,.95); padding:25px; border-radius:12px; box-shadow:0 8px 20px rgba(0,0,0,.3) }
+    .loading-spinner{ width:32px; height:32px; border:3px solid #E8E8E8; border-top:3px solid #3498DB; border-radius:50%; animation:spin 1s linear infinite }
+
+    @keyframes shadowPulse{0%,100%{transform:translateX(-50%) scale(1);opacity:.25}50%{transform:translateX(-50%) scale(1.1);opacity:.4}}
+    @keyframes petFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    @keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}
+
+    /* ====== Mobile tweaks ====== */
+    @media (max-width:768px){
+      #image-character-container{ height:420px; margin-bottom:20px }
+      .character-display-area{ width:94%; padding:0 14px; gap:12px }
+      .character-container{ width:160px; height:240px }        /* ยังใหญ่กว่าของเดิม */
+      .character-shadow{ width:95px; height:22px }
+      .character-nameplate h3{ font-size:.95rem }
+      .character-level{ font-size:.7rem }
+      .stat-item{ font-size:.8rem }
+      .pet-container{ right:22px; bottom:28px }
+      .pet-image{ width:60px; height:60px }
+    }
+
+    /* หน้าจอเล็กมาก */
+    @media (max-width:390px){
+      .character-container{ width:140px; height:210px }
+      .character-shadow{ width:85px; height:20px }
+    }
+  `;
+  document.head.appendChild(style);
 }
+
 
 /* global instance */
 window.characterSystem = new ImageCharacterSystem();
