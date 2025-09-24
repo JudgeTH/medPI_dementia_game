@@ -10,6 +10,9 @@ function choiceWithNewAnswerIndex(choices,idx){
   const sh = shuffle(pairs);
   return { items: sh.map(p=>p.t), correctIndex: sh.findIndex(p=>p.ok) };
 }
+// บังคับ show/hide ให้ชัวร์ (กัน CSS ทับ)
+function showEl(el){ if(!el) return; el.hidden=false; el.style.display=''; }
+function hideEl(el){ if(!el) return; el.hidden=true;  el.style.display='none'; }
 
 // ===== config =====
 const LS={TIME_ON_IMAGE_MS:'memory.timeOnImageMs', TIME_TO_ANSWER_MS:'memory.timeToAnswerMs', DAILY_STAR_CAP:'game.dailyStarCap', BONUS_T1_MS:'game.bonusT1Ms', BONUS_T2_MS:'game.bonusT2Ms'};
@@ -47,7 +50,6 @@ const UI={
   correctCount:$('#correctCount'), starsCount:$('#starsCount'),
   imageStage:$('#imageStage'), qImage:$('#qImage'),
   questionStage:$('#questionStage'), prompt:$('#prompt'), choices:$('#choices'),
-  // NEW: progress bar elements
   progressWrap:$('#imgProgress'), progressBar:$('#progressBar'),
   summary:$('#summary'), sumCorrect:$('#sumCorrect'), sumTotal:$('#sumTotal'), sumStars:$('#sumStars'),
   playAgain:$('#playAgain')
@@ -98,15 +100,15 @@ async function showImagePhase(q){
   UI.phasePill.textContent='ดูภาพ';
   UI.qImage.src=q.image;
 
-  // show image + show progress
-  UI.imageStage.hidden=false;
-  UI.questionStage.hidden=true;
-  if (UI.progressWrap) UI.progressWrap.hidden = false;
+  // โชว์รูป + แถบเวลา
+  showEl(UI.imageStage);
+  hideEl(UI.questionStage);
+  if (UI.progressWrap) showEl(UI.progressWrap);
 
   setProgress(0);
   state.imageShownAt=now();
 
-  // animate progress with RAF during the image phase
+  // แอนิเมตแถบเวลา (RAF)
   const t = CONFIG.TIME_ON_IMAGE_MS;
   const start = now();
   let raf;
@@ -127,20 +129,20 @@ async function showImagePhase(q){
 function showQuestionPhase(q){
   UI.phasePill.textContent='คำถาม';
 
-  // hide image and progress bar
-  UI.imageStage.hidden = true;
-  if (UI.progressWrap) UI.progressWrap.hidden = true;
+  // ซ่อนรูป + แถบเวลา
+  hideEl(UI.imageStage);
+  if (UI.progressWrap) hideEl(UI.progressWrap);
   setProgress(0);
 
-  // show text question
-  UI.questionStage.hidden = false;
+  // โชว์คำถามข้อความ
+  showEl(UI.questionStage);
   UI.prompt.textContent = q.prompt;
   renderChoices(q);
 
   state.questionShownAt=now();
   state.answering=true;
 
-  // invisible time limit (backend only)
+  // time limit หลังบ้าน (ไม่แสดงบนจอ)
   const start = state.questionShownAt, limit = CONFIG.TIME_TO_ANSWER_MS;
   (function watch(){
     if(!state.answering) return;
@@ -163,6 +165,9 @@ async function handleAnswer(q,idx,isCorrect,btn){
   const em=btn.querySelector('.emoji'); em.textContent=isCorrect?'🙂':'😅';
   btn.classList.add('show-emoji');
   $$('.choice').forEach(b=>b.setAttribute('disabled',''));
+
+  // ซ่อนคำถามไว้ก่อนจะไปข้อถัดไป
+  hideEl(UI.questionStage);
 
   await sleep(CONFIG.REVEAL_REACTION_MS);
   await afterAnswer(q,{isCorrect,choiceIndex:idx,responseMs:rt});
@@ -196,9 +201,9 @@ async function afterAnswer(q,{isCorrect,choiceIndex,responseMs}){
 
 // ===== session end =====
 function endSession(){
-  UI.imageStage.hidden = true;
-  UI.questionStage.hidden = true;
-  if (UI.progressWrap) UI.progressWrap.hidden = true;
+  hideEl(UI.imageStage);
+  hideEl(UI.questionStage);
+  if (UI.progressWrap) hideEl(UI.progressWrap);
 
   const awarded=starsToday(); const remain=Math.max(0,CONFIG.DAILY_STAR_CAP - awarded);
   const grant=Math.min(state.stars,remain); const cut=state.stars-grant;
@@ -222,9 +227,15 @@ function endSession(){
 
 // ===== driver =====
 async function nextQuestion(){
+  // รีเซ็ตไม่ให้ค้าง
+  hideEl(UI.questionStage);
+  hideEl(UI.imageStage);
+  if (UI.progressWrap) hideEl(UI.progressWrap);
+
   state.current+=1;
   $('#qIndex').textContent=Math.min(state.current+1,CONFIG.QUESTIONS_PER_SESSION);
   if(state.current>=state.questions.length) return endSession();
+
   const q=state.questions[state.current];
   await showImagePhase(q);
   showQuestionPhase(q);
@@ -233,7 +244,8 @@ async function nextQuestion(){
 (async function start(){
   const dataset=await loadQuestions(); const all=dataset.items||[];
   if(all.length<CONFIG.QUESTIONS_PER_SESSION) console.warn('คลังคำถามมีไม่ครบ 7 ใช้เท่าที่มี');
-  all.forEach(it=>{const im=new Image(); im.src=it.image;}); // preload images
+  // พรีโหลดภาพ
+  all.forEach(it=>{const im=new Image(); im.src=it.image;});
   state.questions=pickUnique(all, CONFIG.QUESTIONS_PER_SESSION);
   nextQuestion();
 })();
