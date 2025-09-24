@@ -217,8 +217,10 @@
   <script src="js/utils/helpers.js"></script>
   <script src="js/utils/storage.js"></script>
   <script src="js/dataManager.js"></script>
+  <!-- ลำดับสคริปต์ -->
   <script src="js/auth.js"></script>
   <script src="js/character.js"></script>
+
 
   <!-- โหลด Economy ก่อน เพื่อให้เกม/ร้านค้าใช้ได้ทั้งเว็บ -->
   <script src="js/economy.js"></script>
@@ -227,32 +229,36 @@
   <script src="js/app.js"></script>
 
   <!-- Bind ปุ่ม "ร้านค้า" + Mount ตัวละครให้ชัวร์ -->
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // ไปหน้าร้านค้า (หน้าแยก)
-      const openShopBtn = document.getElementById('open-shop');
-      if (openShopBtn) {
-        openShopBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          window.location.href = '/pages/shop.html';
-        });
-      }
-
-      // เมาท์ตัวละครเข้าคอนเทนเนอร์ให้แน่ใจ
-      const mount =
-        document.getElementById('character-display-area') ||
-        document.querySelector('#image-character-container .character-display-area') ||
-        document.getElementById('image-character-container');
-
-      if (window.characterSystem && typeof window.characterSystem.mountTo === 'function' && mount) {
-        window.characterSystem.mountTo(mount);
-        try {
-          // ถ้ามีระบบ inventory/economy ใช้ชุดที่ใส่อยู่
-          window.characterSystem.applyEquipment?.(window.Inventory?.getEquipped?.() || {});
-        } catch {}
-      }
-    });
+ <script>
+ document.addEventListener('DOMContentLoaded', async () => {
+    const sys = window.characterSystem;                // ถูก new ใน character-2.js แล้ว
+    if (!sys) return;
+  
+    // 1) โฮสต์ที่จะใส่คอมโพเนนต์
+    const host = document.getElementById('character-display-area')
+             || document.getElementById('image-character-container')
+             || document.body;
+  
+    // 2) ให้ระบบสร้างโครง DOM (มี <img id="character-base"> ฯลฯ)
+    const node = sys.setupCharacterContainer();
+  
+    // 3) วางลงหน้า
+    host.innerHTML = '';
+    host.appendChild(node);
+  
+    // 4) เตรียม userData (ถ้า auth ยังไม่มี)
+    const fallbackGender = 'male';
+    const user = (window.gameAuth && window.gameAuth.currentUser) || {
+      displayName: 'ผู้เล่น',
+      stats: { totalStars: (window.Economy?.getBalance?.() || 0), totalGames: 0 },
+      character: { gender: fallbackGender, equipment: { ...sys.defaultEquipment[fallbackGender] } }
+    };
+  
+    // 5) โหลดรูปฐาน + อุปกรณ์
+    try { await sys.loadCharacter(user); } catch(e){ console.error(e); }
+  });
   </script>
+
 
   <!-- เอฟเฟกต์อิโมจิตัวละคร (แก้ selector ให้ถูก) -->
   <style id="bigger-emotion-effects">
