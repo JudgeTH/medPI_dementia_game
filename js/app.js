@@ -354,19 +354,29 @@ class GameApp {
     }
 
     // แสดงร้านค้า
-    showShop() {
-        this.currentView = 'shop';
-        
-        const actionButtons = document.querySelector('.action-buttons');
-        const gamesSelection = document.getElementById('games-selection');
-        const shopSection = document.getElementById('shop-section');
-        
-        if (actionButtons) actionButtons.style.display = 'none';
-        if (gamesSelection) gamesSelection.style.display = 'none';
-        if (shopSection) shopSection.style.display = 'block';
-        
-        this.showMessage('ร้านค้ากำลังพัฒนา... 🛒', 'info');
-    }
+   showShop() {
+     this.currentView = 'shop';
+     const actionButtons = document.querySelector('.action-buttons');
+     const gamesSelection = document.getElementById('games-selection');
+     const shopSection   = document.getElementById('shop-section');
+   
+     if (actionButtons) actionButtons.style.display = 'none';
+     if (gamesSelection) gamesSelection.style.display = 'none';
+     if (shopSection)    shopSection.style.display = 'block';
+   
+     this.showMessage('ร้านค้ากำลังพัฒนา... 🛒', 'info');
+   }
+   
+   // เปิดร้านค้า (เลือกแท็บ/ไอเท็มได้ผ่าน query)
+   openShop(opts = {}) {
+     // ใช้พาธ relative กันปัญหา subdirectory (เช่น GitHub Pages)
+     const url = new URL('./pages/shop.html', location.href);
+     if (opts.tab)     url.searchParams.set('tab', opts.tab);      // 'featured' | 'costumes' | 'pets'
+     if (opts.itemId)  url.searchParams.set('item', opts.itemId);
+     if (opts.returnTo) url.searchParams.set('returnTo', location.pathname);
+     window.location.href = url.toString();
+   }
+
 
     // แสดงสถิติ
     showStats() {
