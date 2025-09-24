@@ -616,7 +616,15 @@ class GameApp {
     }
 }
 
-// เริ่มต้นแอพ
-document.addEventListener('DOMContentLoaded', () => {
+   document.addEventListener('DOMContentLoaded', () => {
+     const btn = document.getElementById('btnShop');
+     if (!btn) return;
+   
+     btn.addEventListener('click', (e) => {
+       e.preventDefault(); // ไม่ให้ลิงก์เดิมทำงาน
+       // เรียกฟังก์ชันในคลาส GameApp (ต้องมี instance เช่น window.gameApp)
+       gameApp.openShop({ tab: 'featured', returnTo: location.pathname });
+     });
+   });
     window.gameApp = new GameApp();
 });
