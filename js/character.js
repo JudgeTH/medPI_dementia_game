@@ -148,7 +148,6 @@ class ImageCharacterSystem {
             <div class="character-info in-stage">
               <div class="character-nameplate">
                 <h3 id="character-name">ผู้เล่น</h3>
-                <div class="character-level">Lv. 1</div>
               </div>
               <div class="character-stats">
                 <div class="stat-item"><span class="stat-icon">⭐</span><span class="stat-label">เหรียญ:</span><span id="char-coins" class="stat-value">0</span></div>
