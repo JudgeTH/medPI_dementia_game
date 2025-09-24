@@ -397,10 +397,19 @@ class GameApp {
     }
 
     // เริ่มเกม
-    startGame(gameType) {
-        this.showMessage(`เกม ${this.getGameName(gameType)} กำลังพัฒนา... 🚧`, 'info');
-        console.log(`Starting game: ${gameType}`);
-    }
+    // เริ่มเกม
+   startGame(gameType) {
+       // กรณี "เกมจำภาพ" ให้พาไปหน้า /pages/game.html
+       if (gameType === 'memory') {
+           // ถ้าคุณใช้ multi-page ธรรมดา (ไม่มี router) ใช้บรรทัดนี้
+           window.location.href = '/pages/game.html';
+           return;
+       }
+   
+       // เกมอื่น ๆ ยังไม่ทำ แสดงสถานะเดิมไปก่อน
+       this.showMessage(`เกม ${this.getGameName(gameType)} กำลังพัฒนา... 🚧`, 'info');
+       console.log(`Starting game:`, gameType);
+   }
 
     // ได้ชื่อเกมภาษาไทย
     getGameName(gameType) {
