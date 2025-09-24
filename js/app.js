@@ -411,7 +411,18 @@ class GameApp {
            window.location.href = '/pages/game-addition.html';
            return;
        }
-   
+      // กรณี "จำลำดับ" ให้พาไปหน้า /pages/game-addition.html
+       if (gameType === 'pattern') {
+           // ถ้าคุณใช้ multi-page ธรรมดา (ไม่มี router) ใช้บรรทัดนี้
+           window.location.href = '/pages/game-pattern.html';
+           return;
+       }
+       // กรณี "ตรรกะ" ให้พาไปหน้า /pages/game-addition.html
+       if (gameType === 'logic') {
+           // ถ้าคุณใช้ multi-page ธรรมดา (ไม่มี router) ใช้บรรทัดนี้
+           window.location.href = '/pages/game-logic.html';
+           return;
+       }
        // เกมอื่น ๆ ยังไม่ทำ แสดงสถานะเดิมไปก่อน
        this.showMessage(`เกม ${this.getGameName(gameType)} กำลังพัฒนา... 🚧`, 'info');
        console.log(`Starting game:`, gameType);
