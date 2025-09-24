@@ -2,7 +2,7 @@
   "items": [
     {
       "id": "m-001",
-      "image": "/assets/images/memory/pet01.png",
+      "image": "/assets/images/memory/pet1.png",
       "prompt": "จากภาพที่เห็น มีสัตว์สีส้ม กี่ตัว?",
       "choices": ["1 ตัว", "2 ตัว", "ไม่มีเลย", "5 ตัว"],
       "answerIndex": 1
