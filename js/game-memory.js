@@ -14,6 +14,19 @@ function choiceWithNewAnswerIndex(choices,idx){
 function showEl(el){ if(!el) return; el.hidden=false; el.style.display=''; }
 function hideEl(el){ if(!el) return; el.hidden=true;  el.style.display='none'; }
 
+// ==== Economy hook (สำคัญ) ======================================
+// ตั้งชื่อเกมให้ถูกกับไฟล์นี้ ('memory' | 'addition' | 'logic' | 'pattern')
+const GAME_ID = 'memory';
+const giveStars = (n, reason, extra={}) => {
+  // ถ้ามี economy.js ให้บันทึกลงเลเจอร์จริง
+  if (window.Economy && typeof Economy.earnStars === 'function') {
+    return Economy.earnStars(n, { game: GAME_ID, reason, ...extra });
+  }
+  // fallback: ยังไม่มี Economy → แค่เพิ่มคะแนนดาวใน session ไว้โชว์
+  state.stars = (state.stars || 0) + n;
+  return { ok:true, added:n, reason:'local-fallback' };
+};
+
 // ===== config =====
 const LS={TIME_ON_IMAGE_MS:'memory.timeOnImageMs', TIME_TO_ANSWER_MS:'memory.timeToAnswerMs', DAILY_STAR_CAP:'game.dailyStarCap', BONUS_T1_MS:'game.bonusT1Ms', BONUS_T2_MS:'game.bonusT2Ms'};
 const readNum=(k,d)=>{const v=Number(localStorage.getItem(k));return Number.isFinite(v)&&v>0?v:d}
@@ -25,7 +38,7 @@ const CONFIG={
   STAR_STREAK_BONUS:1,
   TIME_ON_IMAGE_MS: readNum(LS.TIME_ON_IMAGE_MS, 10000), // 10s
   TIME_TO_ANSWER_MS: readNum(LS.TIME_TO_ANSWER_MS, 15000),
-  DAILY_STAR_CAP:    readNum(LS.DAILY_STAR_CAP, 50),
+  DAILY_STAR_CAP:    readNum(LS.DAILY_STAR_CAP, 50),     // *อ้างอิงไว้โชว์ข้อความเท่านั้น* (จริง ๆ Economy จะคุมเพดานให้)
   BONUS_T1_MS:       readNum(LS.BONUS_T1_MS, 1500),
   BONUS_T2_MS:       readNum(LS.BONUS_T2_MS, 3000),
 };
@@ -34,13 +47,11 @@ const qp=new URLSearchParams(location.search);
 if(qp.has('timeOnImageSec')){const v=Math.max(1,Number(qp.get('timeOnImageSec'))|0)*1000;localStorage.setItem(LS.TIME_ON_IMAGE_MS,String(v));CONFIG.TIME_ON_IMAGE_MS=v}
 if(qp.has('timeToAnswerSec')){const v=Math.max(1,Number(qp.get('timeToAnswerSec'))|0)*1000;localStorage.setItem(LS.TIME_TO_ANSWER_MS,String(v));CONFIG.TIME_TO_ANSWER_MS=v}
 
-// ===== storage =====
+// ===== storage (เฉพาะ attempts/sessions; ตัดเลเจอร์ดาวเดิมออก) =====
 const UID = localStorage.getItem('ecg_current_uid') || 'guest';
-const K_STARS=`pi.stars_ledger.${UID}`, K_SESS=`pi.sessions.${UID}`, K_ATT=`pi.attempts.${UID}`;
+const K_SESS=`pi.sessions.${UID}`, K_ATT=`pi.attempts.${UID}`;
 const jget=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}}
 const jset=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
-const addStars=(delta,reason)=>{if(!delta)return; const a=jget(K_STARS,[]); a.push({delta,reason,at:new Date().toISOString()}); jset(K_STARS,a)}
-const starsToday=()=>jget(K_STARS,[]).filter(x=>String(x.at||'').startsWith(new Date().toISOString().slice(0,10))).reduce((s,x)=>s+(x.delta||0),0)
 const addAttempt=(x)=>{const a=jget(K_ATT,[]); a.push(x); jset(K_ATT,a)}
 const addSession=(x)=>{const a=jget(K_SESS,[]); a.push(x); jset(K_SESS,a)}
 
@@ -175,10 +186,24 @@ async function handleAnswer(q,idx,isCorrect,btn){
 
 async function afterAnswer(q,{isCorrect,choiceIndex,responseMs}){
   if(isCorrect){
-    state.correct+=1; state.streak+=1;
-    let bonus=0; if(responseMs<=CONFIG.BONUS_T1_MS) bonus=2; else if(responseMs<=CONFIG.BONUS_T2_MS) bonus=1;
+    state.correct+=1; 
+    state.streak+=1;
+
+    // คำนวณโบนัสตามเวลา/สตรีค
+    let speedBonus=0; 
+    if(responseMs<=CONFIG.BONUS_T1_MS) speedBonus=2; 
+    else if(responseMs<=CONFIG.BONUS_T2_MS) speedBonus=1;
     let streakBonus=(state.streak>=3)?CONFIG.STAR_STREAK_BONUS:0;
-    state.stars += CONFIG.STAR_PER_CORRECT + bonus + streakBonus;
+
+    // อัปเดตดาวสำหรับ "หน้าสรุปของรอบนี้" (UI)
+    const totalGain = CONFIG.STAR_PER_CORRECT + speedBonus + streakBonus;
+    state.stars += totalGain;
+
+    // ---- บันทึกลงระบบดาวจริง (Economy) ----
+    giveStars(CONFIG.STAR_PER_CORRECT, 'correct', { qId: q.id, rt: responseMs });
+    if (speedBonus>0) giveStars(speedBonus, 'speed-bonus', { qId: q.id, rt: responseMs });
+    if (streakBonus>0) giveStars(streakBonus, 'streak-bonus', { streak: state.streak });
+
   } else {
     state.streak=0;
   }
@@ -205,21 +230,18 @@ function endSession(){
   hideEl(UI.questionStage);
   if (UI.progressWrap) hideEl(UI.progressWrap);
 
-  const awarded=starsToday(); const remain=Math.max(0,CONFIG.DAILY_STAR_CAP - awarded);
-  const grant=Math.min(state.stars,remain); const cut=state.stars-grant;
-  if(grant>0) addStars(grant,`session:${state.sessionId}`);
-
+  // *ไม่ต้อง* addStars/grant ที่ท้ายรอบแล้ว (Economy จัดการเพดานรายวันเองจากขณะตอบ)
   addSession({
     id: state.sessionId,
-    gameType: 'memory',
+    gameType: GAME_ID,
     score: state.correct,
-    starsEarned: grant,
+    starsEarned: state.stars, // ดาวที่ผู้เล่นได้ภายในรอบนี้ (มุมมอง UI)
     endedAt: new Date().toISOString()
   });
 
   UI.sumCorrect.textContent=state.correct;
   UI.sumTotal.textContent=CONFIG.QUESTIONS_PER_SESSION;
-  UI.sumStars.textContent=`${grant}${cut>0?` (จำกัด – ตัด ${cut})`:''}`;
+  UI.sumStars.textContent=String(state.stars);
 
   UI.summary.classList.add('active');
   UI.playAgain.onclick=()=>location.reload();
