@@ -323,5 +323,78 @@
     }
   }
 </style>
+<!-- อ่านง่ายสำหรับผู้สูงอายุ: ขยายตัวหนังสือ/ตัวละคร/ไอคอน -->
+<style id="elderly-accessibility-hotfix">
+  /* ========== Desktop / Tablet ========== */
+  #image-character-container .character-container{
+    width: 220px !important;   /* เดิม ~128–180 */
+    height: 330px !important;
+  }
+
+  /* ชื่อผู้เล่นในกรอบซ้าย */
+  #image-character-container .character-nameplate h3{
+    font-size: 1.45rem !important;   /* เดิม ~1.15rem */
+    letter-spacing: .2px;
+  }
+  #image-character-container .character-level{
+    font-size: 1rem !important;      /* เดิม ~0.8rem */
+  }
+
+  /* แถวสถิติ – เพิ่มขนาดทั้งชุด */
+  #image-character-container .character-stats{
+    gap: 10px !important;
+  }
+  #image-character-container .stat-item{
+    font-size: 1.1rem !important;    /* เดิม ~0.9rem */
+  }
+  #image-character-container .stat-icon{
+    font-size: 1.6rem !important;    /* ⭐ 🎮 ใหญ่ขึ้น */
+    min-width: 26px !important;
+  }
+  #image-character-container .stat-label{
+    font-weight: 600;
+  }
+  #image-character-container .stat-value{
+    font-size: 1.35rem !important;   /* ตัวเลขใหญ่ อ่านง่าย */
+  }
+
+  /* ปรับขนาดปุ่มอารมณ์เล็กน้อยให้กดง่าย */
+  #image-character-container .emotion-btn{
+    width: 52px !important;
+    height: 52px !important;
+    font-size: 1.35rem !important;
+  }
+
+  /* ========== Mobile (≤768px) ========== */
+  @media (max-width: 768px){
+    #image-character-container{ height: 460px !important; }
+
+    #image-character-container .character-container{
+      width: 200px !important;
+      height: 300px !important;
+    }
+    #image-character-container .character-nameplate h3{
+      font-size: 1.35rem !important;
+    }
+    #image-character-container .character-level{
+      font-size: .95rem !important;
+    }
+    #image-character-container .stat-item{
+      font-size: 1.05rem !important;
+    }
+    #image-character-container .stat-icon{
+      font-size: 1.5rem !important;
+      min-width: 24px !important;
+    }
+    #image-character-container .stat-value{
+      font-size: 1.3rem !important;
+    }
+    #image-character-container .emotion-btn{
+      width: 48px !important;
+      height: 48px !important;
+      font-size: 1.25rem !important;
+    }
+  }
+</style>
 
 
