@@ -9,9 +9,9 @@
     },
     {
       "id": "m-002",
-      "image": "/assets/images/memory/station.jpg",
-      "prompt": "ในภาพมี “รถไฟ” หรือไม่?",
-      "choices": ["มี", "ไม่มี", "ไม่แน่ใจ", "เป็นสถานีรถเมล์"],
+      "image": "/assets/images/memory/pet1.png",
+      "prompt": "ในภาพมี แมวกี่ตัว?",
+      "choices": ["5 ตัว", "4 ตัว", "3 ตัว", "2 ตัว"],
       "answerIndex": 0
     }
   ]
