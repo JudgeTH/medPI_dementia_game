@@ -119,6 +119,49 @@
       .action-card .action-icon{ font-size:2.4rem !important; }
       .action-card h3{ font-size:1.35rem !important; }
     }
+      /* ทำให้การ์ดเป็นฟ้าอ่อน อ่านง่ายขึ้น */
+    .action-card{
+      background-color: #EAF4FF !important;   /* ฟ้าอ่อน */
+      border: 1px solid #CFE3FF !important;
+      box-shadow: 0 2px 8px rgba(14, 35, 69, 0.08) !important; /* เงาอ่อนโทนฟ้า */
+    }
+    .action-card h3{
+      color: #0A2540 !important;   /* น้ำเงินเข้มอ่านชัด */
+    }
+    .action-card p{
+      color: #1F2A44 !important;   /* ตัวรายละเอียด */
+      opacity: 1 !important;       /* เอาความโปร่งออกเพื่อความคมชัด */
+    }
+    .action-card .action-icon{
+      opacity: 1 !important;       /* ไอคอนชัดขึ้นบนพื้นฟ้าอ่อน */
+    }
+  
+    /* เอฟเฟกต์โฮเวอร์ให้ตัดกับพื้นหลัง */
+    .action-card:hover{
+      background-color: #E3F0FF !important;   /* ฟ้าอ่อนลงอีกนิดตอนโฮเวอร์ */
+      transform: translateY(-1px);
+      transition: background-color .2s ease, transform .2s ease, box-shadow .2s ease;
+      box-shadow: 0 6px 18px rgba(14, 35, 69, 0.12) !important;
+    }
+  
+    /* ป้าย "ใหม่!" หรือป้ายจำนวนเกม ให้ยังคงโดดเด่น */
+    .action-card .action-badge{
+      background: #D7EAFF !important;
+      color: #0A2540 !important;
+      border: 1px solid #BEDBFF !important;
+    }
+  
+    /* รองรับโหมดมืด: ยังคงฟ้าอ่อนที่อ่านง่าย */
+    @media (prefers-color-scheme: dark){
+      .action-card{
+        background-color: #DAECFF !important;
+        border-color: #BFD8FF !important;
+        box-shadow: 0 2px 10px rgba(0,0,0,.25) !important;
+      }
+      .action-card:hover{
+        background-color: #D1E6FF !important;
+      }
+    }
   </style>
 </head>
 <body>
