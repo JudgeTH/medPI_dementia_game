@@ -615,7 +615,17 @@ class GameApp {
         document.head.appendChild(style);
     }
 }
+document.addEventListener('DOMContentLoaded', () => {
+  // สร้างอินสแตนซ์ให้เป็น global ก่อน
+  window.gameApp = new GameApp();
 
-   document.addEventListener('DOMContentLoaded', () => {
-    window.gameApp = new GameApp();
+  // ผูกปุ่มร้านค้า (ถ้าไม่มีปุ่ม โค้ดก็ไม่พัง)
+  const btn = document.getElementById('btnShop');
+  if (btn) {
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.gameApp.openShop({ tab: 'featured', returnTo: location.pathname });
+    });
+  }
 });
+
