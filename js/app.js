@@ -405,6 +405,12 @@ class GameApp {
            window.location.href = '/pages/game.html';
            return;
        }
+      // กรณี "เกมคิดเลขเร็ว" ให้พาไปหน้า /pages/game-addition.html
+       if (gameType === 'addition') {
+           // ถ้าคุณใช้ multi-page ธรรมดา (ไม่มี router) ใช้บรรทัดนี้
+           window.location.href = '/pages/game-addition.html';
+           return;
+       }
    
        // เกมอื่น ๆ ยังไม่ทำ แสดงสถานะเดิมไปก่อน
        this.showMessage(`เกม ${this.getGameName(gameType)} กำลังพัฒนา... 🚧`, 'info');
@@ -416,7 +422,7 @@ class GameApp {
         const gameNames = {
             memory: 'จำภาพ',
             pattern: 'จำลำดับ', 
-            attention: 'สมาธิ',
+            addition: 'คิดเลขเร็ว',
             logic: 'ตรรกะ'
         };
         return gameNames[gameType] || gameType;
