@@ -14,6 +14,11 @@
     .card{background:#f7f7f7;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.08);padding:24px}
     .header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
     .pill{background:#eee;border-radius:999px;padding:6px 12px;font-size:14px}
+
+    /* แถบจับเวลาสำหรับช่วงดูภาพ */
+    .progress{height:10px;border-radius:999px;background:#e9e9e9;overflow:hidden;margin:6px 0 16px}
+    .progress>div{height:100%;width:0;background:linear-gradient(90deg,#1976D2,#2E7D32);transition:width .15s linear}
+
     .image-stage{display:grid;place-items:center;min-height:300px;background:#fafafa;border-radius:16px;overflow:hidden;position:relative}
     .image-stage img{width:100%;height:100%;object-fit:contain}
     .q-card{display:grid;gap:16px}
@@ -42,6 +47,11 @@
         <div class="pill">⭐ <b id="starsCount">0</b></div>
       </div>
 
+      <!-- แถบจับเวลา: แสดงเฉพาะตอนดูภาพ (JS จะซ่อน/แสดงให้) -->
+      <div id="imgProgress" class="progress" aria-hidden="true">
+        <div id="progressBar"></div>
+      </div>
+
       <!-- IMAGE PHASE (โชว์ ~10 วิ) -->
       <div id="imageStage" class="image-stage">
         <img id="qImage" alt="รูปสำหรับจดจำ" />
@@ -59,6 +69,7 @@
         <!-- แอนิเมชันอยู่บนสุดใต้หัวข้อ -->
         <div id="customAnimationSlot">
           <div style="color:#7a8aa1">วาง GIF/ภาพแอนิเมชันของคุณที่นี่ตอนสรุปผล</div>
+          <!-- ตัวอย่าง: <img src="/assets/animations/celebrate.gif" alt=""> -->
         </div>
 
         <div class="card" style="margin-bottom:12px">
