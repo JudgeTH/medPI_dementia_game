@@ -1,0 +1,11 @@
+{
+  "items": [
+    {
+      "id": "att-001",
+      "image": "/assets/images/game-images/attention/cat1.jpg",
+      "prompt": "สัตว์ในภาพคืออะไร?",
+      "choices": ["แมว", "สุนัข", "กระต่าย", "หนู"],
+      "answerIndex": 0
+    }
+  ]
+}
