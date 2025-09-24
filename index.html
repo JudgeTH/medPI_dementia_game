@@ -396,5 +396,101 @@
     }
   }
 </style>
+<style id="ui-tune-0923">
+  /* ===============================
+     1) ตัวละคร: เอาเงาออก + ขยายขนาด
+     =============================== */
+  #image-character-container .character-shadow{
+    display: none !important;               /* เอาเงาออก */
+  }
+  /* ขยายตัวละครให้เด่นขึ้น */
+  #image-character-container .character-container{
+    width: 240px !important;
+    height: 360px !important;
+  }
+
+  /* ===============================
+     2) ปุ่มอารมณ์ – กดง่ายขึ้นนิดนึง
+     =============================== */
+  #image-character-container .emotion-controls{
+    gap: 12px !important;
+  }
+  #image-character-container .emotion-btn{
+    width: 52px !important;
+    height: 52px !important;
+    font-size: 1.35rem !important;
+  }
+
+  /* ===============================
+     3) เมนู 4 อันล่าง ให้เท่ากัน/ห่างขอบ/ไอคอนใหญ่
+     =============================== */
+  /* เว้นระยะจากขอบซ้ายขวาหน่อย */
+  .action-buttons{
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  /* ใช้ grid 2 คอลัมน์ให้เท่ากัน และมีช่องไฟ */
+  .action-grid{
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 16px !important;
+  }
+
+  /* การ์ดให้ขนาดเท่ากัน + padding พอดี + ไม่ชิดขอบ */
+  .action-card{
+    min-height: 140px !important;           /* เท่ากันทุกใบ */
+    padding: 16px 14px !important;
+    border-radius: 16px !important;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06) !important;
+  }
+
+  /* ไอคอนในการ์ดให้ใหญ่ขึ้นชัดเจน */
+  .action-card .action-icon{
+    font-size: 2.2rem !important;           /* เดิมเล็กไป */
+    margin-bottom: 10px !important;
+    line-height: 1 !important;
+  }
+
+  /* ชื่อเมนูให้อ่านง่ายขึ้นนิด */
+  .action-card h3{
+    font-size: 1.3rem !important;
+    margin: 6px 0 4px !important;
+  }
+  .action-card p{
+    font-size: .95rem !important;
+    opacity: .85;
+  }
+
+  /* ===============================
+     Mobile (≤768px) ปรับขนาดให้พอดีจอ
+     =============================== */
+  @media (max-width: 768px){
+    #image-character-container{ height: 480px !important; }
+
+    #image-character-container .character-container{
+      width: 220px !important;
+      height: 330px !important;
+    }
+
+    .action-buttons{
+      padding-left: 18px !important;
+      padding-right: 18px !important;
+    }
+    .action-grid{
+      gap: 14px !important;
+    }
+    .action-card{
+      min-height: 150px !important;         /* เท่ากันทุกใบบนมือถือ */
+      padding: 18px 16px !important;
+    }
+    .action-card .action-icon{
+      font-size: 2.4rem !important;
+    }
+    .action-card h3{
+      font-size: 1.35rem !important;
+    }
+  }
+</style>
 
 
