@@ -337,7 +337,22 @@ class ImageCharacterSystem {
     const c = document.getElementById('image-character-container');
     if (c) c.innerHTML = `<div class="character-error"><h3>😞 เกิดข้อผิดพลาด</h3><p>${msg}</p><button onclick="location.reload()" class="retry-btn">ลองใหม่</button></div>`;
   }
-
+   // ภายใน class ImageCharacterSystem { ... }
+   applyEquipment(equipped) {
+     // ตัวอย่าง: แค่เก็บค่าไว้แล้ว re-render ตามโครงที่คุณมี
+     this.equipped = { ...(this.equipped || {}), ...(equipped || {}) };
+     this.render?.();
+   }
+   
+   mountTo(domNode) {
+     // ถ้าระบบเดิม render ลง container เฉพาะ ให้เก็บ reference ใหม่
+     if (domNode) {
+       this.externalMount = domNode;
+       // เรียก render ใหม่ถ้าจำเป็น
+       this.render?.();
+     }
+   }
+   
   /* — minimal styles: พื้นหลังสีอ่อน, ไม่มีการ์ดขาวทับ — */
   addResponsiveStyles() {
     if (document.getElementById('character-responsive-styles')) return;
