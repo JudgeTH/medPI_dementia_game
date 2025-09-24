@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PI Game — เกมจำภาพ</title>
+  <title>PI Game — เกมแบบข้อความ</title>
   <link rel="stylesheet" href="/css/reset.css">
   <link rel="stylesheet" href="/css/variables.css">
   <link rel="stylesheet" href="/css/base.css">
@@ -14,11 +14,6 @@
     .card{background:#f7f7f7;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.08);padding:24px}
     .header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
     .pill{background:#eee;border-radius:999px;padding:6px 12px;font-size:14px}
-    .progress{height:10px;border-radius:999px;background:#e9e9e9;overflow:hidden;margin:6px 0 16px}
-    .progress>div{height:100%;width:0;background:linear-gradient(90deg,#1976D2,#2E7D32);transition:width .2s linear}
-    .image-stage{display:grid;place-items:center;min-height:300px;background:#fafafa;border-radius:16px;overflow:hidden;position:relative}
-    .image-stage img{width:100%;height:100%;object-fit:contain}
-    .phase-badge{position:absolute;top:12px;left:12px;background:rgba(0,0,0,.6);color:#fff;padding:4px 8px;border-radius:999px;font-size:12px}
     .q-card{display:grid;gap:16px}
     .prompt{font-size:22px;font-weight:700}
     .choices{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
@@ -31,7 +26,7 @@
     .summary{display:none}
     .summary.active{display:block}
     .big{font-size:48px;font-weight:800}
-    #customAnimationSlot{display:grid;place-items:center;min-height:160px;background:#f2f7ff;border:2px dashed #c9ddff;border-radius:16px;margin-top:16px}
+    #customAnimationSlot{display:grid;place-items:center;min-height:160px;background:#f2f7ff;border:2px dashed #c9ddff;border-radius:16px;margin:12px 0 20px}
     @media (max-width:640px){.choices{grid-template-columns:1fr}}
   </style>
 </head>
@@ -39,54 +34,46 @@
   <main class="container">
     <section class="card">
       <div class="header">
-        <div class="pill" id="phasePill">เตรียมพร้อม…</div>
+        <div class="pill" id="phasePill">คำถาม</div>
         <div class="pill">ข้อที่ <b id="qIndex">0</b>/<span id="qTotal">7</span></div>
         <div class="pill">ถูก <b id="correctCount">0</b></div>
         <div class="pill">⭐ <b id="starsCount">0</b></div>
       </div>
 
-      <div class="progress" aria-hidden="true"><div id="progressBar"></div></div>
-
-      <!-- IMAGE PHASE -->
-      <div id="imageStage" class="image-stage" aria-live="polite">
-        <span class="phase-badge">ดูภาพ</span>
-        <img id="qImage" alt="รูปคำถาม" />
-      </div>
-
-      <!-- QUESTION PHASE -->
-      <div id="questionStage" class="q-card" hidden>
-        <div class="prompt" id="prompt">คำถามจะอยู่ที่นี่</div>
+      <!-- QUESTION PHASE (ข้อความ + 4 ตัวเลือก) -->
+      <div id="questionStage" class="q-card">
+        <div class="prompt" id="prompt">กำลังโหลดคำถาม…</div>
         <div class="choices" id="choices"></div>
-        <div style="display:flex;justify-content:space-between;color:#666">
-          <span>เวลาตอบ ~ <b id="answerSecs">10</b>s</span>
-          <span>ใช้เวลา: <b id="rt"></b> ms</span>
-        </div>
       </div>
 
       <!-- SUMMARY -->
       <div id="summary" class="summary">
         <h2>สรุปผล</h2>
+        <!-- ย้ายช่องแอนิเมชันขึ้นมาใต้หัวข้อ -->
+        <div id="customAnimationSlot">
+          <div style="color:#7a8aa1">วาง GIF/ภาพแอนิเมชันของคุณที่นี่ตอนสรุปผล</div>
+          <!-- ตัวอย่าง: <img src="/assets/animations/celebrate.gif" alt="" /> -->
+        </div>
+
         <div class="card" style="margin-bottom:12px">
           <div>คะแนนถูกต้อง</div>
           <div class="big" id="sumCorrect">0</div>
           <div>จากทั้งหมด <b id="sumTotal">7</b> ข้อ</div>
         </div>
+
         <div class="card">
           <div>ดาวที่ได้รับ (รวมโบนัส)</div>
           <div class="big">⭐ <span id="sumStars">0</span></div>
         </div>
-        <div id="customAnimationSlot">
-          <div style="color:#7a8aa1">พื้นที่สำหรับวาง GIF/ภาพแอนิเมชันของคุณตอนโชว์คะแนน</div>
-        </div>
+
         <div style="display:flex;gap:8px;margin-top:16px">
-          <a class="pill" href="/"><- กลับหน้าหลัก</a>
+          <a class="pill" href="/">← กลับหน้าหลัก</a>
           <button id="playAgain" class="pill">เล่นอีกครั้ง</button>
         </div>
       </div>
     </section>
   </main>
 
-  <!-- ลอจิกเกม -->
   <script type="module" src="/js/game.js"></script>
 </body>
 </html>
