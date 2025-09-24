@@ -354,19 +354,21 @@ class GameApp {
     }
 
     // แสดงร้านค้า
-    showShop() {
-        this.currentView = 'shop';
-        
-        const actionButtons = document.querySelector('.action-buttons');
-        const gamesSelection = document.getElementById('games-selection');
-        const shopSection = document.getElementById('shop-section');
-        
-        if (actionButtons) actionButtons.style.display = 'none';
-        if (gamesSelection) gamesSelection.style.display = 'none';
-        if (shopSection) shopSection.style.display = 'block';
-        
-        this.showMessage('ร้านค้ากำลังพัฒนา... 🛒', 'info');
-    }
+    // ไปหน้าร้านค้า (แยกหน้า)
+   // ไปหน้าร้านค้า (แยกหน้า)
+   function showShop() {
+      window.location.href = '/pages/shop.html';
+   }
+   // ถ้ายังไม่ได้ bind ปุ่ม ให้ผูกไว้ตอน DOM พร้อม
+   document.addEventListener('DOMContentLoaded', () => {
+     const openShopBtn = document.getElementById('open-shop');
+     if (openShopBtn) {
+       openShopBtn.addEventListener('click', (e) => {
+         e.preventDefault();
+         showShop();
+       });
+     }
+   });
 
     // แสดงสถิติ
     showStats() {
