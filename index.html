@@ -119,48 +119,33 @@
       .action-card .action-icon{ font-size:2.4rem !important; }
       .action-card h3{ font-size:1.35rem !important; }
     }
-      /* ทำให้การ์ดเป็นฟ้าอ่อน อ่านง่ายขึ้น */
+    /* ทำให้การ์ดเป็นฟ้าอ่อน อ่านง่ายขึ้น */
     .action-card{
-      background-color: #EAF4FF !important;   /* ฟ้าอ่อน */
+      background-color: #EAF4FF !important;
       border: 1px solid #CFE3FF !important;
-      box-shadow: 0 2px 8px rgba(14, 35, 69, 0.08) !important; /* เงาอ่อนโทนฟ้า */
+      box-shadow: 0 2px 8px rgba(14, 35, 69, 0.08) !important;
     }
-    .action-card h3{
-      color: #0A2540 !important;   /* น้ำเงินเข้มอ่านชัด */
-    }
-    .action-card p{
-      color: #1F2A44 !important;   /* ตัวรายละเอียด */
-      opacity: 1 !important;       /* เอาความโปร่งออกเพื่อความคมชัด */
-    }
-    .action-card .action-icon{
-      opacity: 1 !important;       /* ไอคอนชัดขึ้นบนพื้นฟ้าอ่อน */
-    }
-  
-    /* เอฟเฟกต์โฮเวอร์ให้ตัดกับพื้นหลัง */
+    .action-card h3{ color: #0A2540 !important; }
+    .action-card p{ color: #1F2A44 !important; opacity: 1 !important; }
+    .action-card .action-icon{ opacity: 1 !important; }
     .action-card:hover{
-      background-color: #E3F0FF !important;   /* ฟ้าอ่อนลงอีกนิดตอนโฮเวอร์ */
+      background-color: #E3F0FF !important;
       transform: translateY(-1px);
       transition: background-color .2s ease, transform .2s ease, box-shadow .2s ease;
       box-shadow: 0 6px 18px rgba(14, 35, 69, 0.12) !important;
     }
-  
-    /* ป้าย "ใหม่!" หรือป้ายจำนวนเกม ให้ยังคงโดดเด่น */
     .action-card .action-badge{
       background: #D7EAFF !important;
       color: #0A2540 !important;
       border: 1px solid #BEDBFF !important;
     }
-  
-    /* รองรับโหมดมืด: ยังคงฟ้าอ่อนที่อ่านง่าย */
     @media (prefers-color-scheme: dark){
       .action-card{
         background-color: #DAECFF !important;
         border-color: #BFD8FF !important;
         box-shadow: 0 2px 10px rgba(0,0,0,.25) !important;
       }
-      .action-card:hover{
-        background-color: #D1E6FF !important;
-      }
+      .action-card:hover{ background-color: #D1E6FF !important; }
     }
   </style>
 </head>
@@ -292,25 +277,7 @@
           </div>
         </section>
 
-        <!-- Shop Section -->
-        <section class="shop-menu" id="shop-section" style="display:none;">
-          <div class="shop-header">
-            <h2>ร้านค้า</h2>
-            <div class="player-coins">
-              <span class="coin-icon">⭐</span>
-              <span id="player-coins">0</span> เหรียญ
-            </div>
-            <button class="btn btn-secondary back-to-main">← กลับหน้าหลัก</button>
-          </div>
-
-          <div class="shop-categories">
-            <button class="shop-tab active" data-category="clothes">👕 เสื้อผ้า</button>
-            <button class="shop-tab" data-category="accessories">👒 เครื่องประดับ</button>
-            <button class="shop-tab" data-category="pets">🐕 สัตว์เลี้ยง</button>
-          </div>
-
-          <div class="shop-items" id="shop-items"><!-- ไอเทมร้านค้าจะถูกสร้างโดย JS --></div>
-        </section>
+        <!-- (ลบ Shop Section แบบ in-page ออก เพราะย้ายไป /pages/shop.html แล้ว) -->
 
         <!-- Quick Stats -->
         <section class="quick-stats">
@@ -348,14 +315,32 @@
     <p>กำลังโหลด...</p>
   </div>
 
-  <!-- JavaScript Files -->
+  <!-- JavaScript Files (ลำดับสำคัญ) -->
   <script src="js/utils/constants.js"></script>
   <script src="js/utils/helpers.js"></script>
   <script src="js/utils/storage.js"></script>
   <script src="js/dataManager.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/character.js"></script>
+
+  <!-- โหลด Economy ก่อน เพื่อให้เกม/ร้านค้าใช้ได้ทั้งเว็บ -->
+  <script src="js/economy.js"></script>
+
+  <!-- แอปหลัก (มีปุ่ม/นำทาง) -->
   <script src="js/app.js"></script>
+
+  <!-- bind ปุ่ม "ร้านค้า" ให้ไปที่หน้าแยก -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const openShopBtn = document.getElementById('open-shop');
+      if (openShopBtn) {
+        openShopBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.location.href = '/pages/shop.html';
+        });
+      }
+    });
+  </script>
 
   <style id="bigger-emotion-effects">
   /* ใหญ่ขึ้น + ลอยสูงขึ้นนิด เพื่อไม่ทับหัว */
@@ -363,28 +348,15 @@
   #image-character-container .effect-sparkles,
   #image-character-container .effect-thought,
   #image-character-container .effect-love{
-    font-size: 2.4rem !important;   /* เดิม ~1rem */
-    top: -48px !important;          /* ขยับขึ้นเล็กน้อย */
+    font-size: 2.4rem !important;
+    top: -48px !important;
     text-shadow: 0 2px 6px rgba(0,0,0,.12);
   }
 
   /* เพิ่มระยะลอยให้ดูมีมิติมากขึ้น */
-  #image-character-container @keyframes effectFloat{
-    0%,100%{ transform: translateX(-50%) translateY(0);    opacity:1 }
-    50%   { transform: translateX(-50%) translateY(-22px); opacity:.85 }
-  }
-
-  /* มือถือ: ยังใหญ่ แต่ลดนิดให้พอดีจอเล็ก */
-  @media (max-width:768px){
-    #image-character-container .effect-hearts,
-    #image-character-container .effect-sparkles,
-    #image-character-container .effect-thought,
-    #image-character-container .effect-love{
-      font-size: 2.1rem !important;
-      top: -42px !important;
-    }
-  }
-</style>
+  /* NOTE: เดิม selector ตรงนี้ผิดไวยากรณ์ (มี @keyframes ติดอยู่หลัง id)
+     ถ้าคุณมี keyframes ชื่อนี้จริง ให้ย้ายไปประกาศในไฟล์ CSS หลักแทนนะครับ */
+  </style>
 
 </body>
 </html>
