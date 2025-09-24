@@ -1,0 +1,18 @@
+{
+  "items": [
+    {
+      "id": "m-001",
+      "image": "/assets/images/pattern/fruits.jpg",
+      "prompt": "จากภาพที่เห็น ผลไม้ชนิดใด \"ไม่ได้\" ปรากฏอยู่?",
+      "choices": ["สตรอว์เบอร์รี", "กล้วย", "กีวี", "แตงโม"],
+      "answerIndex": 2
+    },
+    {
+      "id": "m-002",
+      "image": "/assets/images/pattern/station.jpg",
+      "prompt": "ในภาพมี “รถไฟ” หรือไม่?",
+      "choices": ["มี", "ไม่มี", "ไม่แน่ใจ", "เป็นสถานีรถเมล์"],
+      "answerIndex": 0
+    }
+  ]
+}
