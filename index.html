@@ -360,5 +360,35 @@
   <script src="js/auth.js"></script>
   <script src="js/character.js"></script>
   <script src="js/app.js"></script>
+
+  <style id="bigger-emotion-effects">
+  /* ใหญ่ขึ้น + ลอยสูงขึ้นนิด เพื่อไม่ทับหัว */
+  #image-character-container .effect-hearts,
+  #image-character-container .effect-sparkles,
+  #image-character-container .effect-thought,
+  #image-character-container .effect-love{
+    font-size: 2.4rem !important;   /* เดิม ~1rem */
+    top: -48px !important;          /* ขยับขึ้นเล็กน้อย */
+    text-shadow: 0 2px 6px rgba(0,0,0,.12);
+  }
+
+  /* เพิ่มระยะลอยให้ดูมีมิติมากขึ้น */
+  #image-character-container @keyframes effectFloat{
+    0%,100%{ transform: translateX(-50%) translateY(0);    opacity:1 }
+    50%   { transform: translateX(-50%) translateY(-22px); opacity:.85 }
+  }
+
+  /* มือถือ: ยังใหญ่ แต่ลดนิดให้พอดีจอเล็ก */
+  @media (max-width:768px){
+    #image-character-container .effect-hearts,
+    #image-character-container .effect-sparkles,
+    #image-character-container .effect-thought,
+    #image-character-container .effect-love{
+      font-size: 2.1rem !important;
+      top: -42px !important;
+    }
+  }
+</style>
+
 </body>
 </html>
