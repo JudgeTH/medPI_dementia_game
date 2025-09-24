@@ -11,7 +11,7 @@ function choiceWithNewAnswerIndex(choices,idx){
   return { items: sh.map(p=>p.t), correctIndex: sh.findIndex(p=>p.ok) };
 }
 
-// ===== config (เวลาโชว์รูป 10 วิ, ไม่มี UI จับเวลา) =====
+// ===== config =====
 const LS={TIME_ON_IMAGE_MS:'memory.timeOnImageMs', TIME_TO_ANSWER_MS:'memory.timeToAnswerMs', DAILY_STAR_CAP:'game.dailyStarCap', BONUS_T1_MS:'game.bonusT1Ms', BONUS_T2_MS:'game.bonusT2Ms'};
 const readNum=(k,d)=>{const v=Number(localStorage.getItem(k));return Number.isFinite(v)&&v>0?v:d}
 const CONFIG={
@@ -21,12 +21,12 @@ const CONFIG={
   STAR_PER_CORRECT:1,
   STAR_STREAK_BONUS:1,
   TIME_ON_IMAGE_MS: readNum(LS.TIME_ON_IMAGE_MS, 10000), // 10s
-  TIME_TO_ANSWER_MS: readNum(LS.TIME_TO_ANSWER_MS, 15000), // ไม่โชว์ แต่ใช้เป็น limit หลังบ้าน
+  TIME_TO_ANSWER_MS: readNum(LS.TIME_TO_ANSWER_MS, 15000),
   DAILY_STAR_CAP:    readNum(LS.DAILY_STAR_CAP, 50),
   BONUS_T1_MS:       readNum(LS.BONUS_T1_MS, 1500),
   BONUS_T2_MS:       readNum(LS.BONUS_T2_MS, 3000),
 };
-// override ผ่าน query ได้ เช่น ?timeOnImageSec=8&timeToAnswerSec=12
+// override ผ่าน query เช่น ?timeOnImageSec=8&timeToAnswerSec=12
 const qp=new URLSearchParams(location.search);
 if(qp.has('timeOnImageSec')){const v=Math.max(1,Number(qp.get('timeOnImageSec'))|0)*1000;localStorage.setItem(LS.TIME_ON_IMAGE_MS,String(v));CONFIG.TIME_ON_IMAGE_MS=v}
 if(qp.has('timeToAnswerSec')){const v=Math.max(1,Number(qp.get('timeToAnswerSec'))|0)*1000;localStorage.setItem(LS.TIME_TO_ANSWER_MS,String(v));CONFIG.TIME_TO_ANSWER_MS=v}
@@ -47,22 +47,28 @@ const UI={
   correctCount:$('#correctCount'), starsCount:$('#starsCount'),
   imageStage:$('#imageStage'), qImage:$('#qImage'),
   questionStage:$('#questionStage'), prompt:$('#prompt'), choices:$('#choices'),
+  // NEW: progress bar elements
+  progressWrap:$('#imgProgress'), progressBar:$('#progressBar'),
   summary:$('#summary'), sumCorrect:$('#sumCorrect'), sumTotal:$('#sumTotal'), sumStars:$('#sumStars'),
   playAgain:$('#playAgain')
 };
 UI.qTotal.textContent=CONFIG.QUESTIONS_PER_SESSION;
 
-// ===== dataset (ผูก “รูป” + “คำถามข้อความ”) =====
-// โครงไฟล์: /data/questions/memory.json
-// { items: [ { id, image, prompt, choices[4], answerIndex } ] }
+// progress helper
+const setProgress = (ratio) => {
+  const r = Math.max(0, Math.min(1, ratio));
+  if (UI.progressBar) UI.progressBar.style.width = (r*100).toFixed(1) + '%';
+};
+
+// ===== dataset (image + text question) =====
 const SAMPLE={ items:[
-  {id:'m-001', image:'/assets/images/memory/fruits.jpg', prompt:'จากภาพที่เห็น ผลไม้ชนิดใด "ไม่ได้" ปรากฏอยู่?', choices:['สตรอว์เบอร์รี','กล้วย','กีวี','แตงโม'], answerIndex:2},
+  {id:'m-001', image:'/assets/images/memory/fruits.jpg',  prompt:'จากภาพที่เห็น ผลไม้ชนิดใด "ไม่ได้" ปรากฏอยู่?', choices:['สตรอว์เบอร์รี','กล้วย','กีวี','แตงโม'], answerIndex:2},
   {id:'m-002', image:'/assets/images/memory/station.jpg', prompt:'ในภาพมี “รถไฟ” หรือไม่?', choices:['มี','ไม่มี','ไม่แน่ใจ','เป็นสถานีรถเมล์'], answerIndex:0},
   {id:'m-003', image:'/assets/images/memory/kitchen.jpg', prompt:'ในภาพ ห้องครัวมีของชิ้นใด?', choices:['ไมโครเวฟ','ทีวี','โน้ตบุ๊ก','จักรยาน'], answerIndex:0},
-  {id:'m-004', image:'/assets/images/memory/office.jpg', prompt:'ในภาพมี “เก้าอี้” กี่ตัว?', choices:['1','2','3','มากกว่า 3'], answerIndex:3},
-  {id:'m-005', image:'/assets/images/memory/park.jpg', prompt:'ภาพสวนสาธารณะมีอะไรเด่นที่สุด?', choices:['ม้านั่ง','สไลเดอร์','ลานสเก็ต','รถเข็น'], answerIndex:0},
-  {id:'m-006', image:'/assets/images/memory/class.jpg', prompt:'ในภาพห้องเรียน มีวัตถุใดอยู่หน้าห้อง?', choices:['กระดาน','เตียง','ตู้เย็น','พัดลมเพดาน'], answerIndex:0},
-  {id:'m-007', image:'/assets/images/memory/pets.jpg', prompt:'ในภาพมีสัตว์ชนิดใดมากที่สุด?', choices:['สุนัข','แมว','นก','หนูแฮมสเตอร์'], answerIndex:1},
+  {id:'m-004', image:'/assets/images/memory/office.jpg',  prompt:'ในภาพมี “เก้าอี้” กี่ตัว?', choices:['1','2','3','มากกว่า 3'], answerIndex:3},
+  {id:'m-005', image:'/assets/images/memory/park.jpg',    prompt:'ภาพสวนสาธารณะมีอะไรเด่นที่สุด?', choices:['ม้านั่ง','สไลเดอร์','ลานสเก็ต','รถเข็น'], answerIndex:0},
+  {id:'m-006', image:'/assets/images/memory/class.jpg',   prompt:'ในภาพห้องเรียน มีวัตถุใดอยู่หน้าห้อง?', choices:['กระดาน','เตียง','ตู้เย็น','พัดลมเพดาน'], answerIndex:0},
+  {id:'m-007', image:'/assets/images/memory/pets.jpg',    prompt:'ในภาพมีสัตว์ชนิดใดมากที่สุด?', choices:['สุนัข','แมว','นก','หนูแฮมสเตอร์'], answerIndex:1},
 ]};
 async function loadQuestions(){
   try{
@@ -87,26 +93,54 @@ function renderChoices(q){
     UI.choices.appendChild(btn);
   });
 }
+
 async function showImagePhase(q){
   UI.phasePill.textContent='ดูภาพ';
   UI.qImage.src=q.image;
+
+  // show image + show progress
   UI.imageStage.hidden=false;
   UI.questionStage.hidden=true;
+  if (UI.progressWrap) UI.progressWrap.hidden = false;
+
+  setProgress(0);
   state.imageShownAt=now();
 
-  // โชว์ภาพตามเวลาที่กำหนด (ไม่มี UI จับเวลา)
-  await sleep(CONFIG.TIME_ON_IMAGE_MS);
+  // animate progress with RAF during the image phase
+  const t = CONFIG.TIME_ON_IMAGE_MS;
+  const start = now();
+  let raf;
+  await new Promise(resolve => {
+    (function loop(){
+      const elapsed = now() - start;
+      setProgress(elapsed / t);
+      if (elapsed >= t){
+        cancelAnimationFrame(raf);
+        setProgress(1);
+        return resolve();
+      }
+      raf = requestAnimationFrame(loop);
+    })();
+  });
 }
+
 function showQuestionPhase(q){
   UI.phasePill.textContent='คำถาม';
-  UI.imageStage.hidden=true;
-  UI.questionStage.hidden=false;
-  UI.prompt.textContent=q.prompt;
+
+  // hide image and progress bar
+  UI.imageStage.hidden = true;
+  if (UI.progressWrap) UI.progressWrap.hidden = true;
+  setProgress(0);
+
+  // show text question
+  UI.questionStage.hidden = false;
+  UI.prompt.textContent = q.prompt;
   renderChoices(q);
+
   state.questionShownAt=now();
   state.answering=true;
 
-  // time limit หลังบ้าน (ไม่แสดงบนจอ)
+  // invisible time limit (backend only)
   const start = state.questionShownAt, limit = CONFIG.TIME_TO_ANSWER_MS;
   (function watch(){
     if(!state.answering) return;
@@ -133,6 +167,7 @@ async function handleAnswer(q,idx,isCorrect,btn){
   await sleep(CONFIG.REVEAL_REACTION_MS);
   await afterAnswer(q,{isCorrect,choiceIndex:idx,responseMs:rt});
 }
+
 async function afterAnswer(q,{isCorrect,choiceIndex,responseMs}){
   if(isCorrect){
     state.correct+=1; state.streak+=1;
@@ -147,12 +182,11 @@ async function afterAnswer(q,{isCorrect,choiceIndex,responseMs}){
     id:`a_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
     sessionId:state.sessionId,
     questionId:q.id,
-    shownImageMs: CONFIG.TIME_ON_IMAGE_MS, // เวลาที่ดูภาพ (คงที่ต่อข้อ)
+    shownImageMs: CONFIG.TIME_ON_IMAGE_MS,
     answeredAt:new Date().toISOString(),
     isCorrect, responseMs, choiceIndex
   });
 
-  // อัปเดตแถบข้อมูล
   UI.correctCount.textContent=state.correct;
   UI.starsCount.textContent=state.stars;
 
@@ -162,9 +196,9 @@ async function afterAnswer(q,{isCorrect,choiceIndex,responseMs}){
 
 // ===== session end =====
 function endSession(){
-  // ซ่อนทุกอย่างของ “เกม” เหลือเฉพาะสรุปผล
   UI.imageStage.hidden = true;
   UI.questionStage.hidden = true;
+  if (UI.progressWrap) UI.progressWrap.hidden = true;
 
   const awarded=starsToday(); const remain=Math.max(0,CONFIG.DAILY_STAR_CAP - awarded);
   const grant=Math.min(state.stars,remain); const cut=state.stars-grant;
@@ -195,12 +229,11 @@ async function nextQuestion(){
   await showImagePhase(q);
   showQuestionPhase(q);
 }
+
 (async function start(){
   const dataset=await loadQuestions(); const all=dataset.items||[];
   if(all.length<CONFIG.QUESTIONS_PER_SESSION) console.warn('คลังคำถามมีไม่ครบ 7 ใช้เท่าที่มี');
-  // พรีโหลดภาพ
-  all.forEach(it=>{const im=new Image(); im.src=it.image;});
-  // สุ่มไม่ซ้ำ
+  all.forEach(it=>{const im=new Image(); im.src=it.image;}); // preload images
   state.questions=pickUnique(all, CONFIG.QUESTIONS_PER_SESSION);
   nextQuestion();
 })();
