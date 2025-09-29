@@ -248,6 +248,4 @@ async function nextQuestion(){
   all.forEach(it=>{const im=new Image(); im.src=it.image;});
   state.questions=pickUnique(all, CONFIG.QUESTIONS_PER_SESSION);
   nextQuestion();
-}
-App?.economy?.addStars(5, 'game:memory'); // +5 ดาว
-)();
+})();
