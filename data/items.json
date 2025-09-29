@@ -1,41 +1,6 @@
-{
-  "currency": "stars",
-  "items": [
-    {
-      "id": "head_basic_hat",
-      "name": "หมวกปีกกว้าง",
-      "type": "head",
-      "price": 20,
-      "image": "/assets/images/characters/equipment/head/hat_basic.png"
-    },
-    {
-      "id": "head_ribbon",
-      "name": "ริบบิ้น",
-      "type": "head",
-      "price": 25,
-      "image": "/assets/images/characters/equipment/head/ribbon.png"
-    },
-    {
-      "id": "body_blue_shirt",
-      "name": "เสื้อสีฟ้า",
-      "type": "body",
-      "price": 30,
-      "image": "/assets/images/characters/equipment/body/blue_shirt.png"
-    },
-    {
-      "id": "pet_cat",
-      "name": "แมวเหมียว",
-      "type": "pet",
-      "price": 40,
-      "image": "/assets/images/characters/equipment/pets/cat.png"
-    },
-    {
-      "id": "bg_clinic",
-      "name": "ฉากคลินิก",
-      "type": "bg",
-      "price": 15,
-      "image": "/assets/images/characters/equipment/bg/clinic.png"
-    }
-  ]
-}
-
+// /data/items.js
+window.SHOP_ITEMS = [
+  { id:"elderly_male_base", name:"ผู้ชายสูงวัย",  type:"avatar", price:0, asset:"/assets/images/characters/base/elderly_male_base.png" },
+  { id:"elderly_female_base", name:"ผู้หญิงสูงวัย", type:"avatar", price:0, asset:"/assets/images/characters/base/elderly_female_base.png" },
+  // ... เพิ่มรายการอื่น ๆ
+];
