@@ -439,3 +439,124 @@ async function nextQuestion(){
     }
   });
 })();
+/* =========================================================
+   📘 Memory Questions Loader (append-only, non-destructive)
+   - บังคับให้ใช้ /data/questions/memory.json เป็นแหล่งหลัก
+   - ถ้าโหลดไม่ได้: ค่อยกลับไปใช้ตัวอย่างที่ฝังในไฟล์เดิม
+   - ไม่แก้ของเดิม: แค่ตั้งค่าตัวแปร/หุ้ม start ฟังก์ชันเพื่อยัดโจทย์ภายนอกให้
+   ========================================================= */
+(function MemoryQuestionsLoaderPatch(){
+  if (window.__MEMORY_Q_PATCH__) return; // กันวางซ้ำ
+  window.__MEMORY_Q_PATCH__ = true;
+
+  // 1) ตัวช่วยโหลดไฟล์ภายนอก (ลองหลายพาธ + no-cache)
+  async function fetchExternalQuestions(){
+    const candidates = [
+      '/data/questions/memory.json',
+      './data/questions/memory.json',
+      'data/questions/memory.json'
+    ];
+    for (let i=0;i<candidates.length;i++){
+      const url = candidates[i] + (candidates[i].includes('?') ? '' : `?t=${Date.now()}`); // กัน cache
+      try{
+        const res = await fetch(url, { cache:'no-store' });
+        if (!res.ok) continue;
+        const data = await res.json();
+        const arr = normalizeQuestions(data);
+        if (Array.isArray(arr) && arr.length) return arr;
+      }catch(e){ /* try next */ }
+    }
+    return null; // ไม่เจอ
+  }
+
+  // 2) แปลงโครงให้เป็น Array เสมอ (รองรับรูปแบบ {questions:[...]})
+  function normalizeQuestions(data){
+    if (Array.isArray(data)) return data;
+    if (data && Array.isArray(data.questions)) return data.questions;
+    return null;
+  }
+
+  // 3) เก็บผลลัพธ์ไว้แบบ Promise ให้ส่วนอื่น await ได้
+  let _resolve, _reject;
+  const ready = new Promise((res, rej)=>{ _resolve = res; _reject = rej; });
+  window.__memoryQuestionsReadyPromise = ready;
+
+  // 4) เริ่มโหลดทันทีที่สคริปต์นี้ถูก append
+  (async function boot(){
+    // ถ้ามีโจทย์เดิมในตัวแปร global อยู่แล้ว เก็บไว้เป็น fallback
+    const fallback = (window.MEMORY_QUESTIONS || window.SAMPLE_QUESTIONS || window.QUESTIONS || null);
+
+    let external = await fetchExternalQuestions();
+    if (external && external.length){
+      window.MEMORY_QUESTIONS = external;               // ชี้ไปโจทย์ภายนอก
+      window.MEMORY_QUESTIONS_SOURCE = 'external';
+      document.dispatchEvent(new CustomEvent('memory:questionsReady', { detail:{ source:'external', count: external.length }}));
+      _resolve(external);
+    } else {
+      // กลับไปใช้ของเดิม (ถ้ามี)
+      if (fallback && fallback.length){
+        window.MEMORY_QUESTIONS = fallback;
+        window.MEMORY_QUESTIONS_SOURCE = 'embedded';
+        _resolve(fallback);
+      } else {
+        _reject(new Error('No questions found (external & embedded missing)'));
+      }
+    }
+  })();
+
+  // 5) หุ้ม start ฟังก์ชันยอดนิยม เพื่อ "ยัดโจทย์ภายนอก" ให้แน่ก่อนเริ่มเกม
+  function wrapStart(owner, key){
+    if (!owner || typeof owner[key] !== 'function') return;
+    const orig = owner[key];
+    owner[key] = async function(){
+      try{
+        // รอให้โหลดโจทย์เสร็จก่อน (ถ้า Promise เกิดขึ้นแล้ว)
+        if (window.__memoryQuestionsReadyPromise){
+          await window.__memoryQuestionsReadyPromise.catch(()=>{});
+        }
+        // ถ้า start ถูกเรียกพร้อมพารามิเตอร์เป็นโจทย์อยู่แล้ว เราไม่แก้
+        // แต่ถ้าไม่ได้ส่งเข้ามา: แนบ window.MEMORY_QUESTIONS ให้เป็นอาร์กิวเมนต์แรก
+        if (arguments.length === 0 && Array.isArray(window.MEMORY_QUESTIONS)){
+          return orig.call(this, window.MEMORY_QUESTIONS);
+        }
+      }catch(e){ /* continue to call orig */ }
+      return orig.apply(this, arguments);
+    };
+  }
+
+  const roots = [window, window.GameMemory, window.game, window.memoryGame].filter(Boolean);
+  const START_KEYS = [
+    'initMemoryGame','startGame','start','begin','setupGame','GameMemoryStart'
+  ];
+  roots.forEach(R => START_KEYS.forEach(k => wrapStart(R,k)));
+
+  // 6) เผื่อโค้ดเดิมมีฟังก์ชัน getQuestions(): ให้คืน external ก่อน
+  function attachGetter(owner, key){
+    if (!owner) return;
+    if (typeof owner[key] === 'function'){
+      const orig = owner[key];
+      owner[key] = function(){
+        if (Array.isArray(window.MEMORY_QUESTIONS) && window.MEMORY_QUESTIONS.length){
+          return window.MEMORY_QUESTIONS;
+        }
+        try{ return orig.apply(this, arguments); }catch(_){ return window.MEMORY_QUESTIONS || []; }
+      };
+    } else if (owner[key] === undefined){
+      Object.defineProperty(owner, key, {
+        get(){ return (Array.isArray(window.MEMORY_QUESTIONS) && window.MEMORY_QUESTIONS.length) ? window.MEMORY_QUESTIONS : []; }
+      });
+    }
+  }
+  ['getQuestions','loadQuestions'].forEach(k => {
+    roots.forEach(R => attachGetter(R,k));
+    attachGetter(window, k);
+  });
+
+  // 7) สำหรับโค้ดที่อ้าง SAMPLE_QUESTIONS โดยตรง ให้สลับชี้ external ให้ด้วย
+  Object.defineProperty(window, 'SAMPLE_QUESTIONS', {
+    get(){ return window.MEMORY_QUESTIONS; },
+    set(v){ /* ignore เพื่อคง external ทับ */ },
+    configurable: true
+  });
+
+})();
