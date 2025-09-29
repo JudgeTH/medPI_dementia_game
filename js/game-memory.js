@@ -64,14 +64,68 @@ const setProgress = (ratio) => {
 
 // ===== dataset (image + text question) =====
 const SAMPLE={ items:[
-  {id:'m-001', image:'/assets/images/memory/fruits.jpg',  prompt:'จากภาพที่เห็น ผลไม้ชนิดใด "ไม่ได้" ปรากฏอยู่?', choices:['สตรอว์เบอร์รี','กล้วย','กีวี','แตงโม'], answerIndex:2},
-  {id:'m-002', image:'/assets/images/memory/station.jpg', prompt:'ในภาพมี “รถไฟ” หรือไม่?', choices:['มี','ไม่มี','ไม่แน่ใจ','เป็นสถานีรถเมล์'], answerIndex:0},
-  {id:'m-003', image:'/assets/images/memory/kitchen.jpg', prompt:'ในภาพ ห้องครัวมีของชิ้นใด?', choices:['ไมโครเวฟ','ทีวี','โน้ตบุ๊ก','จักรยาน'], answerIndex:0},
-  {id:'m-004', image:'/assets/images/memory/office.jpg',  prompt:'ในภาพมี “เก้าอี้” กี่ตัว?', choices:['1','2','3','มากกว่า 3'], answerIndex:3},
-  {id:'m-005', image:'/assets/images/memory/park.jpg',    prompt:'ภาพสวนสาธารณะมีอะไรเด่นที่สุด?', choices:['ม้านั่ง','สไลเดอร์','ลานสเก็ต','รถเข็น'], answerIndex:0},
-  {id:'m-006', image:'/assets/images/memory/class.jpg',   prompt:'ในภาพห้องเรียน มีวัตถุใดอยู่หน้าห้อง?', choices:['กระดาน','เตียง','ตู้เย็น','พัดลมเพดาน'], answerIndex:0},
-  {id:'m-007', image:'/assets/images/memory/pets.jpg',    prompt:'ในภาพมีสัตว์ชนิดใดมากที่สุด?', choices:['สุนัข','แมว','นก','หนูแฮมสเตอร์'], answerIndex:1},
-]};
+  {
+      "id": "m-001",
+      "image": "/assets/images/memory/pet1.png",
+      "prompt": "จากภาพที่เห็น มีสัตว์สีส้ม กี่ตัว?",
+      "choices": ["1 ตัว", "2 ตัว", "ไม่มีเลย", "5 ตัว"],
+      "answerIndex": 1
+    },
+    {
+      "id": "m-003",
+      "image": "/assets/images/memory/pet2.png",
+      "prompt": "จากภาพที่เห็นเป็นสัตว์ชนิดใด?",
+      "choices": ["แมว", "หมา", "ปลา", "เสือ"],
+      "answerIndex": 0
+    },
+    {
+      "id": "m-004",
+      "image": "/assets/images/memory/pet3.png",
+      "prompt": "มีหมายืนสองขากี่ตัว?",
+      "choices": ["1 ตัว", "2 ตัว", "ไม่มีเลย", "3 ตัว"],
+      "answerIndex": 0
+    },
+    {
+      "id": "m-005",
+      "image": "/assets/images/memory/sea1.png",
+      "prompt": "จากภาพที่เห็น มีหอย กี่ตัว?",
+      "choices": ["1 ตัว", "2 ตัว", "ไม่มีเลย", "3 ตัว"],
+      "answerIndex": 3
+    },
+    {
+      "id": "m-007",
+      "image": "/assets/images/memory/farm1.png",
+      "prompt": "จากภาพที่เห็นมีเป็ดกี่ตัว?",
+      "choices": ["1 ตัว", "2 ตัว", "ไม่มีเลย", "5 ตัว"],
+      "answerIndex": 0
+    },
+    {
+      "id": "m-008",
+      "image": "/assets/images/memory/pet4.png",
+      "prompt": "จากภาพที่เห็นมีกระรอกกี่ตัว?",
+      "choices": ["4 ตัว", "5 ตัว", "ไม่มีเลย", "3 ตัว"],
+      "answerIndex": 1
+    },
+    "id": "m-009",
+      "image": "/assets/images/memory/doc1.png",
+      "prompt": "จากภาพที่เห็น เด็กใส่เสื้อสีอะไร?",
+      "choices": ["แดง", "ส้ม", "ขาว", "เหลือง"],
+      "answerIndex": 1
+    },
+    {
+      "id": "m-010",
+      "image": "/assets/images/memory/pet5.png",
+      "prompt": "จากภาพที่เห็น ลูกช้างกำลังเหยียบผลไม้อะไร?",
+      "choices": ["มะละกอ", "แตงโม", "สัปปะรด", "กล้วย"],
+      "answerIndex": 1
+    },
+    {
+      "id": "m-011",
+      "image": "/assets/images/memory/sale1.png",
+      "prompt": "ในภาพกล้วยกี่ลูก?",
+      "choices": ["1 ลูก", "2 ลูก", "4 ลูก", "3 ลูก"],
+      "answerIndex": 3
+    }]};
 async function loadQuestions(){
   try{
     const res=await fetch('/data/questions/memory.json',{cache:'no-store'});
