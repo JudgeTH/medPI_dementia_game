@@ -163,39 +163,6 @@
       }
     }
   </style>
-
-  <style id="hide-character-stats">
-    /* ซ่อนเฉพาะสถิติข้างอวตาร์ (ไม่แตะ Quick Stats ด้านล่าง) */
-    #image-character-container .character-stats{
-      display: none !important;
-    }
-  </style>
-
-
-  <style id="pet-slot-style">
-    /* ให้กล่องตัวละครเป็นฐานวางสัตว์เลี้ยงแบบซ้อนทับ */
-    #character-display-area{ position: relative; }
-    .pet-slot{
-      position: absolute;
-      right: 8%;
-      bottom: 6%;
-      width: 96px;
-      height: 96px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.4);
-      backdrop-filter: blur(2px);
-      box-shadow: 0 4px 12px rgba(0,0,0,.08);
-      pointer-events: none; /* ไม่บังปุ่มตัวละคร */
-    }
-    .pet-placeholder{ font-size: 1.4rem; opacity: .7; }
-    @media (max-width: 768px){
-      .pet-slot{ width: 76px; height: 76px; right: 6%; bottom: 5%; }
-    }
-  </style>
-
 </head>
 <body>
   <!-- หน้า Login/Welcome -->
@@ -255,11 +222,6 @@
       <main class="dashboard-content">
         <section class="character-section">
           <div id="character-display-area">
-            <!-- พื้นที่สัตว์เลี้ยง (อยู่ฉากเดียวกับตัวละคร) -->
-            <div id="pet-slot" class="pet-slot" aria-label="สัตว์เลี้ยง">
-              <div class="pet-placeholder">🐾</div>
-            </div>
-
             <!-- Ragnarok Character จะถูกสร้างที่นี่โดย JavaScript -->
             <div class="character-loading">กำลังโหลดตัวละคร... ⚡</div>
           </div>
