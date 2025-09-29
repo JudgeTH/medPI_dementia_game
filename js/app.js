@@ -1,100 +1,153 @@
 /* =========================================================
-   app.js — Integrated with character.js (Adapter-first)
-   - Reads avatar & renders via character.js (no guessing)
-   - Listens to Character events (ready/updated)
-   - Coins under name + pet slot transparent when none
-   - Does NOT remove the Play Game widget
+   app.js — Simple Avatar (single-image) + Coins + Shop-ready
+   - ไม่ใช้ ES Modules (no import/export)
+   - แสดงอวาตาร์จากภาพเดี่ยว (fallback เป็น base ที่ให้มา)
+   - เหรียญใต้ชื่อ (ledger แบบง่าย)
+   - อินเวนทอรีเฉพาะ "avatars" (ซื้อแล้วเป็นเจ้าของ เปลี่ยนได้)
+   - ไม่ยุ่งกับปุ่ม "เล่นเกม"
    ========================================================= */
 
 (function () {
-
-  /* ---------------- Basic utils ---------------- */
+  /* ---------------- Config & Utils ---------------- */
   const KEYS = {
     uid: 'current_uid',
     name: 'player_name',
     coins: 'player_coins',
-    petAsset: 'player_pet_asset',
-    inv: (uid) => `inventory:${uid}`,
     ledger: (uid) => `stars_ledger:${uid}`,
+    avatarId: 'avatar_id',
+    avatarAsset: 'avatar_asset',
+    avatarsOwned: 'avatars_owned', // array of avatar ids
   };
 
-  const $ = (sel, root = document) => root.querySelector(sel);
-  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  // พาธรูป base ที่อาจารย์มีอยู่แล้ว
+  const AVATAR_DEFAULTS = [
+    {
+      id: 'elderly_male_base',
+      name: 'ผู้ชายสูงวัย',
+      asset: '/assets/images/characters/base/elderly_male_base.png',
+      price: 0
+    },
+    {
+      id: 'elderly_female_base',
+      name: 'ผู้หญิงสูงวัย',
+      asset: '/assets/images/characters/base/elderly_female_base.png',
+      price: 0
+    }
+  ];
+
+  const $ = (s, r = document) => r.querySelector(s);
   const nowISO = () => new Date().toISOString();
-  const safeInt = (v, d = 0) => (Number.isFinite(+v) ? +v : d);
+  const toInt = (v, d=0) => (Number.isFinite(+v) ? +v : d);
 
   const store = {
     get(k, d=null){ try{ const r=localStorage.getItem(k); if(r===null)return d; return /^\[|\{/.test(r)?JSON.parse(r):r; }catch{return d;} },
-    set(k,v){ try{ localStorage.setItem(k, (typeof v==='object')?JSON.stringify(v):String(v)); }catch{} },
-    del(k){ try{ localStorage.removeItem(k); }catch{} },
+    set(k,v){ try{ localStorage.setItem(k, typeof v==='object'?JSON.stringify(v):String(v)); }catch{} },
+    del(k){ try{ localStorage.removeItem(k);}catch{} }
   };
 
-  /* ---------------- Economy & Inventory ---------------- */
+  /* ---------------- Economy (ledger แบบง่าย) ---------------- */
   const economy = {
-    getUid(){ return store.get(KEYS.uid) || 'guest'; },
-    _getLedger(uid){ return store.get(KEYS.ledger(uid), []); },
-    _setLedger(uid, arr){ store.set(KEYS.ledger(uid), arr); },
-    async getStarBalance(uid = economy.getUid()){
-      const ledger = economy._getLedger(uid);
-      if (!ledger.length) return safeInt(store.get(KEYS.coins, 0));
-      return ledger.reduce((s, r) => s + (r.delta || 0), 0);
+    uid(){ return store.get(KEYS.uid) || 'guest'; },
+    _ledger(uid=this.uid()){ return store.get(KEYS.ledger(uid), []); },
+    _saveLedger(arr, uid=this.uid()){ store.set(KEYS.ledger(uid), arr); },
+    async balance(uid=this.uid()){
+      const L = this._ledger(uid);
+      if (!L.length) return toInt(store.get(KEYS.coins, 0));
+      return L.reduce((s,r)=>s+(r.delta||0),0);
     },
-    async addStars(delta, reason='reward', uid = economy.getUid()){
-      if (!delta) return economy.getStarBalance(uid);
-      const ledger = economy._getLedger(uid);
-      ledger.push({ id:`${Date.now()}-${Math.random().toString(36).slice(2)}`, at: nowISO(), delta:+delta, reason });
-      economy._setLedger(uid, ledger);
-      const bal = await economy.getStarBalance(uid);
-      store.set(KEYS.coins, bal);
+    async add(delta, reason='reward', uid=this.uid()){
+      if (!delta) return this.balance(uid);
+      const L = this._ledger(uid);
+      L.push({ id:`${Date.now()}-${Math.random().toString(36).slice(2)}`, at:nowISO(), delta:+delta, reason });
+      this._saveLedger(L, uid);
+      const bal = await this.balance(uid);
+      store.set(KEYS.coins, bal); // เผื่อโค้ดเดิมยังอ่านคีย์นี้
       document.dispatchEvent(new Event('coins:changed'));
       return bal;
     },
-    async spendStars(cost, reason='purchase', uid = economy.getUid()){
-      cost = Math.abs(safeInt(cost, 0));
-      const bal = await economy.getStarBalance(uid);
+    async spend(cost, reason='purchase', uid=this.uid()){
+      cost = Math.abs(toInt(cost,0));
+      const bal = await this.balance(uid);
       if (bal < cost) throw new Error('เหรียญไม่พอ');
-      return economy.addStars(-cost, reason, uid);
+      return this.add(-cost, reason, uid);
     }
   };
 
-  const inventory = {
-    _read(uid=economy.getUid()){ return store.get(KEYS.inv(uid), []); },
-    _write(arr, uid=economy.getUid()){ store.set(KEYS.inv(uid), arr); },
-    async listOwned(uid=economy.getUid()){ return inventory._read(uid); },
-    async hasItem(itemId, uid=economy.getUid()){ return inventory._read(uid).some(x=>x.itemId===itemId); },
-    async addItem(item, uid=economy.getUid()){
-      const arr = inventory._read(uid);
-      if (!arr.some(x=>x.itemId===item.id)){ arr.push({ itemId:item.id, ownedAt:nowISO(), item }); inventory._write(arr, uid); }
+  /* ---------------- Avatar (single-image) ---------------- */
+  const avatar = {
+    // รายการอวาตาร์ที่ “ร้าน” จะใช้ (พยายามโหลดจาก /data/avatars.json ถ้าไม่มีจะใช้ AVATAR_DEFAULTS)
+    async listAll(){
+      try{
+        const res = await fetch('/data/avatars.json', {cache:'no-store'});
+        if (res.ok) return await res.json();
+      }catch(e){}
+      return AVATAR_DEFAULTS;
+    },
+    owned(){
+      return store.get(KEYS.avatarsOwned, []) || [];
+    },
+    _saveOwned(arr){
+      store.set(KEYS.avatarsOwned, arr);
+    },
+    ensureOwnBase(){
+      const own = new Set(this.owned());
+      AVATAR_DEFAULTS.forEach(a => own.add(a.id));
+      this._saveOwned(Array.from(own));
+    },
+    current(){
+      return {
+        id: store.get(KEYS.avatarId) || AVATAR_DEFAULTS[0].id,
+        asset: store.get(KEYS.avatarAsset) || AVATAR_DEFAULTS[0].asset
+      };
+    },
+    setCurrent({id, asset}){
+      if (id) store.set(KEYS.avatarId, id);
+      if (asset) store.set(KEYS.avatarAsset, asset);
+      this.render();
+    },
+    async buyAndEquip(avatarObj){
+      const own = new Set(this.owned());
+      if (!own.has(avatarObj.id)){
+        if (avatarObj.price && avatarObj.price>0){
+          await economy.spend(avatarObj.price, `purchase:avatar:${avatarObj.id}`);
+        }
+        own.add(avatarObj.id);
+        this._saveOwned(Array.from(own));
+      }
+      this.setCurrent({id: avatarObj.id, asset: avatarObj.asset});
       document.dispatchEvent(new Event('inventory:changed'));
-      return true;
+      document.dispatchEvent(new Event('coins:changed'));
+    },
+    render(){
+      const area = $('#character-display-area');
+      if (!area) return;
+      // สร้าง/อัปเดต img เดียว
+      let img = area.querySelector('img.avatar-img');
+      if (!img){
+        area.innerHTML = ''; // ล้าง loader เดิม
+        img = document.createElement('img');
+        img.className = 'avatar-img';
+        img.alt = 'avatar';
+        img.style.maxWidth = '260px';
+        img.style.maxHeight = '360px';
+        img.style.objectFit = 'contain';
+        img.style.borderRadius = '18px';
+        img.style.boxShadow = '0 6px 24px rgba(0,0,0,.08)';
+        area.appendChild(img);
+      }
+      const cur = this.current();
+      img.onerror = () => {
+        // หากพาธผิด ให้ย้อนกลับไปยัง base ตัวแรก
+        const fallback = AVATAR_DEFAULTS[0];
+        img.src = fallback.asset;
+        this.setCurrent({id:fallback.id, asset:fallback.asset});
+      };
+      img.src = cur.asset;
     }
   };
 
-  /* ---------------- Pet Slot ---------------- */
-  const pet = {
-    getAsset(){ return store.get(KEYS.petAsset, null); },
-    setAsset(src){ if(src) store.set(KEYS.petAsset, src); else store.del(KEYS.petAsset); document.dispatchEvent(new Event('pet:changed')); },
-    refreshSlot(){
-      const img = document.getElementById('pet-image');
-      if (!img) return;
-      const src = pet.getAsset();
-      if (src){ if (img.src !== src) img.src = src; img.style.opacity = 1; }
-      else { img.removeAttribute('src'); img.style.opacity = 0; }
-    }
-  };
-
-  /* ---------------- Header UI ---------------- */
+  /* ---------------- Header (ชื่อ + เหรียญ) ---------------- */
   const headerUI = {
-    refreshName(){
-      const el = document.getElementById('display-name');
-      if (!el) return;
-      el.textContent = store.get(KEYS.name) || 'ผู้เล่น';
-    },
-    async refreshCoins(){
-      const el = document.getElementById('header-coins');
-      if (!el) return;
-      el.textContent = await economy.getStarBalance();
-    },
     ensureCoinsInline(){
       if (!document.getElementById('header-coins')){
         const host = $('.name-and-coins') || $('.header') || document.body;
@@ -104,194 +157,73 @@
         host.appendChild(div);
       }
     },
+    refreshName(){
+      const el = document.getElementById('display-name');
+      if (el) el.textContent = store.get(KEYS.name) || 'ผู้เล่น';
+    },
+    async refreshCoins(){
+      const el = document.getElementById('header-coins');
+      if (el) el.textContent = await economy.balance();
+    },
     init(){
-      document.addEventListener('coins:changed', headerUI.refreshCoins);
-      document.addEventListener('pet:changed', pet.refreshSlot);
+      document.addEventListener('coins:changed', this.refreshCoins);
       document.addEventListener('DOMContentLoaded', () => {
-        headerUI.ensureCoinsInline();
-        headerUI.refreshName();
-        headerUI.refreshCoins();
-        pet.refreshSlot();
+        this.ensureCoinsInline();
+        this.refreshName();
+        this.refreshCoins();
       });
     }
   };
 
-  /* ---------------- Character Adapter ----------------
-     จุดประสงค์: พูดภาษาเดียวกับ character.js ไม่ว่ารูปแบบ API จะเป็นแบบไหน
-     รองรับ:
-       - window.Character.mount(target) / render(target) / renderTo(target) / init(target)
-       - window.Character.getAvatarAsset() หรือ getAvatar() -> {asset|sprite|url}
-       - window.Character.state.avatar.asset
-       - Event: Character.on('ready'|'updated') และ DOM events: character:ready / character:updated
-  ----------------------------------------------------- */
-  const CharacterAdapter = (function(){
-    const api = {
-      isReady(){
-        return !!window.Character;
-      },
-      on(evt, cb){
-        let off = ()=>{};
-        // 1) Character.on
-        if (window.Character && typeof window.Character.on === 'function'){
-          try {
-            const ret = window.Character.on(evt, cb);
-            if (typeof ret === 'function') off = ret;
-          } catch {}
-        }
-        // 2) DOM CustomEvent
-        const domHandler = (e)=>cb(e.detail||e);
-        document.addEventListener(`character:${evt}`, domHandler);
-        // 3) บางโปรเจกต์ยิง 'ready' ตรง ๆ
-        if (evt === 'ready') document.addEventListener('ready', domHandler);
-        return () => {
-          off();
-          document.removeEventListener(`character:${evt}`, domHandler);
-          if (evt === 'ready') document.removeEventListener('ready', domHandler);
-        };
-      },
-      async render(targetSelector){
-        const target = (typeof targetSelector==='string') ? $(targetSelector) : targetSelector;
-        if (!target) return false;
-        const C = window.Character;
-        if (!C) return false;
-        try {
-          if (typeof C.mount === 'function') return !!(await C.mount(target));
-          if (typeof C.renderTo === 'function') return !!(await C.renderTo(target));
-          if (typeof C.render === 'function') return !!(await C.render(target));
-          if (typeof C.init === 'function') return !!(await C.init(target));
-        } catch(e){ console.warn('Character.render error:', e); }
-        return false;
-      },
-      getAvatarAsset(){
-        const C = window.Character;
-        if (!C) return null;
-        try {
-          if (typeof C.getAvatarAsset === 'function') return C.getAvatarAsset();
-          if (typeof C.getAvatar === 'function'){
-            const a = C.getAvatar();
-            return a?.asset || a?.sprite || a?.url || null;
-          }
-          if (C.avatarAsset) return C.avatarAsset;
-          if (C.state?.avatar?.asset) return C.state.avatar.asset;
-        } catch(e){}
-        return null;
-      }
-    };
-    return api;
-  })();
-
-  /* ---------------- Character Bootstrap ---------------- */
-  function characterMounted() {
-    const area = $('#character-display-area');
-    if (!area) return false;
-    return !!area.querySelector('#image-character-container, .character-container, canvas, img.character-sprite');
-  }
-
-  async function mountCharacter() {
-    const areaSel = '#character-display-area';
-    const loader = $('.character-loading');
-    if (loader) loader.style.opacity = .8;
-
-    // ถ้า Character ยังไม่พร้อม ให้รอเป็นช่วง ๆ แล้วลองใหม่
-    let tries = 0;
-    while (!CharacterAdapter.isReady() && tries < 12) { // รวม ~3วินาที
-      await new Promise(r => setTimeout(r, 250));
-      tries++;
-    }
-    if (!CharacterAdapter.isReady()) return false;
-
-    // bind events: ready/updated -> sync avatar if needed
-    CharacterAdapter.on('ready', syncAvatarLabelOnly);
-    CharacterAdapter.on('updated', syncAvatarLabelOnly);
-
-    // render
-    const ok = await CharacterAdapter.render(areaSel);
-    if (ok && loader) loader.remove();
-    // อ่าน asset (ถ้ามี) -> ใส่ alt/src ให้ container ปัจจุบัน (ไม่ทับ DOM ที่ character.js วาด)
-    syncAvatarLabelOnly();
-    return ok;
-  }
-
-  function syncAvatarLabelOnly(){
-    // ใช้เพื่ออัพเดต alt/src ของรูปหลัก ถ้า character.js เปิดให้ดึง asset ได้
-    const asset = CharacterAdapter.getAvatarAsset();
-    const container = $('#image-character-container') || $('#character-display-area');
-    if (!container) return;
-    if (asset){
-      let img = container.querySelector('img.character-sprite, img[data-role="avatar"], img');
-      if (!img){
-        img = document.createElement('img');
-        img.setAttribute('data-role','avatar');
-        img.style.maxWidth = '100%';
-        img.style.maxHeight = '100%';
-        container.appendChild(img);
-      }
-      if (img && !img.classList.contains('character-sprite')) {
-        img.src = asset;
-      }
-    }
-  }
-
-  /* ---------------- Play Game button (no removal) ---------------- */
+  /* ---------------- Play Game (ไม่ลบการ์ด) ---------------- */
   function ensurePlayGameCard() {
     if (document.getElementById('open-games')) return;
-    const containers = [
-      $('.actions-grid'), $('.action-grid'),
-      $('.actions'), $('#action-cards'),
-      document.querySelector('main .container')
-    ].filter(Boolean);
-    if (!containers.length) return;
+    const grid = document.querySelector('.actions-grid, .action-grid, .actions, #action-cards, main .container');
+    if (!grid) return;
     const btn = document.createElement('button');
     btn.id = 'open-games';
     btn.className = 'action-card games-card';
     btn.innerHTML = `<div class="action-icon">🎮</div><h3>เล่นเกม</h3><p>เริ่มเล่นและสะสมเหรียญ</p>`;
     btn.addEventListener('click', () => {
-      if (window.App && typeof window.App.openGame === 'function') window.App.openGame();
-      else if (document.getElementById('start-game')) document.getElementById('start-game').click();
+      if (window.App?.openGame) window.App.openGame();
       else location.href = '/pages/game.html';
     });
-    containers[0].prepend(btn);
+    grid.prepend(btn);
   }
 
   /* ---------------- Boot ---------------- */
   document.addEventListener('DOMContentLoaded', async () => {
-    // defaults
+    // ค่าเริ่มต้นปลอดภัย
     if (!store.get(KEYS.uid)) store.set(KEYS.uid, 'guest');
     if (!store.get(KEYS.name)) store.set(KEYS.name, 'ผู้เล่น');
+
+    // ถ้ามีเหรียญเก่าในคีย์ coins แต่ยังไม่มี ledger ให้ย้ายเข้า ledger
+    const legacy = toInt(store.get(KEYS.coins, 0));
+    if (legacy && economy._ledger(economy.uid()).length === 0){
+      await economy.add(legacy, 'migrate:legacy');
+    }
 
     headerUI.init();
     ensurePlayGameCard();
 
-    // migrate legacy coins -> ledger (ทำซ้ำได้)
-    const legacy = safeInt(store.get(KEYS.coins, 0));
-    if (legacy && economy._getLedger(economy.getUid()).length === 0) {
-      await economy.addStars(legacy, 'migrate:legacy');
+    // ให้เป็นเจ้าของอวาตาร์ base เสมอ
+    avatar.ensureOwnBase();
+
+    // ตั้งค่าอวาตาร์ปัจจุบันครั้งแรก (ถ้ายังไม่เคยตั้ง)
+    const cur = avatar.current();
+    if (!cur || !cur.asset){
+      avatar.setCurrent({ id: AVATAR_DEFAULTS[0].id, asset: AVATAR_DEFAULTS[0].asset });
     }
 
-    // เชื่อม character.js จริง
-    mountCharacter();
+    // วาดอวาตาร์
+    avatar.render();
   });
 
   /* ---------------- Public API ---------------- */
   window.App = Object.assign(window.App || {}, {
-    economy, inventory, pet,
-    ui: {
-      refreshCoins: headerUI.refreshCoins,
-      refreshPet: pet.refreshSlot,
-      refreshName: headerUI.refreshName,
-    },
-    character: {
-      mount: mountCharacter,
-      getAvatarAsset: () => CharacterAdapter.getAvatarAsset()
-    },
-    purchaseItemById: async function (itemId, getItemByIdFn) {
-      const item = await Promise.resolve(getItemByIdFn(itemId));
-      if (!item) throw new Error('ไม่พบสินค้า');
-      await economy.spendStars(item.price, `purchase:${item.id}`);
-      await inventory.addItem(item);
-      document.dispatchEvent(new Event('coins:changed'));
-      return true;
-    },
+    economy,
+    avatar,
+    // ตัวอย่างใช้ในหน้า "ร้าน": ซื้ออวาตาร์แล้วสวมใส่
+    // await App.avatar.buyAndEquip({id:'elderly_male_base', asset:'/assets/...png', price:0})
   });
-
 })();
