@@ -1,13 +1,14 @@
-/* ========================================
-   app.js — PWA Game (HOTFIX 2: Character Bootstrapper)
-   - Keep coins under name + pet slot
-   - Restore/ensure Play Game card (no removal)
-   - Try to mount character; else draw fallback avatar
-   - Economy (ledger) + Inventory
-   ======================================== */
+/* =========================================================
+   app.js — Integrated with character.js (Adapter-first)
+   - Reads avatar & renders via character.js (no guessing)
+   - Listens to Character events (ready/updated)
+   - Coins under name + pet slot transparent when none
+   - Does NOT remove the Play Game widget
+   ========================================================= */
 
 (function () {
-  // ====== CONFIG ======
+
+  /* ---------------- Basic utils ---------------- */
   const KEYS = {
     uid: 'current_uid',
     name: 'player_name',
@@ -16,24 +17,19 @@
     inv: (uid) => `inventory:${uid}`,
     ledger: (uid) => `stars_ledger:${uid}`,
   };
-  const FALLBACK_AVATAR = {
-    // ใส่ path รูป placeholder ได้ ถ้าไม่มีจะใช้ emoji
-    src: '/assets/images/characters/default.png',
-    bg: 'linear-gradient(180deg,#f7faff 0%, #eef5ff 100%)'
-  };
 
-  // ====== UTIL ======
-  const nowISO = () => new Date().toISOString();
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const nowISO = () => new Date().toISOString();
   const safeInt = (v, d = 0) => (Number.isFinite(+v) ? +v : d);
+
   const store = {
     get(k, d=null){ try{ const r=localStorage.getItem(k); if(r===null)return d; return /^\[|\{/.test(r)?JSON.parse(r):r; }catch{return d;} },
     set(k,v){ try{ localStorage.setItem(k, (typeof v==='object')?JSON.stringify(v):String(v)); }catch{} },
     del(k){ try{ localStorage.removeItem(k); }catch{} },
   };
 
-  // ====== ECONOMY ======
+  /* ---------------- Economy & Inventory ---------------- */
   const economy = {
     getUid(){ return store.get(KEYS.uid) || 'guest'; },
     _getLedger(uid){ return store.get(KEYS.ledger(uid), []); },
@@ -61,7 +57,6 @@
     }
   };
 
-  // ====== INVENTORY ======
   const inventory = {
     _read(uid=economy.getUid()){ return store.get(KEYS.inv(uid), []); },
     _write(arr, uid=economy.getUid()){ store.set(KEYS.inv(uid), arr); },
@@ -75,7 +70,7 @@
     }
   };
 
-  // ====== PET SLOT ======
+  /* ---------------- Pet Slot ---------------- */
   const pet = {
     getAsset(){ return store.get(KEYS.petAsset, null); },
     setAsset(src){ if(src) store.set(KEYS.petAsset, src); else store.del(KEYS.petAsset); document.dispatchEvent(new Event('pet:changed')); },
@@ -88,7 +83,7 @@
     }
   };
 
-  // ====== HEADER (name + coins) ======
+  /* ---------------- Header UI ---------------- */
   const headerUI = {
     refreshName(){
       const el = document.getElementById('display-name');
@@ -102,11 +97,11 @@
     },
     ensureCoinsInline(){
       if (!document.getElementById('header-coins')){
-        const nameWrap = $('.name-and-coins') || $('.header') || document.body;
+        const host = $('.name-and-coins') || $('.header') || document.body;
         const div = document.createElement('div');
         div.className = 'player-coins-inline';
         div.innerHTML = `<span class="coin-icon">⭐</span> <span id="header-coins">0</span> เหรียญ`;
-        nameWrap.appendChild(div);
+        host.appendChild(div);
       }
     },
     init(){
@@ -121,7 +116,123 @@
     }
   };
 
-  // ====== GAME WIDGET (restore if missing) ======
+  /* ---------------- Character Adapter ----------------
+     จุดประสงค์: พูดภาษาเดียวกับ character.js ไม่ว่ารูปแบบ API จะเป็นแบบไหน
+     รองรับ:
+       - window.Character.mount(target) / render(target) / renderTo(target) / init(target)
+       - window.Character.getAvatarAsset() หรือ getAvatar() -> {asset|sprite|url}
+       - window.Character.state.avatar.asset
+       - Event: Character.on('ready'|'updated') และ DOM events: character:ready / character:updated
+  ----------------------------------------------------- */
+  const CharacterAdapter = (function(){
+    const api = {
+      isReady(){
+        return !!window.Character;
+      },
+      on(evt, cb){
+        let off = ()=>{};
+        // 1) Character.on
+        if (window.Character && typeof window.Character.on === 'function'){
+          try {
+            const ret = window.Character.on(evt, cb);
+            if (typeof ret === 'function') off = ret;
+          } catch {}
+        }
+        // 2) DOM CustomEvent
+        const domHandler = (e)=>cb(e.detail||e);
+        document.addEventListener(`character:${evt}`, domHandler);
+        // 3) บางโปรเจกต์ยิง 'ready' ตรง ๆ
+        if (evt === 'ready') document.addEventListener('ready', domHandler);
+        return () => {
+          off();
+          document.removeEventListener(`character:${evt}`, domHandler);
+          if (evt === 'ready') document.removeEventListener('ready', domHandler);
+        };
+      },
+      async render(targetSelector){
+        const target = (typeof targetSelector==='string') ? $(targetSelector) : targetSelector;
+        if (!target) return false;
+        const C = window.Character;
+        if (!C) return false;
+        try {
+          if (typeof C.mount === 'function') return !!(await C.mount(target));
+          if (typeof C.renderTo === 'function') return !!(await C.renderTo(target));
+          if (typeof C.render === 'function') return !!(await C.render(target));
+          if (typeof C.init === 'function') return !!(await C.init(target));
+        } catch(e){ console.warn('Character.render error:', e); }
+        return false;
+      },
+      getAvatarAsset(){
+        const C = window.Character;
+        if (!C) return null;
+        try {
+          if (typeof C.getAvatarAsset === 'function') return C.getAvatarAsset();
+          if (typeof C.getAvatar === 'function'){
+            const a = C.getAvatar();
+            return a?.asset || a?.sprite || a?.url || null;
+          }
+          if (C.avatarAsset) return C.avatarAsset;
+          if (C.state?.avatar?.asset) return C.state.avatar.asset;
+        } catch(e){}
+        return null;
+      }
+    };
+    return api;
+  })();
+
+  /* ---------------- Character Bootstrap ---------------- */
+  function characterMounted() {
+    const area = $('#character-display-area');
+    if (!area) return false;
+    return !!area.querySelector('#image-character-container, .character-container, canvas, img.character-sprite');
+  }
+
+  async function mountCharacter() {
+    const areaSel = '#character-display-area';
+    const loader = $('.character-loading');
+    if (loader) loader.style.opacity = .8;
+
+    // ถ้า Character ยังไม่พร้อม ให้รอเป็นช่วง ๆ แล้วลองใหม่
+    let tries = 0;
+    while (!CharacterAdapter.isReady() && tries < 12) { // รวม ~3วินาที
+      await new Promise(r => setTimeout(r, 250));
+      tries++;
+    }
+    if (!CharacterAdapter.isReady()) return false;
+
+    // bind events: ready/updated -> sync avatar if needed
+    CharacterAdapter.on('ready', syncAvatarLabelOnly);
+    CharacterAdapter.on('updated', syncAvatarLabelOnly);
+
+    // render
+    const ok = await CharacterAdapter.render(areaSel);
+    if (ok && loader) loader.remove();
+    // อ่าน asset (ถ้ามี) -> ใส่ alt/src ให้ container ปัจจุบัน (ไม่ทับ DOM ที่ character.js วาด)
+    syncAvatarLabelOnly();
+    return ok;
+  }
+
+  function syncAvatarLabelOnly(){
+    // ใช้เพื่ออัพเดต alt/src ของรูปหลัก ถ้า character.js เปิดให้ดึง asset ได้
+    const asset = CharacterAdapter.getAvatarAsset();
+    const container = $('#image-character-container') || $('#character-display-area');
+    if (!container) return;
+    if (asset){
+      let img = container.querySelector('img.character-sprite, img[data-role="avatar"], img');
+      if (!img){
+        img = document.createElement('img');
+        img.setAttribute('data-role','avatar');
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '100%';
+        container.appendChild(img);
+      }
+      if (img && !img.classList.contains('character-sprite')) {
+        img.src = asset;
+      }
+    }
+  }
+
+  /* ---------------- Play Game button (no removal) ---------------- */
   function ensurePlayGameCard() {
     if (document.getElementById('open-games')) return;
     const containers = [
@@ -142,100 +253,26 @@
     containers[0].prepend(btn);
   }
 
-  // ====== CHARACTER BOOTSTRAPPER ======
-  function hasCharacterMounted() {
-    // มองหาคอนเทนเนอร์หลักที่ character.js น่าจะสร้าง
-    const area = $('#character-display-area');
-    if (!area) return false;
-    return !!area.querySelector('#image-character-container, .character-container, canvas, img.character-sprite');
-  }
-
-  async function tryMountCharacter() {
-    // เรียกเมธอดที่อาจจะมีอยู่ใน character.js
-    const targetSel = '#character-display-area';
-    try {
-      if (window.Character && typeof window.Character.mount === 'function')
-        return !!(await window.Character.mount(targetSel));
-      if (window.Character && typeof window.Character.renderTo === 'function')
-        return !!(await window.Character.renderTo(targetSel));
-      if (window.Character && typeof window.Character.init === 'function')
-        return !!(await window.Character.init(targetSel));
-      if (typeof window.renderCharacter === 'function')
-        return !!(await window.renderCharacter(targetSel));
-    } catch(e){
-      console.warn('Character API error:', e);
-    }
-    return false;
-  }
-
-  function drawFallbackCharacter() {
-    const area = $('#character-display-area');
-    if (!area) return;
-    // เคลียร์ loader แล้ววาด Fallback
-    area.innerHTML = `
-      <div id="image-character-container" class="character-container" 
-           style="width:260px;height:360px;border-radius:18px;display:flex;align-items:center;justify-content:center;
-                  background:${FALLBACK_AVATAR.bg}; box-shadow:0 6px 24px rgba(0,0,0,.08); position:relative;">
-        <div style="position:absolute;top:10px;left:10px;font-weight:700;background:rgba(255,255,255,.75);
-                    border-radius:10px;padding:6px 10px;backdrop-filter:blur(4px);">
-          <span id="fallback-name"></span>
-        </div>
-        <img id="fallback-img" alt="" style="max-width:90%;max-height:90%;object-fit:contain;"/>
-      </div>
-    `;
-    // ชื่อผู้เล่น
-    $('#fallback-name').textContent = store.get(KEYS.name) || 'ผู้เล่น';
-    // รูปภาพ (ถ้าไม่มีไฟล์จริง ให้ใช้ emoji)
-    const img = $('#fallback-img');
-    img.onerror = () => { img.replaceWith(Object.assign(document.createElement('div'), {textContent:'🧍', style:'font-size:96px;'})); };
-    img.src = FALLBACK_AVATAR.src;
-  }
-
-  function bootCharacter() {
-    // 1) รอ DOM พร้อมก่อน
-    document.addEventListener('DOMContentLoaded', async () => {
-      const loader = $('.character-loading');
-      if (loader) loader.style.opacity = .7;
-
-      // 2) พยายาม mount ผ่าน character.js ภายใน 800ms
-      let mounted = await Promise.race([
-        tryMountCharacter(),
-        new Promise(res => setTimeout(()=>res(false), 800))
-      ]);
-
-      // 3) ถ้ายังไม่เจอ ให้รอต่ออีกนิด (บางไฟล์โหลดช้า)
-      if (!mounted) {
-        mounted = await Promise.race([
-          tryMountCharacter(),
-          new Promise(res => setTimeout(()=>res(false), 900))
-        ]);
-      }
-
-      // 4) ถ้าไม่สำเร็จจริง ๆ -> วาด Fallback
-      if (!mounted && !hasCharacterMounted()) {
-        drawFallbackCharacter();
-      }
-    });
-  }
-
-  // ====== BOOTSTRAP ======
+  /* ---------------- Boot ---------------- */
   document.addEventListener('DOMContentLoaded', async () => {
+    // defaults
     if (!store.get(KEYS.uid)) store.set(KEYS.uid, 'guest');
     if (!store.get(KEYS.name)) store.set(KEYS.name, 'ผู้เล่น');
 
     headerUI.init();
     ensurePlayGameCard();
 
-    // migrate legacy coins -> ledger (ทำซ้ำได้ไม่พัง)
+    // migrate legacy coins -> ledger (ทำซ้ำได้)
     const legacy = safeInt(store.get(KEYS.coins, 0));
     if (legacy && economy._getLedger(economy.getUid()).length === 0) {
       await economy.addStars(legacy, 'migrate:legacy');
     }
+
+    // เชื่อม character.js จริง
+    mountCharacter();
   });
 
-  bootCharacter();
-
-  // ====== PUBLIC API ======
+  /* ---------------- Public API ---------------- */
   window.App = Object.assign(window.App || {}, {
     economy, inventory, pet,
     ui: {
@@ -243,7 +280,10 @@
       refreshPet: pet.refreshSlot,
       refreshName: headerUI.refreshName,
     },
-    openGame: window.App?.openGame || null,
+    character: {
+      mount: mountCharacter,
+      getAvatarAsset: () => CharacterAdapter.getAvatarAsset()
+    },
     purchaseItemById: async function (itemId, getItemByIdFn) {
       const item = await Promise.resolve(getItemByIdFn(itemId));
       if (!item) throw new Error('ไม่พบสินค้า');
