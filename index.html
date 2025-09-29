@@ -165,27 +165,35 @@
   </style>
 
   <style id="hide-character-stats">
-    /* ซ่อนกล่องสถิติ "เหรียญ/เกม" ข้างอวตาร์ แต่คงชื่อผู้เล่นไว้ */
-    #image-character-container .character-stats,
-    .character-section .character-stats {
+    /* ซ่อนเฉพาะสถิติข้างอวตาร์ (ไม่แตะ Quick Stats ด้านล่าง) */
+    #image-character-container .character-stats{
       display: none !important;
     }
   </style>
 
 
   <style id="pet-slot-style">
+    /* ให้กล่องตัวละครเป็นฐานวางสัตว์เลี้ยงแบบซ้อนทับ */
+    #character-display-area{ position: relative; }
     .pet-slot{
-      margin: 12px auto 8px auto;
-      width: 92%;
-      min-height: 120px;
-      border-radius: 16px;
-      border: 2px dashed #BFD8FF;
-      background: #F5FAFF;
+      position: absolute;
+      right: 8%;
+      bottom: 6%;
+      width: 96px;
+      height: 96px;
       display: flex;
       align-items: center;
       justify-content: center;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.4);
+      backdrop-filter: blur(2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,.08);
+      pointer-events: none; /* ไม่บังปุ่มตัวละคร */
     }
-    .pet-placeholder{ opacity:.65; font-size: 1.1rem; }
+    .pet-placeholder{ font-size: 1.4rem; opacity: .7; }
+    @media (max-width: 768px){
+      .pet-slot{ width: 76px; height: 76px; right: 6%; bottom: 5%; }
+    }
   </style>
 
 </head>
@@ -247,13 +255,13 @@
       <main class="dashboard-content">
         <section class="character-section">
           <div id="character-display-area">
+            <!-- พื้นที่สัตว์เลี้ยง (อยู่ฉากเดียวกับตัวละคร) -->
+            <div id="pet-slot" class="pet-slot" aria-label="สัตว์เลี้ยง">
+              <div class="pet-placeholder">🐾</div>
+            </div>
+
             <!-- Ragnarok Character จะถูกสร้างที่นี่โดย JavaScript -->
             <div class="character-loading">กำลังโหลดตัวละคร... ⚡</div>
-          </div>
-        
-          <!-- พื้นที่สัตว์เลี้ยง (วางอนาคต) -->
-          <div id="pet-slot" class="pet-slot" aria-label="พื้นที่สำหรับสัตว์เลี้ยง">
-            <div class="pet-placeholder">🐾 พื้นที่สัตว์เลี้ยง</div>
           </div>
         </section>
 
