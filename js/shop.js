@@ -1,46 +1,65 @@
-// /js/inventory.js
-(function (global) {
-  const getUser = () => (global.gameAuth?.currentUser) || (global.gameAuth?.loadUser?.() || null);
+// js/shop.js
+import * as storage from './utils/storage.js';
+import { getCurrentUid, getStarBalance, spendStars } from './economy.js';
+import { addItem, hasItem } from './inventory.js';
 
-  function _ensure() {
-    const u = getUser();
-    if (!u) return null;
-    u.inventory = u.inventory || { owned: [], equipped: { head: null, body: null, pet: null, bg: null } };
-    global.gameAuth?.saveCurrentUser?.();
-    return u.inventory;
+async function loadItems() {
+  // โหลดจาก IndexedDB ก่อน ถ้าไม่มีค่อย fetch จากไฟล์แล้ว cache
+  let items = await storage.getAll('items');
+  if (!items || items.length === 0) {
+    const res = await fetch('/data/items.json');
+    items = await res.json();
+    for (const it of items) await storage.put('items', it);
   }
+  return items;
+}
 
-  function getInventory() {
-    return _ensure() || { owned: [], equipped: {} };
-  }
+function renderItemCard(it, { owned, canBuy, balance }) {
+  return `
+    <div class="card item-card">
+      <img src="${it.asset}" alt="${it.name}" class="item-img" />
+      <div class="item-body">
+        <div class="item-title">${it.name}</div>
+        <div class="item-price">ราคา: ${it.price} ⭐</div>
+        <div class="item-actions">
+          ${owned ? `<button disabled class="btn owned">เป็นเจ้าของแล้ว</button>`
+                  : `<button class="btn buy" data-id="${it.id}" ${!canBuy?'disabled':''}>
+                       ซื้อ (${it.price} / ยอดคงเหลือ ${balance})
+                     </button>`
+          }
+        </div>
+      </div>
+    </div>
+  `;
+}
 
-  function isOwned(itemId) {
-    const inv = _ensure(); if (!inv) return false;
-    return inv.owned.includes(itemId);
-  }
+async function refresh() {
+  const root = document.getElementById('shopRoot');
+  const uid = await getCurrentUid();
+  if (!uid) { root.innerHTML = '<p>กรุณาเริ่มใช้งาน/เข้าสู่ระบบแบบแฝงก่อน</p>'; return; }
 
-  function addItem(itemId) {
-    const inv = _ensure(); if (!inv) return false;
-    if (!inv.owned.includes(itemId)) inv.owned.push(itemId);
-    global.gameAuth?.saveCurrentUser?.();
-    return true;
-  }
+  const [items, balance] = [await loadItems(), await getStarBalance(uid)];
+  const cards = await Promise.all(items.map(async (it) => {
+    const owned = await hasItem(uid, it.id);
+    return renderItemCard(it, { owned, canBuy: balance >= it.price, balance });
+  }));
+  root.innerHTML = `<div class="grid">${cards.join('')}</div>`;
 
-  function equip(slot, itemId) {
-    const inv = _ensure(); if (!inv) return false;
-    inv.equipped[slot] = itemId || null;
-    global.gameAuth?.saveCurrentUser?.();
-    try {
-      // แจ้งระบบตัวละครให้ re-render ถ้ามี
-      global.characterSystem?.applyEquipment?.(inv.equipped);
-    } catch {}
-    return true;
-  }
+  // bind buy buttons
+  root.querySelectorAll('.buy').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      const item = await storage.get('items', id);
+      try {
+        await spendStars(uid, item.price, `purchase:${id}`);
+        await addItem(uid, item);
+        await refresh();
+        alert(`ซื้อ “${item.name}” สำเร็จ!`);
+      } catch (e) {
+        alert(e.message || 'ซื้อไม่สำเร็จ');
+      }
+    });
+  });
+}
 
-  function getEquipped() {
-    return getInventory().equipped;
-  }
-
-  global.Inventory = { getInventory, isOwned, addItem, equip, getEquipped };
-  if (typeof window !== 'undefined') window.Inventory = global.Inventory;
-})(window);
+document.addEventListener('DOMContentLoaded', refresh);
