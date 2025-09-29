@@ -7,7 +7,6 @@
       "choices": ["1 ตัว", "2 ตัว", "ไม่มีเลย", "5 ตัว"],
       "answerIndex": 1
     },
-    "items": [
     {
       "id": "m-003",
       "image": "/assets/images/memory/pet2.png",
@@ -15,7 +14,6 @@
       "choices": ["แมว", "หมา", "ปลา", "เสือ"],
       "answerIndex": 0
     },
-    "items": [
     {
       "id": "m-004",
       "image": "/assets/images/memory/pet3.png",
@@ -23,49 +21,45 @@
       "choices": ["1 ตัว", "2 ตัว", "ไม่มีเลย", "3 ตัว"],
       "answerIndex": 0
     },
-    "items": [
     {
       "id": "m-005",
-      "image": "/assets/images/memory/pet1.png",
+      "image": "/assets/images/memory/sea1.png",
       "prompt": "จากภาพที่เห็น มีหอย กี่ตัว?",
-      "choices": ["1 ตัว", "2 ตัว", "ไม่มีเลย", "5 ตัว"],
-      "answerIndex": 1
+      "choices": ["1 ตัว", "2 ตัว", "ไม่มีเลย", "3 ตัว"],
+      "answerIndex": 3
     },
-    "items": [
     {
       "id": "m-007",
-      "image": "/assets/images/memory/pet1.png",
-      "prompt": "จากภาพที่เห็น มีสัตว์สีส้ม กี่ตัว?",
+      "image": "/assets/images/memory/farm1.png",
+      "prompt": "จากภาพที่เห็นมีเป็ดกี่ตัว?",
       "choices": ["1 ตัว", "2 ตัว", "ไม่มีเลย", "5 ตัว"],
-      "answerIndex": 1
+      "answerIndex": 0
     },
-    "items": [
     {
       "id": "m-008",
-      "image": "/assets/images/memory/pet1.png",
-      "prompt": "จากภาพที่เห็น มีสัตว์สีส้ม กี่ตัว?",
-      "choices": ["1 ตัว", "2 ตัว", "ไม่มีเลย", "5 ตัว"],
+      "image": "/assets/images/memory/pet4.png",
+      "prompt": "จากภาพที่เห็นมีกระรอกกี่ตัว?",
+      "choices": ["4 ตัว", "5 ตัว", "ไม่มีเลย", "3 ตัว"],
       "answerIndex": 1
     },
     "id": "m-009",
-      "image": "/assets/images/memory/pet1.png",
-      "prompt": "จากภาพที่เห็น มีสัตว์สีส้ม กี่ตัว?",
-      "choices": ["1 ตัว", "2 ตัว", "ไม่มีเลย", "5 ตัว"],
+      "image": "/assets/images/memory/doc1.png",
+      "prompt": "จากภาพที่เห็น เด็กใส่เสื้อสีอะไร?",
+      "choices": ["แดง", "ส้ม", "ขาว", "เหลือง"],
       "answerIndex": 1
     },
-    "items": [
     {
       "id": "m-010",
-      "image": "/assets/images/memory/pet1.png",
-      "prompt": "จากภาพที่เห็น มีสัตว์สีส้ม กี่ตัว?",
-      "choices": ["1 ตัว", "2 ตัว", "ไม่มีเลย", "5 ตัว"],
+      "image": "/assets/images/memory/pet5.png",
+      "prompt": "จากภาพที่เห็น ลูกช้างกำลังเหยียบผลไม้อะไร?",
+      "choices": ["มะละกอ", "แตงโม", "สัปปะรด", "กล้วย"],
       "answerIndex": 1
     },
     {
       "id": "m-002",
-      "image": "/assets/images/memory/pet1.png",
-      "prompt": "ในภาพมี แมวกี่ตัว?",
-      "choices": ["5 ตัว", "4 ตัว", "3 ตัว", "2 ตัว"],
+      "image": "/assets/images/memory/sale1.png",
+      "prompt": "ในภาพกล้วยกี่ลูก?",
+      "choices": ["1 ลูก", "2 ลูก", "4 ลูก", "3 ลูก"],
       "answerIndex": 3
     }
   ]
