@@ -701,4 +701,83 @@ document.addEventListener('DOMContentLoaded', () => {
   window.App = Object.assign(window.App || {}, {
     __goShopSafe: goShop
   });
+/* =========================================================
+   ⭐ Safe Economy (append-only, non-destructive)
+   - Ledger เก็บดาวใน localStorage (stars_ledger:<uid>)
+   - เผย API: App.economy.addStars / spendStars / getStarBalance
+   - รองรับ event จากเกม: 'game:reward' → เติมดาวอัตโนมัติ
+   - ยิง 'coins:changed' ทุกครั้งที่ยอดเปลี่ยน
+   ========================================================= */
+(function SafeEconomyAppendOnly(){
+  if (window.__SAFE_ECONOMY__) return; // กันใส่ซ้ำ
+  window.__SAFE_ECONOMY__ = true;
+
+  const K = {
+    uid: 'current_uid',
+    coinsLegacy: 'player_coins',
+    ledger: (uid)=>`stars_ledger:${uid}`,
+  };
+  const nowISO = ()=>new Date().toISOString();
+  const toInt = (v,d=0)=> (Number.isFinite(+v)? +v : d);
+
+  function uid(){
+    let id = localStorage.getItem(K.uid);
+    if (!id){ id = 'guest'; localStorage.setItem(K.uid, id); }
+    return id;
+  }
+  function readLedger(u=uid()){
+    try{ return JSON.parse(localStorage.getItem(K.ledger(u))||'[]') }catch{ return [] }
+  }
+  function writeLedger(arr,u=uid()){
+    localStorage.setItem(K.ledger(u), JSON.stringify(arr));
+  }
+  async function getStarBalance(u=uid()){
+    const L = readLedger(u);
+    if (!L.length) return toInt(localStorage.getItem(K.coinsLegacy)||'0', 0);
+    return L.reduce((s,r)=>s+(r.delta||0),0);
+  }
+  async function addStars(delta, reason='reward', u=uid()){
+    delta = toInt(delta, 0);
+    if (!delta) return getStarBalance(u);
+    const L = readLedger(u);
+    L.push({ id:`${Date.now()}-${Math.random().toString(36).slice(2)}`, at:nowISO(), delta, reason });
+    writeLedger(L, u);
+    // sync legacy key เผื่อโค้ดเก่าอ่านอยู่
+    localStorage.setItem(K.coinsLegacy, String(await getStarBalance(u)));
+    document.dispatchEvent(new Event('coins:changed'));
+    return getStarBalance(u);
+  }
+  async function spendStars(cost, reason='purchase', u=uid()){
+    cost = Math.abs(toInt(cost,0));
+    const bal = await getStarBalance(u);
+    if (bal < cost) throw new Error('เหรียญ/ดาวไม่พอ');
+    return addStars(-cost, reason, u);
+  }
+
+  // อย่าเขียนทับของเดิม ถ้ามีอยู่แล้วให้ใช้ของเดิม
+  window.App = window.App || {};
+  window.App.economy = window.App.economy || {
+    getStarBalance, addStars, spendStars
+  };
+
+  // รองรับ event จากหน้าเกมแบบรวมศูนย์
+  // ใช้: document.dispatchEvent(new CustomEvent('game:reward',{detail:{stars:5, reason:'game:memory'}}))
+  document.addEventListener('game:reward', async (e)=>{
+    try{
+      const n = toInt(e?.detail?.stars, 0);
+      const reason = e?.detail?.reason || 'game:reward';
+      if (n) await addStars(n, reason);
+    }catch(err){ console.warn('[economy] game:reward error', err); }
+  });
+
+  // ย้ายเหรียญเก่าเข้า ledger (ถ้าเคยเก็บไว้ที่ player_coins)
+  (async function migrateOnce(){
+    const L = readLedger(uid());
+    const legacy = toInt(localStorage.getItem(K.coinsLegacy)||'0',0);
+    if (!L.length && legacy){
+      await addStars(legacy, 'migrate:legacy');
+    }
+  })();
+})();
+
 })();
