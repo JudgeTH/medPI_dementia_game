@@ -1,8 +1,8 @@
 /* ========================================
-   app.js — PWA Game (HOTFIX)
-   - DO NOT remove game widget anymore
-   - Restore/ensure "Play Game" button if missing
+   app.js — PWA Game (HOTFIX 2: Character Bootstrapper)
    - Keep coins under name + pet slot
+   - Restore/ensure Play Game card (no removal)
+   - Try to mount character; else draw fallback avatar
    - Economy (ledger) + Inventory
    ======================================== */
 
@@ -16,14 +16,17 @@
     inv: (uid) => `inventory:${uid}`,
     ledger: (uid) => `stars_ledger:${uid}`,
   };
+  const FALLBACK_AVATAR = {
+    // ใส่ path รูป placeholder ได้ ถ้าไม่มีจะใช้ emoji
+    src: '/assets/images/characters/default.png',
+    bg: 'linear-gradient(180deg,#f7faff 0%, #eef5ff 100%)'
+  };
 
   // ====== UTIL ======
   const nowISO = () => new Date().toISOString();
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
   const safeInt = (v, d = 0) => (Number.isFinite(+v) ? +v : d);
-
-  // ====== STORAGE (localStorage) ======
   const store = {
     get(k, d=null){ try{ const r=localStorage.getItem(k); if(r===null)return d; return /^\[|\{/.test(r)?JSON.parse(r):r; }catch{return d;} },
     set(k,v){ try{ localStorage.setItem(k, (typeof v==='object')?JSON.stringify(v):String(v)); }catch{} },
@@ -120,64 +123,117 @@
 
   // ====== GAME WIDGET (restore if missing) ======
   function ensurePlayGameCard() {
-    // ไม่ลบอะไรอีกแล้ว — ถ้าไม่มีปุ่มเล่นเกม เราจะ “เพิ่ม” ให้
     if (document.getElementById('open-games')) return;
-
-    // หา grid ที่วางการ์ด (เดา class ที่พบบ่อย)
     const containers = [
-      $('.actions-grid'),
-      $('.actions'),
-      $('#action-cards'),
-      document.querySelector('main .container'),
+      $('.actions-grid'), $('.action-grid'),
+      $('.actions'), $('#action-cards'),
+      document.querySelector('main .container')
     ].filter(Boolean);
-
     if (!containers.length) return;
-
     const btn = document.createElement('button');
     btn.id = 'open-games';
     btn.className = 'action-card games-card';
-    btn.innerHTML = `
-      <div class="action-icon">🎮</div>
-      <h3>เล่นเกม</h3>
-      <p>เริ่มเล่นและสะสมเหรียญ</p>
-    `;
-
-    // พฤติกรรมเมื่อกด: เรียกฟังก์ชันถ้ามี, ไม่งั้นเดาง่ายๆ
+    btn.innerHTML = `<div class="action-icon">🎮</div><h3>เล่นเกม</h3><p>เริ่มเล่นและสะสมเหรียญ</p>`;
     btn.addEventListener('click', () => {
-      if (window.App && typeof window.App.openGame === 'function') {
-        window.App.openGame();
-      } else if (document.getElementById('start-game')) {
-        document.getElementById('start-game').click();
-      } else if (location.pathname.endsWith('/') || location.pathname.endsWith('index.html')) {
-        // ลองไปหน้าเกมมาตรฐาน
-        const candidates = ['/game.html', '/pages/game.html', '/pages/games.html'];
-        const target = candidates.find(p => p);
-        location.href = target;
-      } else {
-        // ยิงอีเวนต์ให้โค้ดเดิมจับไปเปิดเกมเอง
-        document.dispatchEvent(new Event('ui:open-game'));
+      if (window.App && typeof window.App.openGame === 'function') window.App.openGame();
+      else if (document.getElementById('start-game')) document.getElementById('start-game').click();
+      else location.href = '/pages/game.html';
+    });
+    containers[0].prepend(btn);
+  }
+
+  // ====== CHARACTER BOOTSTRAPPER ======
+  function hasCharacterMounted() {
+    // มองหาคอนเทนเนอร์หลักที่ character.js น่าจะสร้าง
+    const area = $('#character-display-area');
+    if (!area) return false;
+    return !!area.querySelector('#image-character-container, .character-container, canvas, img.character-sprite');
+  }
+
+  async function tryMountCharacter() {
+    // เรียกเมธอดที่อาจจะมีอยู่ใน character.js
+    const targetSel = '#character-display-area';
+    try {
+      if (window.Character && typeof window.Character.mount === 'function')
+        return !!(await window.Character.mount(targetSel));
+      if (window.Character && typeof window.Character.renderTo === 'function')
+        return !!(await window.Character.renderTo(targetSel));
+      if (window.Character && typeof window.Character.init === 'function')
+        return !!(await window.Character.init(targetSel));
+      if (typeof window.renderCharacter === 'function')
+        return !!(await window.renderCharacter(targetSel));
+    } catch(e){
+      console.warn('Character API error:', e);
+    }
+    return false;
+  }
+
+  function drawFallbackCharacter() {
+    const area = $('#character-display-area');
+    if (!area) return;
+    // เคลียร์ loader แล้ววาด Fallback
+    area.innerHTML = `
+      <div id="image-character-container" class="character-container" 
+           style="width:260px;height:360px;border-radius:18px;display:flex;align-items:center;justify-content:center;
+                  background:${FALLBACK_AVATAR.bg}; box-shadow:0 6px 24px rgba(0,0,0,.08); position:relative;">
+        <div style="position:absolute;top:10px;left:10px;font-weight:700;background:rgba(255,255,255,.75);
+                    border-radius:10px;padding:6px 10px;backdrop-filter:blur(4px);">
+          <span id="fallback-name"></span>
+        </div>
+        <img id="fallback-img" alt="" style="max-width:90%;max-height:90%;object-fit:contain;"/>
+      </div>
+    `;
+    // ชื่อผู้เล่น
+    $('#fallback-name').textContent = store.get(KEYS.name) || 'ผู้เล่น';
+    // รูปภาพ (ถ้าไม่มีไฟล์จริง ให้ใช้ emoji)
+    const img = $('#fallback-img');
+    img.onerror = () => { img.replaceWith(Object.assign(document.createElement('div'), {textContent:'🧍', style:'font-size:96px;'})); };
+    img.src = FALLBACK_AVATAR.src;
+  }
+
+  function bootCharacter() {
+    // 1) รอ DOM พร้อมก่อน
+    document.addEventListener('DOMContentLoaded', async () => {
+      const loader = $('.character-loading');
+      if (loader) loader.style.opacity = .7;
+
+      // 2) พยายาม mount ผ่าน character.js ภายใน 800ms
+      let mounted = await Promise.race([
+        tryMountCharacter(),
+        new Promise(res => setTimeout(()=>res(false), 800))
+      ]);
+
+      // 3) ถ้ายังไม่เจอ ให้รอต่ออีกนิด (บางไฟล์โหลดช้า)
+      if (!mounted) {
+        mounted = await Promise.race([
+          tryMountCharacter(),
+          new Promise(res => setTimeout(()=>res(false), 900))
+        ]);
+      }
+
+      // 4) ถ้าไม่สำเร็จจริง ๆ -> วาด Fallback
+      if (!mounted && !hasCharacterMounted()) {
+        drawFallbackCharacter();
       }
     });
-
-    // ใส่เป็นใบแรกในกริด
-    containers[0].prepend(btn);
   }
 
   // ====== BOOTSTRAP ======
   document.addEventListener('DOMContentLoaded', async () => {
-    // init defaults
     if (!store.get(KEYS.uid)) store.set(KEYS.uid, 'guest');
     if (!store.get(KEYS.name)) store.set(KEYS.name, 'ผู้เล่น');
 
     headerUI.init();
     ensurePlayGameCard();
 
-    // migrate legacy coins -> ledger (ครั้งเดียวก็ได้ ทำซ้ำไม่พัง)
+    // migrate legacy coins -> ledger (ทำซ้ำได้ไม่พัง)
     const legacy = safeInt(store.get(KEYS.coins, 0));
     if (legacy && economy._getLedger(economy.getUid()).length === 0) {
       await economy.addStars(legacy, 'migrate:legacy');
     }
   });
+
+  bootCharacter();
 
   // ====== PUBLIC API ======
   window.App = Object.assign(window.App || {}, {
@@ -187,7 +243,6 @@
       refreshPet: pet.refreshSlot,
       refreshName: headerUI.refreshName,
     },
-    // ให้หน้าอื่นเรียกเปิดเกมแบบกำหนดเองได้
     openGame: window.App?.openGame || null,
     purchaseItemById: async function (itemId, getItemByIdFn) {
       const item = await Promise.resolve(getItemByIdFn(itemId));
