@@ -387,6 +387,64 @@
 </style>
 <script type="module" src="js/econ-stars.js"></script>
 <script type="module" src="js/coins-ui.js"></script>
+<script>
+(function () {
+  const UID_KEY = 'ecg_current_uid';
+  const LEDGER_PREFIX = 'pi.stars_ledger.';
+
+  function getUid() {
+    return localStorage.getItem(UID_KEY) || 'guest';
+  }
+
+  function loadLedger() {
+    const key = LEDGER_PREFIX + getUid();
+    try {
+      return JSON.parse(localStorage.getItem(key) || '[]');
+    } catch {
+      return [];
+    }
+  }
+
+  function calcTotals() {
+    const rows = loadLedger();
+    let balance = 0, earned = 0;
+    for (const r of rows) {
+      const d = Number((r && r.delta) || 0);
+      balance += d;
+      if (d > 0) earned += d;
+    }
+    return { balance, earned };
+  }
+
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = String(value);
+  }
+
+  function render() {
+    const { balance, earned } = calcTotals();
+    // เหรียญในร้าน (คงเหลือ)
+    setText('player-coins', balance);
+    // เหรียญทั้งหมด (สะสมบวกทั้งหมด) — ถ้าอยากให้แสดง “คงเหลือ” ให้เปลี่ยนเป็น balance
+    setText('total-earned-coins', earned);
+  }
+
+  // อัปเดตเมื่อมีการเปลี่ยนแปลง localStorage จาก “อีกแท็บ/อีกหน้า”
+  window.addEventListener('storage', (e) => {
+    if (e.key && e.key.startsWith(LEDGER_PREFIX)) render();
+  });
+
+  // รีเฟรชเมื่อกลับเข้าหน้า/โหลดจาก bfcache
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+  window.addEventListener('pageshow', render);
+
+  // แรกเข้า
+  document.addEventListener('DOMContentLoaded', render);
+
+  // เผื่ออยากสั่งรีเฟรชเองจากคอนโซลหรือไฟล์อื่น
+  window.refreshCoins = render;
+})();
+</script>
 
 
 </body>
