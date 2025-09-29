@@ -1,172 +1,27 @@
+<!-- pages/shop.html -->
 <!doctype html>
 <html lang="th">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Shop</title>
-  <link rel="stylesheet" href="/css/style.css" />
+  <title>ร้านค้า</title>
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/components.css" />
   <style>
-    :root { --bg:#f6f7fb; --card:#fff; --ink:#111; --muted:#64748b; }
-    body{margin:0;background:var(--bg);font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',sans-serif}
-    header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#2d3748;color:#fff}
-    header .balance{font-weight:700}
-    .wrap{display:grid;grid-template-columns:320px 1fr;gap:16px;padding:16px}
-    .card{background:var(--card);border-radius:14px;box-shadow:0 10px 24px rgba(0,0,0,.08)}
-    .avatar{height:280px;position:relative;border-radius:14px;overflow:hidden;background:#e8fbf3}
-    .panel{padding:12px}
-    .items{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
-    .item{display:flex;flex-direction:column;gap:8px;padding:10px}
-    .item img{width:100%;height:120px;object-fit:contain}
-    .meta{display:flex;justify-content:space-between;align-items:center}
-    .name{font-weight:600}
-    .price{color:#ef6c00}
-    .owned{font-size:12px;color:#16a34a}
-    button{border:0;border-radius:10px;padding:8px 10px;cursor:pointer}
-    .buy{background:#ffd24d}
-    .equip{background:#8bd17c}
-    .unequip{background:#e0e7ff}
-    .toolbar{display:flex;gap:8px}
-    .tabs{display:flex;gap:8px;margin-bottom:10px}
-    .tab{background:#e2e8f0;border-radius:999px;padding:6px 10px;cursor:pointer;font-size:14px}
-    .tab.active{background:#94a3b8;color:#fff}
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+    .item-img { width: 100%; height: 160px; object-fit: contain; }
+    .item-title { font-weight: 600; margin-top: 8px; }
+    .item-price { opacity: .8; margin-top: 4px; }
+    .item-actions { margin-top: 8px; }
+    .btn.owned { opacity: .6; }
   </style>
 </head>
 <body>
-  <header>
-    <div style="display:flex;align-items:center;gap:8px">
-      <button onclick="history.back()" style="border:0;border-radius:8px;padding:6px 10px;cursor:pointer">⬅️ กลับ</button>
-      <strong>ร้านค้า</strong>
-    </div>
-    <div class="balance">⭐ <span id="balance">0</span></div>
-  </header>
+  <main class="container">
+    <h1>ร้านค้า</h1>
+    <div id="shopRoot" aria-live="polite">กำลังโหลด...</div>
+  </main>
 
-  <div class="wrap">
-    <div class="card">
-      <div id="avatarMount" class="avatar"></div>
-      <div class="panel toolbar">
-        <button onclick="location.reload()">รีเฟรช</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="panel">
-        <div class="tabs">
-          <div class="tab active" data-filter="all">ทั้งหมด</div>
-          <div class="tab" data-filter="head">หมวก/หัว</div>
-          <div class="tab" data-filter="body">เสื้อผ้า</div>
-          <div class="tab" data-filter="pet">สัตว์เลี้ยง</div>
-          <div class="tab" data-filter="bg">พื้นหลัง</div>
-        </div>
-        <div id="items" class="items"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- scripts -->
-  <script src="/js/auth.js"></script>
-  <script src="/js/economy.js"></script>
-  <script src="/js/inventory.js"></script>
-  <script src="/js/character.js"></script>
-  <script>
-    // ===== helpers =====
-    function renderBalance() {
-      document.getElementById('balance').textContent = Economy.getBalance();
-    }
-
-    async function loadItems() {
-      const res = await fetch('/data/items.json', { cache:'no-store' });
-      const data = await res.json();
-      return data.items || [];
-    }
-
-    function renderItems(items, filter='all') {
-      const inv = Inventory.getInventory();
-      const el = document.getElementById('items');
-      el.innerHTML = '';
-
-      items
-        .filter(i => filter === 'all' ? true : i.type === filter)
-        .forEach(it => {
-          const owned = inv.owned.includes(it.id);
-          const equipped = inv.equipped[it.type] === it.id;
-
-          const card = document.createElement('div');
-          card.className = 'item';
-          card.innerHTML = `
-            <img src="${it.image}" alt="">
-            <div class="meta">
-              <div class="name">${it.name}</div>
-              <div class="price">⭐ ${it.price}</div>
-            </div>
-            ${owned ? '<div class="owned">เป็นเจ้าของแล้ว</div>' : ''}
-            <div class="toolbar"></div>
-          `;
-          const actions = card.querySelector('.toolbar');
-
-          if (!owned) {
-            const btnBuy = document.createElement('button');
-            btnBuy.className = 'buy';
-            btnBuy.textContent = 'ซื้อ';
-            btnBuy.onclick = () => {
-              if (!Economy.canSpend(it.price)) {
-                alert('ดาวไม่พอครับ');
-                return;
-              }
-              const ok = Economy.spendStars(it.price, { reason:'buy-item', itemId: it.id });
-              if (ok.ok) {
-                Inventory.addItem(it.id);
-                renderBalance();
-                renderItems(items, filter);
-              }
-            };
-            actions.appendChild(btnBuy);
-          } else {
-            if (!equipped) {
-              const btnEq = document.createElement('button');
-              btnEq.className = 'equip';
-              btnEq.textContent = 'ใส่';
-              btnEq.onclick = () => {
-                Inventory.equip(it.type, it.id);
-                renderItems(items, filter);
-              };
-              actions.appendChild(btnEq);
-            } else {
-              const btnUn = document.createElement('button');
-              btnUn.className = 'unequip';
-              btnUn.textContent = 'ถอด';
-              btnUn.onclick = () => {
-                Inventory.equip(it.type, null);
-                renderItems(items, filter);
-              };
-              actions.appendChild(btnUn);
-            }
-          }
-
-          el.appendChild(card);
-        });
-    }
-
-    // ===== init =====
-    (async function initShop(){
-      // เมาท์ตัวละคร
-      const mount = document.getElementById('avatarMount');
-      window.characterSystem?.mountTo?.(mount);
-      window.characterSystem?.applyEquipment?.(Inventory.getEquipped());
-
-      // แท็บกรอง
-      document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-          document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-          tab.classList.add('active');
-          renderItems(window.__ALL_ITEMS__, tab.dataset.filter);
-        });
-      });
-
-      renderBalance();
-      const items = await loadItems();
-      window.__ALL_ITEMS__ = items;
-      renderItems(items, 'all');
-    })();
-  </script>
+  <script type="module" src="/js/shop.js"></script>
 </body>
 </html>
