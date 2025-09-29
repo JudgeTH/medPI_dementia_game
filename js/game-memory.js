@@ -303,3 +303,171 @@ async function nextQuestion(){
   state.questions=pickUnique(all, CONFIG.QUESTIONS_PER_SESSION);
   nextQuestion();
 })();
+
+/* =========================================================
+   ⭐ Per-Question Stars (append-only, non-destructive)
+   - 1 คำตอบถูก = 1 ⭐ (สะสมไว้)
+   - เมื่อ "จบเกม" (เล่นครบ 7 ข้อหรือเกมประกาศจบ) → มอบ⭐รวมครั้งเดียว
+   - ไม่แตะของเดิม, ดักอีเวนต์/ฟังก์ชันยอดนิยมให้อัตโนมัติ
+   ========================================================= */
+(function MemoryStarsPerQuestion(){
+  if (window.__MEMORY_STARS_PER_Q__) return;
+  window.__MEMORY_STARS_PER_Q__ = true;
+
+  /* ---------- CONFIG ---------- */
+  var CONFIG = {
+    QUESTIONS_PER_ROUND: 7,            // จำนวนข้อ/รอบ (หรือปล่อยเกมกำหนดเองก็ได้)
+    REQUIRE_ROUND_LIMIT: true,         // true: จบเมื่อครบ 7 หรือเกมประกาศจบ; false: รอเกมประกาศจบเท่านั้น
+    REASON: 'game:memory:perQuestion', // เหตุผลบันทึกใน ledger
+    SHOW_TOAST: true                   // โชว์ +⭐ ตอนมอบรวม
+  };
+
+  /* ---------- ECONOMY (ไม่ทำลายของเดิม) ---------- */
+  var Econ = (function(){
+    var K = {
+      uid: 'current_uid',
+      legacy: 'player_coins',
+      ledger: function(u){ return 'stars_ledger:' + u; }
+    };
+    function uid(){ var u = localStorage.getItem(K.uid); if(!u){u='guest'; localStorage.setItem(K.uid,u);} return u; }
+    function readL(u){ try{ return JSON.parse(localStorage.getItem(K.ledger(u))||'[]'); }catch(_){ return []; } }
+    function writeL(a,u){ localStorage.setItem(K.ledger(u), JSON.stringify(a)); }
+    function sum(a){ return a.reduce(function(s,r){return s+(r.delta||0);},0); }
+    async function balance(){
+      try{ if (window.App?.economy?.getStarBalance) return await window.App.economy.getStarBalance(uid()); }catch(_){}
+      var L = readL(uid()); if (L.length) return sum(L);
+      return parseInt(localStorage.getItem(K.legacy)||'0',10)||0;
+    }
+    async function addStars(n, reason){
+      n = Number(n)||0; if (!n) return balance();
+      // ใช้ API เดิมก่อน
+      if (window.App?.economy?.addStars){
+        var v = await window.App.economy.addStars(n, reason, uid());
+        try{ document.dispatchEvent(new Event('coins:changed')); }catch(_){}
+        return v;
+      }
+      // ยิง event เผื่อมีตัวรับ
+      try{ document.dispatchEvent(new CustomEvent('game:reward',{detail:{stars:n,reason:reason||CONFIG.REASON}})); }catch(_){}
+      // เขียน ledger เอง (fallback)
+      var L = readL(uid());
+      L.push({ id: Date.now()+'-'+Math.random().toString(36).slice(2), at: new Date().toISOString(), delta: +n, reason: reason||CONFIG.REASON });
+      writeL(L, uid());
+      localStorage.setItem(K.legacy, String(await balance()));
+      try{ document.dispatchEvent(new Event('coins:changed')); }catch(_){}
+      return balance();
+    }
+    return { addStars:addStars, balance:balance };
+  })();
+
+  /* ---------- UI: Toast ---------- */
+  function toast(msg){
+    if (!CONFIG.SHOW_TOAST) return;
+    var el = document.createElement('div');
+    el.textContent = msg;
+    Object.assign(el.style, {
+      position:'fixed', left:'50%', top:'14px', transform:'translateX(-50%)',
+      background:'rgba(0,0,0,.75)', color:'#fff', padding:'8px 12px', borderRadius:'999px',
+      fontWeight:'700', boxShadow:'0 6px 18px rgba(0,0,0,.25)', zIndex:99999, opacity:'0', transition:'opacity .25s ease'
+    });
+    document.body.appendChild(el);
+    requestAnimationFrame(function(){ el.style.opacity='1'; });
+    setTimeout(function(){ el.style.opacity='0'; setTimeout(function(){ el.remove(); }, 280); }, 1500);
+  }
+
+  /* ---------- STATE ---------- */
+  var correctThisRound = 0;
+  var answeredThisRound = 0;
+  var awarded = false;
+
+  function resetRoundState(){
+    correctThisRound = 0;
+    answeredThisRound = 0;
+    awarded = false;
+  }
+
+  // เรียกตอนตอบ "ถูก" 1 ข้อ
+  function markCorrect(){
+    correctThisRound++;
+  }
+  // เรียกทุกครั้งที่ "ตอบไปแล้ว" 1 ข้อ (ถูก/ผิดก็เพิ่ม)
+  function markAnswered(){
+    answeredThisRound++;
+    if (CONFIG.REQUIRE_ROUND_LIMIT && CONFIG.QUESTIONS_PER_ROUND > 0){
+      if (answeredThisRound >= CONFIG.QUESTIONS_PER_ROUND){
+        finalizeIfNeeded('round-limit');
+      }
+    }
+  }
+
+  async function finalizeIfNeeded(source){
+    if (awarded) return;
+    awarded = true;
+    var stars = correctThisRound; // 1 คำตอบถูก = 1 ดาว
+    if (stars > 0){
+      await Econ.addStars(stars, CONFIG.REASON);
+      toast('+'+stars+' ⭐');
+    }
+    // เตรียมรอบใหม่ (ถ้ามีเล่นต่อ)
+    setTimeout(resetRoundState, 300);
+  }
+
+  /* ---------- PUBLIC HELPERS (ปลอดภัย, ใช้ได้ทันที) ----------
+     👉 แนะนำใส่บรรทัดเดียวในโค้ดเดิม:
+        - ตอนตรวจ "ตอบถูก":     window.memoryMarkCorrect();
+        - ตอน "กดส่งคำตอบ":     window.memoryMarkAnswered();
+        - ตอน "จบเกม/โชว์ผล":    window.memoryFinishRound();
+     ถ้าไม่ได้ใส่ โค้ดนี้ยังพยายามเดา/ดักอัตโนมัติให้
+  ---------------------------------------------------------------- */
+  window.memoryMarkCorrect  = function(){ try{ markCorrect(); }catch(_){ } };
+  window.memoryMarkAnswered = function(){ try{ markAnswered(); }catch(_){ } };
+  window.memoryFinishRound  = function(){ finalizeIfNeeded('manual'); };
+
+  /* ---------- AUTO-HOOKS: พยายามดักของเดิมให้เอง ---------- */
+  // 1) ดัก "ตอบถูก" จากชื่อฟังก์ชันยอดนิยม
+  function wrap(owner, key, fn){
+    if (!owner || typeof owner[key] !== 'function') return;
+    var orig = owner[key];
+    owner[key] = function(){
+      try{ fn.apply(this, arguments); }catch(_){}
+      return orig.apply(this, arguments);
+    };
+  }
+
+  var roots = [window, window.GameMemory, window.game, window.memoryGame].filter(Boolean);
+
+  // ถูก: onCorrect/handleCorrect/markCorrect/correctAnswer
+  ['onCorrect','handleCorrect','markCorrect','correctAnswer','answerCorrect'].forEach(function(k){
+    roots.forEach(function(R){ wrap(R, k, markCorrect); });
+  });
+
+  // ตอบไปแล้ว: onAnswered/nextQuestion/submitAnswer/processAnswer
+  ['onAnswered','nextQuestion','submitAnswer','processAnswer','handleAnswer'].forEach(function(k){
+    roots.forEach(function(R){ wrap(R, k, markAnswered); });
+  });
+
+  // จบเกม/สรุปผล: endGame/showResults/gameComplete/finishGame
+  ['endGame','showResults','gameComplete','finishGame','showWin','showVictory'].forEach(function(k){
+    roots.forEach(function(R){ wrap(R, k, function(){ finalizeIfNeeded(k); }); });
+  });
+
+  // 2) ดักผ่าน Custom Events ถ้าโค้ดเดิมยิงเอง
+  //   - ตอนตอบถูกให้ dispatch อะไรแบบนี้ก็ได้: document.dispatchEvent(new Event('answer:correct'))
+  document.addEventListener('answer:correct',  function(){ markCorrect(); },  {capture:true});
+  document.addEventListener('question:answered',function(){ markAnswered(); }, {capture:true});
+  document.addEventListener('memory:finish',    function(){ finalizeIfNeeded('event'); }, {capture:true});
+  document.addEventListener('game:finish',      function(){ finalizeIfNeeded('event'); }, {capture:true});
+
+  // 3) กันลืม: ปุ่มลัด Shift+Alt+K → จำลอง "ตอบถูก" 1 ข้อ / Shift+Alt+F → จบเกม
+  document.addEventListener('keydown', function(e){
+    if (e.shiftKey && e.altKey && e.code === 'KeyK'){ markCorrect(); markAnswered(); }
+    if (e.shiftKey && e.altKey && e.code === 'KeyF'){ finalizeIfNeeded('hotkey'); }
+  });
+
+  // 4) เริ่มรอบใหม่เมื่อโหลดเกม
+  if (document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', resetRoundState);
+  } else {
+    resetRoundState();
+  }
+})();
+
