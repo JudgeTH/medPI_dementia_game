@@ -250,24 +250,26 @@ async function nextQuestion(){
   nextQuestion();
 })();
 /* =========================================================
-   ⭐ Memory Game — Star Rewards (Append-only, Non-destructive)
-   - ไม่แก้โค้ดเดิม แค่สวมทับฟังก์ชันที่มี (win/match)
-   - ให้ดาว = WIN_BONUS + MATCH_BONUS * matches
-   - ใช้ App.economy.addStars ถ้ามี, ถ้าไม่มีก็ยิง event + เขียน ledger
+   ⭐ Memory Game — Guaranteed Star Rewards (Append-only)
+   - ไม่แตะของเดิม, สวมทับ/ฟัง DOM หลายทาง ให้ได้ดาวแน่นอน
    ========================================================= */
-(function MemoryStarRewards(){
-  if (window.__MEMORY_STAR_REWARDS__) return; // กันวางซ้ำ
-  window.__MEMORY_STAR_REWARDS__ = true;
+(function MemoryStarsGuaranteed(){
+  if (window.__MEMORY_STARS_GUARANTEED__) return;
+  window.__MEMORY_STARS_GUARANTEED__ = true;
 
   /* ---------- CONFIG ---------- */
   var CONFIG = {
-    WIN_BONUS: 10,     // ดาวเมื่อชนะเกม
-    MATCH_BONUS: 1,    // ดาวต่อ 1 คู่ที่จับถูก
-    REASON_WIN: 'game:memory:win',
-    REASON_MATCH: 'game:memory:match'
+    WIN_BONUS: 10,              // ได้ดาวเมื่อ "ชนะ" 1 เกม
+    MATCH_PER_PAIR: 0,          // ถ้าตรวจจับจำนวนคู่ได้ ให้บวกเพิ่มต่อคู่ (0 = ปิด)
+    WIN_TEXT_PATTERNS: [
+      'ชนะ', 'ชัยชนะ', 'คุณชนะ', 'สำเร็จ', 'เสร็จสิ้น',
+      'you win', 'victory', 'completed', 'finished'
+    ],
+    WIN_CLASS_PATTERNS: /(win|victory|complete|result)/i,
+    REWARD_REASON: 'game:memory:win'
   };
 
-  /* ---------- SAFE ECONOMY (fallback) ---------- */
+  /* ---------- Economy shim (ปลอดภัย ไม่ชนของเดิม) ---------- */
   var Econ = (function(){
     var K = {
       uid: 'current_uid',
@@ -276,130 +278,164 @@ async function nextQuestion(){
     };
     function uid(){
       var u = localStorage.getItem(K.uid);
-      if (!u){ u = 'guest'; localStorage.setItem(K.uid, u); }
+      if (!u){ u='guest'; localStorage.setItem(K.uid,u); }
       return u;
     }
-    function readLedger(u){ try { return JSON.parse(localStorage.getItem(K.ledger(u))||'[]'); } catch(_) { return []; } }
+    function readLedger(u){ try{ return JSON.parse(localStorage.getItem(K.ledger(u))||'[]'); }catch(_){ return []; } }
     function writeLedger(arr,u){ localStorage.setItem(K.ledger(u), JSON.stringify(arr)); }
-    function sum(arr){ return arr.reduce(function(s,r){ return s + (r.delta||0); }, 0); }
+    function sum(arr){ return arr.reduce(function(s,r){ return s + (r.delta||0); },0); }
     async function getBalance(){
-      // ถ้า App.economy มีอยู่ ใช้ของเดิม
       try{
-        if (window.App && window.App.economy && typeof window.App.economy.getStarBalance === 'function'){
-          return await window.App.economy.getStarBalance(uid());
-        }
+        if (window.App?.economy?.getStarBalance) return await window.App.economy.getStarBalance(uid());
       }catch(_){}
-      // ledger → legacy fallback
       var L = readLedger(uid());
       if (L.length) return sum(L);
-      var legacy = parseInt(localStorage.getItem(K.legacy)||'0',10)||0;
-      return legacy;
+      return parseInt(localStorage.getItem(K.legacy)||'0',10)||0;
     }
     async function addStars(n, reason){
-      // ใช้ของเดิมถ้ามี
-      if (window.App && window.App.economy && typeof window.App.economy.addStars === 'function'){
-        return await window.App.economy.addStars(n, reason, uid());
+      // ใช้ API เดิมก่อนถ้ามี
+      if (window.App?.economy?.addStars) {
+        var v = await window.App.economy.addStars(n, reason, uid());
+        try{ document.dispatchEvent(new Event('coins:changed')); }catch(_){}
+        return v;
       }
-      // ยิง event ให้ระบบภายนอก (ถ้ามี SafeEconomyAppendOnly อยู่จะรับ)
-      try {
-        document.dispatchEvent(new CustomEvent('game:reward',{ detail:{ stars:n, reason: reason || 'game:memory' } }));
-      } catch(_){}
-
-      // เขียนเองแบบง่าย (fallback)
+      // ยิง event เผื่อมีตัวรับ
+      try{ document.dispatchEvent(new CustomEvent('game:reward', { detail:{ stars:n, reason:reason||'game:memory'} })); }catch(_){}
+      // เขียน ledger เอง (fallback)
       var L = readLedger(uid());
       L.push({ id: Date.now()+'-'+Math.random().toString(36).slice(2), at: new Date().toISOString(), delta: +n, reason: reason||'game:memory' });
       writeLedger(L, uid());
-      localStorage.setItem(K.legacy, String(await getBalance())); // sync คีย์เก่า
-      // แจ้ง UI
-      try { document.dispatchEvent(new Event('coins:changed')); } catch(_){}
+      localStorage.setItem(K.legacy, String(await getBalance()));
+      try{ document.dispatchEvent(new Event('coins:changed')); }catch(_){}
       return getBalance();
     }
-    return { getBalance: getBalance, addStars: addStars };
+    return { addStars:addStars, getBalance:getBalance };
   })();
 
-  /* ---------- TOAST UI (เล็ก ๆ) ---------- */
+  /* ---------- Toast UI ---------- */
   function toastStars(n){
     if (!n) return;
     var el = document.createElement('div');
-    el.textContent = '+' + n + ' ⭐';
+    el.textContent = '+'+n+' ⭐';
     Object.assign(el.style, {
       position:'fixed', left:'50%', top:'14px', transform:'translateX(-50%)',
-      background:'rgba(0,0,0,.75)', color:'#fff', padding:'8px 12px',
-      borderRadius:'999px', fontWeight:'700', boxShadow:'0 6px 18px rgba(0,0,0,.25)', zIndex:99999,
-      transition:'all .3s ease', opacity:'0'
+      background:'rgba(0,0,0,.75)', color:'#fff', padding:'8px 12px', borderRadius:'999px',
+      fontWeight:'700', boxShadow:'0 6px 18px rgba(0,0,0,.25)', zIndex:99999, opacity:'0', transition:'opacity .25s ease'
     });
     document.body.appendChild(el);
     requestAnimationFrame(function(){ el.style.opacity='1'; });
-    setTimeout(function(){ el.style.opacity='0'; setTimeout(function(){ el.remove(); }, 350); }, 1500);
+    setTimeout(function(){ el.style.opacity='0'; setTimeout(function(){ el.remove(); }, 280); }, 1500);
   }
 
-  /* ---------- COUNTERS ---------- */
-  var matchCount = 0;
-
-  // ดัก “แมตช์สำเร็จ” จากชื่อฟังก์ชันยอดฮิต แล้วเพิ่มตัวนับให้เอง
-  function wrapMatch(fnOwner, key){
-    if (!fnOwner || typeof fnOwner[key] !== 'function') return;
-    var orig = fnOwner[key];
-    fnOwner[key] = function(){
-      try { matchCount++; } catch(_){}
-      return orig.apply(this, arguments);
-    };
+  /* ---------- Award once helper ---------- */
+  var __rewardedThisRound = false;
+  async function awardOnce(stars, reason){
+    if (__rewardedThisRound) return;
+    __rewardedThisRound = true;
+    try { await Econ.addStars(stars, reason||CONFIG.REWARD_REASON); toastStars(stars); }
+    catch(e){ console.warn('[MemoryStars] addStars error', e); }
+    // reset เมื่อเริ่มรอบใหม่ (ผู้ใช้กดเล่นอีกครั้ง → ส่วนใหญ่รีเฟรชบอร์ด)
+    setTimeout(function(){ __rewardedThisRound = false; }, 3000);
   }
 
-  // ดัก “ชนะเกม/จบเกม”
-  function wrapWin(fnOwner, key){
-    if (!fnOwner || typeof fnOwner[key] !== 'function') return;
-    var orig = fnOwner[key];
-    fnOwner[key] = async function(){
+  /* ---------- Public helper (เรียกเอง 1 บรรทัดได้) ---------- */
+  // ใช้ในโค้ดเดิมตรงจุด "ชนะเกม": window.awardStars(10, 'game:memory:win')
+  window.awardStars = function(n, reason){ awardOnce(n||CONFIG.WIN_BONUS, reason||CONFIG.REWARD_REASON); };
+
+  /* ---------- 1) Wrap ฟังก์ชันชนะยอดนิยม ---------- */
+  function wrapWin(owner, key){
+    if (!owner || typeof owner[key] !== 'function') return;
+    var orig = owner[key];
+    owner[key] = function(){
       var ret = orig.apply(this, arguments);
-      try {
-        var stars = (CONFIG.WIN_BONUS||0) + (CONFIG.MATCH_BONUS||0) * matchCount;
-        if (stars > 0){
-          await Econ.addStars(stars, CONFIG.REASON_WIN);
-          toastStars(stars);
-        }
-      } catch(err){
-        console.warn('[MemoryRewards] addStars error:', err);
-      } finally {
-        // รีเซ็ตตัวนับรอบใหม่
-        matchCount = 0;
-      }
+      awardOnce(CONFIG.WIN_BONUS, CONFIG.REWARD_REASON);
       return ret;
     };
   }
-
-  // รายชื่อคีย์ที่พบบ่อยในเกมความจำ
-  var CANDIDATES = {
-    match: ['onMatch','handleMatch','markMatch','setMatched','pairMatched'],
-    win:   ['onWin','handleWin','endGame','gameComplete','finishGame','showWin','showVictory']
-  };
-
-  // พยายามหาออพเจ็กต์เกมหลักเพื่อ wrap (เช่น window.GameMemory หรือ this)
   var roots = [window, window.GameMemory, window.game, window.memoryGame].filter(Boolean);
+  var WIN_KEYS = ['onWin','handleWin','endGame','gameComplete','finishGame','showWin','showVictory','gameWon'];
+  roots.forEach(function(R){ WIN_KEYS.forEach(function(k){ wrapWin(R,k); }); });
 
-  roots.forEach(function(R){
-    CANDIDATES.match.forEach(function(k){ wrapMatch(R, k); });
-    CANDIDATES.win.forEach(function(k){ wrapWin(R, k); });
+  /* ---------- 2) ฟัง custom events ---------- */
+  var EVT_NAMES = ['memory:win','game:win','win','victory','finished'];
+  EVT_NAMES.forEach(function(ev){
+    document.addEventListener(ev, function(){ awardOnce(CONFIG.WIN_BONUS, CONFIG.REWARD_REASON); }, {capture:true});
   });
 
-  // เผื่อเกมยิงอีเวนต์เอง เรารับไว้ด้วย (ไม่พึ่งชื่อฟังก์ชัน)
-  document.addEventListener('memory:match', function(){ matchCount++; }, {capture:true});
-  document.addEventListener('memory:win', async function(){
+  /* ---------- 3) MutationObserver หา “ชนะ” จาก DOM ---------- */
+  var mo;
+  function scanForWin(node){
     try{
-      var stars = (CONFIG.WIN_BONUS||0) + (CONFIG.MATCH_BONUS||0) * matchCount;
-      if (stars>0){
-        await Econ.addStars(stars, CONFIG.REASON_WIN);
-        toastStars(stars);
+      // a) จากข้อความ
+      var text = (node.textContent || '').toLowerCase();
+      if (text && CONFIG.WIN_TEXT_PATTERNS.some(function(t){ return text.includes(t); })){
+        awardOnce(CONFIG.WIN_BONUS, CONFIG.REWARD_REASON);
+        return true;
       }
-    } finally { matchCount = 0; }
-  }, {capture:true});
+      // b) จาก class/id
+      if (node.className && CONFIG.WIN_CLASS_PATTERNS.test(String(node.className))) {
+        awardOnce(CONFIG.WIN_BONUS, CONFIG.REWARD_REASON);
+        return true;
+      }
+      if (node.id && CONFIG.WIN_CLASS_PATTERNS.test(String(node.id))) {
+        awardOnce(CONFIG.WIN_BONUS, CONFIG.REWARD_REASON);
+        return true;
+      }
+    }catch(_){}
+    return false;
+  }
+  function startMO(){
+    try{
+      mo = new MutationObserver(function(mut){
+        for (var i=0;i<mut.length;i++){
+          var m = mut[i];
+          if (m.type === 'childList'){
+            m.addedNodes && m.addedNodes.forEach(function(nd){
+              if (!nd) return;
+              if (scanForWin(nd)) return;
+              // สแกนลูก ๆ เผื่อเป็น modal
+              if (nd.querySelectorAll){
+                var nodes = nd.querySelectorAll('*');
+                for (var j=0;j<nodes.length;j++){
+                  if (scanForWin(nodes[j])) return;
+                }
+              }
+            });
+          }
+        }
+      });
+      mo.observe(document.body, { childList:true, subtree:true });
+    }catch(_){}
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startMO);
+  } else {
+    startMO();
+  }
 
-  // ปุ่มทดสอบ (ปิดเสียง/ลบออกได้): Shift+Alt+M → +5⭐
+  /* ---------- 4) (เผื่อได้) นับคู่ matched จาก DOM ---------- */
+  // ถ้าโปรเจกต์ใช้ data-attr/classทั่วไป จะจับได้และคำนวณเพิ่มให้อัตโนมัติ
+  function countPairs(){
+    var totalCards = (document.querySelectorAll('[data-card]').length) || (document.querySelectorAll('.card').length) || 0;
+    var matched    = (document.querySelectorAll('[data-card].matched').length) || (document.querySelectorAll('.card.matched').length) || 0;
+    var pairs = Math.floor(Math.max(totalCards, matched)/2);
+    return { totalCards: totalCards, matched: matched, pairs: pairs };
+  }
+  // เมื่อชนะจาก Observer/Wrap แล้ว ลองบวกเพิ่มตามคู่ (ถ้าตรวจจับได้)
+  document.addEventListener('coins:changed', function(){
+    if (!CONFIG.MATCH_PER_PAIR) return;
+    try{
+      var c = countPairs();
+      if (c.pairs>0){
+        awardOnce(c.pairs * CONFIG.MATCH_PER_PAIR, 'game:memory:pairBonus');
+      }
+    }catch(_){}
+  });
+
+  /* ---------- 5) ปุ่มทดสอบ (Shift+Alt+M) ---------- */
   document.addEventListener('keydown', function(e){
     if (e.shiftKey && e.altKey && e.code === 'KeyM'){
-      Econ.addStars(5, 'debug:manual').then(function(){ toastStars(5); });
+      awardOnce(5, 'debug:manual');
     }
   });
-
 })();
-
