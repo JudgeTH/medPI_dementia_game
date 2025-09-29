@@ -106,7 +106,7 @@ const SAMPLE={ items:[
       "choices": ["4 ตัว", "5 ตัว", "ไม่มีเลย", "3 ตัว"],
       "answerIndex": 1
     },
-    "id": "m-009",
+      "id": "m-009",
       "image": "/assets/images/memory/doc1.png",
       "prompt": "จากภาพที่เห็น เด็กใส่เสื้อสีอะไร?",
       "choices": ["แดง", "ส้ม", "ขาว", "เหลือง"],
