@@ -1,40 +1,35 @@
 // js/econ-stars.js
-// ========== ใช้แค่ไฟล์นี้ก่อน ยังไม่ยุ่งกับระบบอื่น ==========
-const STAR_KEY = 'pi_star_ledger_v1'; // ledger เป็นอาเรย์ของ {delta, reason, at}
+const STAR_KEY = 'pi_star_ledger_v1'; // [{delta, reason, at}]
 
-function _loadLedger() {
-  try {
-    return JSON.parse(localStorage.getItem(STAR_KEY) || '[]');
-  } catch {
-    return [];
-  }
+function _load() {
+  try { return JSON.parse(localStorage.getItem(STAR_KEY) || '[]'); }
+  catch { return []; }
 }
-
-function _saveLedger(rows) {
+function _save(rows) {
   localStorage.setItem(STAR_KEY, JSON.stringify(rows));
-  // แจ้ง UI อื่นๆ (เช่น badge) ว่าค่าเปลี่ยน
-  window.dispatchEvent(new CustomEvent('stars:updated', { detail: { balance: Stars.getBalance() } }));
+  const t = Stars.totals();
+  window.dispatchEvent(new CustomEvent('stars:updated', { detail: t }));
 }
 
 export const Stars = {
-  /** ยอดคงเหลือ = sum(delta) */
-  getBalance() {
-    const rows = _loadLedger();
-    return rows.reduce((s, r) => s + (r.delta || 0), 0);
-  },
-  /** บันทึก +/− ดาว (delta เช่น +5, -20) พร้อมเหตุผล */
-  add(delta, reason = 'reward') {
+  add(delta, reason='reward') {
     if (!delta || isNaN(delta)) return;
-    const rows = _loadLedger();
+    const rows = _load();
     rows.push({ delta: Number(delta), reason, at: new Date().toISOString() });
-    _saveLedger(rows);
+    _save(rows);
   },
-  /** เคลียร์ทั้งหมด (ไว้ทดสอบ/รีเซ็ตเท่านั้น) */
-  _reset() {
+  totals() {
+    const rows = _load();
+    let balance = 0, earned = 0, spent = 0;
+    for (const r of rows) {
+      balance += (r.delta||0);
+      if ((r.delta||0) > 0) earned += r.delta; else spent += -(r.delta||0);
+    }
+    return { balance, earned, spent, count: rows.length };
+  },
+  resetForTest() {
     localStorage.removeItem(STAR_KEY);
-    window.dispatchEvent(new CustomEvent('stars:updated', { detail: { balance: 0 } }));
+    window.dispatchEvent(new CustomEvent('stars:updated', { detail: { balance:0, earned:0, spent:0, count:0 } }));
   }
 };
-
-// ให้เรียกใช้ได้จาก console เวลาเทส
-window.PiStars = Stars;
+window.PiStars = Stars; // เผื่อเรียกเทสต์จาก console
