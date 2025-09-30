@@ -353,16 +353,55 @@ console.log('✅ Simple Character System loaded (Avatar + Pet only)');
 // === force nameplate to top-left ===
 (() => {
   const css = `
-  .character-stage{ position: relative !important; }
-  .character-nameplate{
-    position: absolute !important;
-    top: 16px !important;
-    left: 24px !important;
-    margin: 0 !important;
-    text-align: left !important;
-  }`;
-  const s = document.createElement('style');
-  s.textContent = css;
-  document.head.appendChild(s);
-})();
+  /* กล่องการ์ดพื้นเขียวเป็นจุดอ้างอิง */
+.character-stage {
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;          /* จัดแนวตั้งกึ่งกลางให้ content */
+  justify-content: space-between !important;
+  min-height: 260px !important;            /* ปรับตามดีไซน์ของคุณ */
+}
+
+/* ชื่อมุมซ้ายบน */
+.character-nameplate {
+  position: absolute !important;
+  inset: 16px auto auto 24px !important;   /* top right bottom left */
+  margin: 0 !important;
+  text-align: left !important;
+  z-index: 5 !important;
+}
+
+/* คอลัมน์/บล็อคของตัวละคร (ใส่ class นี้ให้รูปคนหรือ wrapper ของรูปคน) */
+.character-art {
+  position: relative !important;
+  display: inline-block !important;
+  align-self: center !important;           /* ให้ตัวละครอยู่กึ่งกลางแนวตั้ง */
+  margin-right: 28px !important;
+}
+
+/* สลอตสัตว์เลี้ยง: ยืนใกล้เท้าด้านซ้ายของตัวละคร */
+.pet-slot {
+  position: absolute !important;
+  bottom: 0 !important;                    /* ชิดพื้นของ character-art */
+  left: -24px !important;                  /* เยื้องเข้าหาตัวละคร ปรับได้ */
+  width: 96px !important;
+  height: 96px !important;
+  border-radius: 16px !important;
+  background: rgba(255,255,255,0.65) !important;
+  backdrop-filter: blur(4px) !important;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.12) !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: flex-end !important;        /* ให้สัตว์เลี้ยงยืนติดพื้นสลอต */
+  justify-content: center !important;
+  z-index: 4 !important;
+}
+
+/* รูปสัตว์เลี้ยงภายในสลอต */
+.pet-slot img {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  display: block !important;
+}
 
