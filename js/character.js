@@ -346,6 +346,27 @@ class ImageCharacterSystem {
   }
 }
 
+/* วางท้ายสุดของ CSS */
+.character-stage{ position: relative !important; } /* ให้เป็นจุดอ้างอิง */
+
+.character-info.in-stage{
+  position: absolute !important;
+  top: 20px !important;        /* ระยะจากขอบบน */
+  left: 28px !important;       /* ระยะจากขอบซ้าย */
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.character-nameplate{
+  margin: 0 !important;
+  padding-bottom: 6px !important;
+  border-bottom: 1px solid #E8E8E8 !important;
+  text-align: left !important;
+}
+
+
 /* Global Instance */
 window.characterSystem = new ImageCharacterSystem();
 console.log('✅ Simple Character System loaded (Avatar + Pet only)');
