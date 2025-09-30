@@ -92,5 +92,48 @@
   </main>
 
   <script type="module" src="/js/game-memory.js"></script>
+  <script>
+    function renderSummaryAnimation(correctCount) {
+      const slot = document.getElementById('customAnimationSlot');
+      if (!slot) return;
+      slot.innerHTML = "";
+  
+      let imgSrc = null;
+      if (correctCount <= 1) {
+        imgSrc = "/assets/animations/celebrate1.png"; // ตอบถูก 0–1 ข้อ
+      } else if (correctCount === 2) {
+        imgSrc = "/assets/animations/celebrate2.png"; // ตอบถูก 2 ข้อ
+      } else if (correctCount === 3) {
+        imgSrc = "/assets/animations/celebrate3.png"; // ตอบถูก 3 ข้อ
+      } else if (correctCount === 4) {
+        imgSrc = "/assets/animations/celebrate4.png"; // ตอบถูก 4 ข้อ
+      } else if (correctCount === 5) {
+        imgSrc = "/assets/animations/celebrate5.png"; // ตอบถูก 5 ข้อ
+      } else if (correctCount === 6) {
+        imgSrc = "/assets/animations/celebrate6.png"; // ตอบถูก 6 ข้อ
+      } else if (correctCount === 7) {
+        imgSrc = "/assets/animations/celebrate7.png"; // ตอบถูก 7 ข้อ
+      }
+  
+      if (imgSrc) {
+        const img = document.createElement("img");
+        img.src = imgSrc;
+        img.alt = "สรุปผล";
+        img.style.maxWidth = "100%";
+        img.style.height = "auto";
+        slot.appendChild(img);
+      }
+    }
+  
+    // เรียกครั้งแรกหลังโหลดหน้า
+    document.addEventListener("DOMContentLoaded", () => {
+      const correctCount = parseInt(
+        document.getElementById("sumCorrect")?.textContent?.trim() || "0",
+        10
+      ) || 0;
+      renderSummaryAnimation(correctCount);
+    });
+  </script>
+
 </body>
 </html>
