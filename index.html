@@ -317,15 +317,18 @@
   </div>
 
   <!-- JavaScript Files -->
-  <script src="js/utils/constants.js"></script>
-  <script src="js/utils/helpers.js"></script>
-  <script src="js/utils/storage.js"></script>
-  <script src="js/dataManager.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/character.js"></script>
-  <script src="js/economy-unified.js"></script>
-  <script src="js/inventory-enhanced.js"></script>
-  <script src="js/app.js"></script>
+  <!-- โหลดแบบ ES Module ทั้งชุด -->
+  <script type="module">
+    import '/js/constants.js';
+    import '/js/helpers.js';
+    import '/js/storage.js';
+    import '/js/dataManager.js';
+    import '/js/auth.js';
+    import '/js/app.js';           // ตัวหลักถ้ามี
+    import '/js/character.js.js';   // ไฟล์ที่เราฉีด CSS + pet slot
+    import '/js/economy-unified.js';
+    import '/js/inventory-enhanced.js';
+  </script>
 
   <style id="bigger-emotion-effects">
   /* ใหญ่ขึ้น + ลอยสูงขึ้นนิด เพื่อไม่ทับหัว */
