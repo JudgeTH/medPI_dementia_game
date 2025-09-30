@@ -151,13 +151,13 @@ async function loadQuestions(){
 function getGradeImage(correctCount, totalQuestions) {
   // เกรด 1-7 ตามจำนวนข้อถูก
   const gradeMap = [
-    { min: 0, max: 1, image: '/assets/images/grades/grade1.png' },  // 0-1 ข้อถูก
-    { min: 2, max: 2, image: '/assets/images/grades/grade2.png' },  // 2 ข้อถูก
-    { min: 3, max: 3, image: '/assets/images/grades/grade3.png' },  // 3 ข้อถูก
-    { min: 4, max: 4, image: '/assets/images/grades/grade4.png' },  // 4 ข้อถูก
-    { min: 5, max: 5, image: '/assets/images/grades/grade5.png' },  // 5 ข้อถูก
-    { min: 6, max: 6, image: '/assets/images/grades/grade6.png' },  // 6 ข้อถูก
-    { min: 7, max: 7, image: '/assets/images/grades/grade7.png' }   // 7 ข้อถูก (เต็ม)
+    { min: 0, max: 1, image: '/assets/animations/celebrate1.png' },  // 0-1 ข้อถูก
+    { min: 2, max: 2, image: '/assets/animations/celebrate2.png' },  // 2 ข้อถูก
+    { min: 3, max: 3, image: '/assets/animations/celebrate3.png' },  // 3 ข้อถูก
+    { min: 4, max: 4, image: '/assets/animations/celebrate4.png' },  // 4 ข้อถูก
+    { min: 5, max: 5, image: '/assets/animations/celebrate5.png' },  // 5 ข้อถูก
+    { min: 6, max: 6, image: '/assets/animations/celebrate6.png' },  // 6 ข้อถูก
+    { min: 7, max: 7, image: '/assets/animations/celebrate7.png' }   // 7 ข้อถูก (เต็ม)
   ];
   
   const grade = gradeMap.find(g => correctCount >= g.min && correctCount <= g.max);
