@@ -349,3 +349,20 @@ class ImageCharacterSystem {
 /* Global Instance */
 window.characterSystem = new ImageCharacterSystem();
 console.log('✅ Simple Character System loaded (Avatar + Pet only)');
+
+// === force nameplate to top-left ===
+(() => {
+  const css = `
+  .character-stage{ position: relative !important; }
+  .character-nameplate{
+    position: absolute !important;
+    top: 16px !important;
+    left: 24px !important;
+    margin: 0 !important;
+    text-align: left !important;
+  }`;
+  const s = document.createElement('style');
+  s.textContent = css;
+  document.head.appendChild(s);
+})();
+
