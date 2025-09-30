@@ -353,13 +353,13 @@ console.log('✅ Simple Character System loaded (Avatar + Pet only)');
 // === force nameplate to top-left ===
 (() => {
   const css = `
-  /* กล่องการ์ดพื้นเขียวเป็นจุดอ้างอิง */
+  /* กล่องพื้นเขียวเป็นจุดอ้างอิง และจัดตัวละครให้อยู่กึ่งกลางแนวตั้ง */
 .character-stage {
   position: relative !important;
   display: flex !important;
-  align-items: center !important;          /* จัดแนวตั้งกึ่งกลางให้ content */
+  align-items: center !important;          /* กลางแกนตั้ง */
   justify-content: space-between !important;
-  min-height: 260px !important;            /* ปรับตามดีไซน์ของคุณ */
+  min-height: 260px !important;
 }
 
 /* ชื่อมุมซ้ายบน */
@@ -371,19 +371,19 @@ console.log('✅ Simple Character System loaded (Avatar + Pet only)');
   z-index: 5 !important;
 }
 
-/* คอลัมน์/บล็อคของตัวละคร (ใส่ class นี้ให้รูปคนหรือ wrapper ของรูปคน) */
+/* ครอบรูปตัวละคร */
 .character-art {
   position: relative !important;
   display: inline-block !important;
-  align-self: center !important;           /* ให้ตัวละครอยู่กึ่งกลางแนวตั้ง */
+  align-self: center !important;           /* ให้กลางแกนตั้งแม้พ่อเป็น flex */
   margin-right: 28px !important;
 }
 
-/* สลอตสัตว์เลี้ยง: ยืนใกล้เท้าด้านซ้ายของตัวละคร */
+/* สลอตสัตว์เลี้ยง ข้างเท้าตัวละคร */
 .pet-slot {
   position: absolute !important;
-  bottom: 0 !important;                    /* ชิดพื้นของ character-art */
-  left: -24px !important;                  /* เยื้องเข้าหาตัวละคร ปรับได้ */
+  bottom: 0 !important;
+  left: -24px !important;
   width: 96px !important;
   height: 96px !important;
   border-radius: 16px !important;
@@ -392,16 +392,16 @@ console.log('✅ Simple Character System loaded (Avatar + Pet only)');
   box-shadow: 0 6px 16px rgba(0,0,0,0.12) !important;
   overflow: hidden !important;
   display: flex !important;
-  align-items: flex-end !important;        /* ให้สัตว์เลี้ยงยืนติดพื้นสลอต */
+  align-items: flex-end !important;
   justify-content: center !important;
   z-index: 4 !important;
 }
 
-/* รูปสัตว์เลี้ยงภายในสลอต */
 .pet-slot img {
   max-width: 100% !important;
   max-height: 100% !important;
   object-fit: contain !important;
   display: block !important;
 }
+
 
