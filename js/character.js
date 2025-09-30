@@ -100,16 +100,6 @@ class ImageCharacterSystem {
                 <h3 id="character-name">ผู้เล่น</h3>
               </div>
               <div class="character-stats">
-                <div class="stat-item">
-                  <span class="stat-icon">⭐</span>
-                  <span class="stat-label">เหรียญ:</span>
-                  <span id="char-coins" class="stat-value">0</span>
-                </div>
-                <div class="stat-item">
-                  <span class="stat-icon">🎮</span>
-                  <span class="stat-label">เกม:</span>
-                  <span id="char-games" class="stat-value">0</span>
-                </div>
               </div>
             </div>
           </div>
