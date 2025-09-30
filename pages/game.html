@@ -12,85 +12,71 @@
     body{font-family:system-ui,"Noto Sans Thai",sans-serif;background:#fff;color:#111}
     .container{max-width:900px;margin:0 auto;padding:24px}
     .card{background:#f7f7f7;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.08);padding:24px}
-    .header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
-    .pill{background:#eee;border-radius:999px;padding:6px 12px;font-size:14px}
+    .header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+    .pill{background:#eee;border-radius:999px;padding:6px 12px;font-size:14px;white-space:nowrap}
 
-    /* แถบจับเวลาสำหรับช่วงดูภาพ */
+    /* แถบจับเวลา */
     .progress{height:10px;border-radius:999px;background:#e9e9e9;overflow:hidden;margin:6px 0 16px}
     .progress>div{height:100%;width:0;background:linear-gradient(90deg,#1976D2,#2E7D32);transition:width .15s linear}
 
     .image-stage{display:grid;place-items:center;min-height:300px;background:#fafafa;border-radius:16px;overflow:hidden;position:relative}
-    .image-stage img{width:100%;height:100%;object-fit:contain}
+    .image-stage img{width:100%;height:100%;object-fit:contain;max-height:400px}
     .q-card{display:grid;gap:16px}
-    .prompt{font-size:22px;font-weight:700}
+    .prompt{font-size:22px;font-weight:700;line-height:1.4}
     .choices{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-    .choice{position:relative;display:flex;align-items:center;justify-content:center;min-height:84px;padding:14px;border-radius:18px;border:2px solid transparent;background:#fff;box-shadow:0 6px 20px rgba(0,0,0,.08);cursor:pointer;font-size:20px;text-align:center}
+    .choice{position:relative;display:flex;align-items:center;justify-content:center;min-height:84px;padding:16px;border-radius:18px;border:3px solid transparent;background:#fff;box-shadow:0 6px 20px rgba(0,0,0,.08);cursor:pointer;font-size:18px;text-align:center;transition:all .2s ease}
+    .choice:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.12)}
     .choice[disabled]{opacity:.6;pointer-events:none}
-    .choice.correct{border-color:#1B5E20}
-    .choice.wrong{border-color:#C62828}
-    .emoji{position:absolute;right:10px;bottom:10px;font-size:24px;opacity:0;transform:scale(.8);transition:opacity .15s ease,transform .2s ease}
+    .choice.correct{border-color:#1B5E20;background:#E8F5E9}
+    .choice.wrong{border-color:#C62828;background:#FFEBEE}
+    .emoji{position:absolute;right:10px;bottom:10px;font-size:28px;opacity:0;transform:scale(.8);transition:opacity .15s ease,transform .2s ease}
     .choice.show-emoji .emoji{opacity:1;transform:scale(1)}
+    
+    /* Summary Section */
     .summary{display:none}
     .summary.active{display:block}
-    .big{font-size:48px;font-weight:800}
-    #customAnimationSlot{display:grid;place-items:center;min-height:160px;background:#f2f7ff;border:2px dashed #c9ddff;border-radius:16px;margin:12px 0 20px}
-    @media (max-width:640px){.choices{grid-template-columns:1fr}}
-  </style>
-</head>
-<body>
-  <main class="container">
-    <section class="card">
-      <div class="header">
-        <div class="pill" id="phasePill">ดูภาพ</div>
-        <div class="pill">ข้อที่ <b id="qIndex">0</b>/<span id="qTotal">7</span></div>
-        <div class="pill">ถูก <b id="correctCount">0</b></div>
-        <div class="pill">⭐ <b id="starsCount">0</b></div>
-      </div>
-
-      <!-- แถบจับเวลา: แสดงเฉพาะตอนดูภาพ (JS จะซ่อน/แสดงให้) -->
-      <div id="imgProgress" class="progress" aria-hidden="true">
-        <div id="progressBar"></div>
-      </div>
-
-      <!-- IMAGE PHASE (โชว์ ~10 วิ) -->
-      <div id="imageStage" class="image-stage">
-        <img id="qImage" alt="รูปสำหรับจดจำ" />
-      </div>
-
-      <!-- QUESTION PHASE (ข้อความ + 4 ตัวเลือก) -->
-      <div id="questionStage" class="q-card" hidden>
-        <div class="prompt" id="prompt">กำลังโหลดคำถาม…</div>
-        <div class="choices" id="choices"></div>
-      </div>
-
-      <!-- SUMMARY -->
-      <div id="summary" class="summary">
-        <h2>สรุปผล</h2>
-        <!-- แอนิเมชันอยู่บนสุดใต้หัวข้อ -->
-        <div id="customAnimationSlot">
-          <div style="color:#7a8aa1">วาง GIF/ภาพแอนิเมชันของคุณที่นี่ตอนสรุปผล</div>
-          <!-- ตัวอย่าง: <img src="/assets/animations/celebrate.gif" alt=""> -->
-        </div>
-
-        <div class="card" style="margin-bottom:12px">
-          <div>คะแนนถูกต้อง</div>
-          <div class="big" id="sumCorrect">0</div>
-          <div>จากทั้งหมด <b id="sumTotal">7</b> ข้อ</div>
-        </div>
-
-        <div class="card">
-          <div>ดาวที่ได้รับ (รวมโบนัส)</div>
-          <div class="big">⭐ <span id="sumStars">0</span></div>
-        </div>
-
-        <div style="display:flex;gap:8px;margin-top:16px">
-          <a class="pill" href="/">← กลับหน้าหลัก</a>
-          <button id="playAgain" class="pill">เล่นอีกครั้ง</button>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <script type="module" src="/js/game-memory.js"></script>
-</body>
-</html>
+    .big{font-size:48px;font-weight:800;color:#1976D2}
+    
+    /* 🆕 Grade Image Container */
+    #gradeImageContainer{
+      display:grid;
+      place-items:center;
+      min-height:200px;
+      background:#f8f9fa;
+      border-radius:16px;
+      margin:16px 0 20px;
+      padding:20px;
+      position:relative;
+      overflow:hidden
+    }
+    #gradeImage{
+      max-width:100%;
+      max-height:280px;
+      object-fit:contain;
+      animation:fadeInScale .5s ease-out;
+      border-radius:12px
+    }
+    @keyframes fadeInScale{
+      from{opacity:0;transform:scale(.9)}
+      to{opacity:1;transform:scale(1)}
+    }
+    
+    .result-grid{display:grid;gap:16px;margin-top:16px}
+    .result-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 4px 12px rgba(0,0,0,.06);text-align:center}
+    .result-label{font-size:14px;color:#666;margin-bottom:8px}
+    .result-value{font-size:36px;font-weight:700;color:#1976D2}
+    
+    .button-group{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap}
+    .btn{padding:12px 24px;border-radius:999px;font-weight:600;cursor:pointer;transition:all .2s;border:none;font-size:16px}
+    .btn-primary{background:#1976D2;color:#fff}
+    .btn-primary:hover{background:#1565C0;transform:translateY(-1px)}
+    .btn-secondary{background:#eee;color:#333}
+    .btn-secondary:hover{background:#ddd}
+    
+    @media (max-width:640px){
+      .choices{grid-template-columns:1fr}
+      .choice{min-height:70px;font-size:16px}
+      .header{font-size:13px}
+      .prompt{font-size:18px}
+      .result-value{font-size:28px}
+    }
