@@ -99,8 +99,6 @@ class ImageCharacterSystem {
               <div class="character-nameplate">
                 <h3 id="character-name">ผู้เล่น</h3>
               </div>
-              <div class="character-stats">
-              </div>
             </div>
           </div>
 
@@ -244,7 +242,7 @@ class ImageCharacterSystem {
     const emotionMap = {
       happy: { class: 'bounce-animation', effect: '💕 💖 💕' },
       wave:  { class: 'wave-animation',   effect: '✨ ⭐ ✨' },
-      think: { class: 'think-animation',  effect: '💭' },
+      think: { class: 'think-animation',  effect: '💭💭💭💭' },
       love:  { class: 'love-animation',   effect: '💕 💗 💕 💖 💕' }
     };
 
