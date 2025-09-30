@@ -1,4 +1,59 @@
-<!DOCTYPE html>
+  <!-- JavaScript Files - ลำดับสำคัญ! -->
+  <!-- 1. โหลด Items ก่อน -->
+  <script src="/data/items.js"></script>
+  
+  <!-- 2. โหลด Utils -->
+  <script src="js/utils/constants.js"></script>
+  <script src="js/utils/helpers.js"></script>
+  <script src="js/utils/storage.js"></script>
+  
+  <!-- 3. โหลด Core Systems -->
+  <script src="js/dataManager.js"></script>
+  <script src="js/auth.js"></script>
+  
+  <!-- 4. โหลด Character System (แก้แล้ว รองรับ Avatar เต็มตัว) -->
+  <script src="js/character.js"></script>
+  
+  <!-- 5. โหลด Main App -->
+  <script src="js/app.js"></script>
+
+  <script>
+    // บังคับให้โหลด Avatar แบบเต็มตัว
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🎮 Initializing game...');
+      
+      // ตรวจสอบว่าโหลด items.js แล้วหรือยัง
+      if (window.SHOP_ITEMS) {
+        console.log('✅ Items loaded:', window.SHOP_ITEMS.length);
+      } else {
+        console.warn('⚠️ Items not loaded');
+      }
+      
+      // ตั้งค่า default avatar
+      setTimeout(function() {
+        if (window.characterSystem && window.characterSystem.isInitialized) {
+          const userId = localStorage.getItem('ecg_current_uid') || 'guest';
+          const gender = localStorage.getItem('player_gender') || 'male';
+          const displayName = localStorage.getItem('player_name') || 'ผู้เล่น';
+          
+          const userData = {
+            userId: userId,
+            displayName: displayName,
+            character: {
+              avatarId: gender === 'female' ? 'elderly_female_base' : 'elderly_male_base'
+            },
+            stats: {
+              totalStars: 0,
+              totalGames: 0
+            }
+          };
+          
+          window.characterSystem.loadCharacter(userData);
+          console.log('✅ Character loaded with avatarId:', userData.character.avatarId);
+        }
+      }, 500);
+    });
+  </script><!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
@@ -13,7 +68,7 @@
 
   <title>เกมฝึกสมองสำหรับผู้สูงอายุ</title>
 
-  <!-- CSS Files (คงลิงก์เดิมไว้ตามโปรเจกต์) -->
+  <!-- CSS Files -->
   <link rel="stylesheet" href="css/reset.css" />
   <link rel="stylesheet" href="css/variables.css" />
   <link rel="stylesheet" href="css/base.css" />
@@ -21,10 +76,11 @@
   <link rel="stylesheet" href="css/animations.css" />
   <link rel="stylesheet" href="css/responsive.css" />
 
-  <!-- Combined UI Hotfix (clean) -->
+  <!-- Combined UI Hotfix -->
   <style>
-    /* ===== Character layout: info ซ้าย / ตัวละคร ขวา ===== */
-    #image-character-container .character-display-area{
+    /* Character layout: info ซ้าย / ตัวละคร ขวา */
+    #image-character-container .character-display-area,
+    #character-container-wrapper .character-display{
       display:flex;
       justify-content:space-between;
       align-items:center;
@@ -32,44 +88,56 @@
       max-width:980px;
       padding:0 16px;
     }
-    #image-character-container .character-info.in-stage{ 
+    #image-character-container .character-info.in-stage,
+    #character-container-wrapper .character-info{ 
       order:1; 
       text-align:left; 
       max-width:240px; 
     }
-    #image-character-container .character-container{ 
+    #image-character-container .character-container,
+    #character-container-wrapper .avatar-container{ 
       order:2; 
       width:220px !important; 
       height:330px !important; 
     }
 
-    /* ชื่อผู้เล่น/ป้ายชื่อ */
-    #image-character-container .character-nameplate h3{ 
+    /* ชื่อผู้เล่น */
+    #image-character-container .character-nameplate h3,
+    #character-container-wrapper .nameplate h3{ 
       font-size:3.5rem !important; 
       letter-spacing:.2px; 
     }
 
-    /* แถวสถิติ – อ่านง่ายขึ้น */
-    #image-character-container .character-stats{ gap:10px !important; }
-    #image-character-container .stat-item{ font-size:1.1rem !important; }
-    #image-character-container .stat-icon{
+    /* แถวสถิติ */
+    #image-character-container .character-stats,
+    #character-container-wrapper .stats{ gap:10px !important; }
+    #image-character-container .stat-item,
+    #character-container-wrapper .stat{ font-size:1.1rem !important; }
+    #image-character-container .stat-icon,
+    #character-container-wrapper .stat-icon{
       font-size:1.6rem !important;
       min-width:26px !important;
     }
-    #image-character-container .stat-label{ font-weight:600; }
-    #image-character-container .stat-value{ font-size:1.35rem !important; }
+    #image-character-container .stat-label,
+    #character-container-wrapper .stat-label{ font-weight:600; }
+    #image-character-container .stat-value,
+    #character-container-wrapper .stat-value{ font-size:1.35rem !important; }
 
-    /* ปุ่มอารมณ์ – กดง่ายขึ้น */
-    #image-character-container .emotion-controls{ gap:12px !important; }
-    #image-character-container .emotion-btn{
+    /* ปุ่มอารมณ์ */
+    #image-character-container .emotion-controls,
+    #character-container-wrapper .emotion-controls{ gap:12px !important; }
+    #image-character-container .emotion-btn,
+    #character-container-wrapper .emotion-btn{
       width:52px !important;
       height:52px !important;
       font-size:1.35rem !important;
     }
 
-    /* ตัดเงาตัวละคร + ขยาย */
-    #image-character-container .character-shadow{ display:none !important; }
-    #image-character-container .character-container{
+    /* ตัดเงา + ขยายตัวละคร */
+    #image-character-container .character-shadow,
+    #character-container-wrapper .character-shadow{ display:none !important; }
+    #image-character-container .character-container,
+    #character-container-wrapper .avatar-container{
       width:240px !important;
       height:360px !important;
     }
@@ -86,27 +154,65 @@
       padding:16px 14px !important;
       border-radius:16px !important;
       box-shadow:0 2px 8px rgba(0,0,0,.06) !important;
+      background-color: #EAF4FF !important;
+      border: 1px solid #CFE3FF !important;
     }
     .action-card .action-icon{
       font-size:2.2rem !important;
       margin-bottom:10px !important;
       line-height:1 !important;
+      opacity: 1 !important;
     }
-    .action-card h3{ font-size:1.3rem !important; margin:6px 0 4px !important; }
-    .action-card p{ font-size:.95rem !important; opacity:.85; }
+    .action-card h3{ 
+      font-size:1.3rem !important; 
+      margin:6px 0 4px !important;
+      color: #0A2540 !important;
+    }
+    .action-card p{ 
+      font-size:.95rem !important; 
+      color: #1F2A44 !important;
+      opacity: 1 !important;
+    }
+    .action-card:hover{
+      background-color: #E3F0FF !important;
+      transform: translateY(-1px);
+      transition: all .2s ease;
+      box-shadow: 0 6px 18px rgba(14, 35, 69, 0.12) !important;
+    }
 
-    /* ====== Mobile (≤768px) ====== */
+    /* Emotion effects ใหญ่ขึ้น */
+    #image-character-container .effect-hearts,
+    #image-character-container .effect-sparkles,
+    #image-character-container .effect-thought,
+    #image-character-container .effect-love,
+    #character-container-wrapper .effect-hearts,
+    #character-container-wrapper .effect-sparkles,
+    #character-container-wrapper .effect-thought,
+    #character-container-wrapper .effect-love{
+      font-size: 2.4rem !important;
+      top: -48px !important;
+      text-shadow: 0 2px 6px rgba(0,0,0,.12);
+    }
+
+    /* Mobile */
     @media (max-width:768px){
-      #image-character-container{ height:480px !important; }
-      #image-character-container .character-container{
+      #image-character-container,
+      #character-container-wrapper{ height:480px !important; }
+      #image-character-container .character-container,
+      #character-container-wrapper .avatar-container{
         width:220px !important;
         height:330px !important;
       }
-      #image-character-container .character-nameplate h3{ font-size:2.35rem !important; }
-      #image-character-container .stat-item{ font-size:1.05rem !important; }
-      #image-character-container .stat-icon{ font-size:1.5rem !important; min-width:24px !important; }
-      #image-character-container .stat-value{ font-size:1.3rem !important; }
-      #image-character-container .emotion-btn{
+      #image-character-container .character-nameplate h3,
+      #character-container-wrapper .nameplate h3{ font-size:2.35rem !important; }
+      #image-character-container .stat-item,
+      #character-container-wrapper .stat{ font-size:1.05rem !important; }
+      #image-character-container .stat-icon,
+      #character-container-wrapper .stat-icon{ font-size:1.5rem !important; min-width:24px !important; }
+      #image-character-container .stat-value,
+      #character-container-wrapper .stat-value{ font-size:1.3rem !important; }
+      #image-character-container .emotion-btn,
+      #character-container-wrapper .emotion-btn{
         width:48px !important; height:48px !important; font-size:1.25rem !important;
       }
 
@@ -118,48 +224,17 @@
       }
       .action-card .action-icon{ font-size:2.4rem !important; }
       .action-card h3{ font-size:1.35rem !important; }
-    }
-      /* ทำให้การ์ดเป็นฟ้าอ่อน อ่านง่ายขึ้น */
-    .action-card{
-      background-color: #EAF4FF !important;   /* ฟ้าอ่อน */
-      border: 1px solid #CFE3FF !important;
-      box-shadow: 0 2px 8px rgba(14, 35, 69, 0.08) !important; /* เงาอ่อนโทนฟ้า */
-    }
-    .action-card h3{
-      color: #0A2540 !important;   /* น้ำเงินเข้มอ่านชัด */
-    }
-    .action-card p{
-      color: #1F2A44 !important;   /* ตัวรายละเอียด */
-      opacity: 1 !important;       /* เอาความโปร่งออกเพื่อความคมชัด */
-    }
-    .action-card .action-icon{
-      opacity: 1 !important;       /* ไอคอนชัดขึ้นบนพื้นฟ้าอ่อน */
-    }
-  
-    /* เอฟเฟกต์โฮเวอร์ให้ตัดกับพื้นหลัง */
-    .action-card:hover{
-      background-color: #E3F0FF !important;   /* ฟ้าอ่อนลงอีกนิดตอนโฮเวอร์ */
-      transform: translateY(-1px);
-      transition: background-color .2s ease, transform .2s ease, box-shadow .2s ease;
-      box-shadow: 0 6px 18px rgba(14, 35, 69, 0.12) !important;
-    }
-  
-    /* ป้าย "ใหม่!" หรือป้ายจำนวนเกม ให้ยังคงโดดเด่น */
-    .action-card .action-badge{
-      background: #D7EAFF !important;
-      color: #0A2540 !important;
-      border: 1px solid #BEDBFF !important;
-    }
-  
-    /* รองรับโหมดมืด: ยังคงฟ้าอ่อนที่อ่านง่าย */
-    @media (prefers-color-scheme: dark){
-      .action-card{
-        background-color: #DAECFF !important;
-        border-color: #BFD8FF !important;
-        box-shadow: 0 2px 10px rgba(0,0,0,.25) !important;
-      }
-      .action-card:hover{
-        background-color: #D1E6FF !important;
+      
+      #image-character-container .effect-hearts,
+      #image-character-container .effect-sparkles,
+      #image-character-container .effect-thought,
+      #image-character-container .effect-love,
+      #character-container-wrapper .effect-hearts,
+      #character-container-wrapper .effect-sparkles,
+      #character-container-wrapper .effect-thought,
+      #character-container-wrapper .effect-love{
+        font-size: 2.1rem !important;
+        top: -42px !important;
       }
     }
   </style>
@@ -221,8 +296,9 @@
 
       <main class="dashboard-content">
         <section class="character-section">
+          <!-- 🆕 Character mount point สำหรับระบบใหม่ -->
+          <div id="character-mount-point"></div>
           <div id="character-display-area">
-            <!-- Ragnarok Character จะถูกสร้างที่นี่โดย JavaScript -->
             <div class="character-loading">กำลังโหลดตัวละคร... ⚡</div>
           </div>
         </section>
@@ -307,11 +383,7 @@
             <button class="shop-tab" data-category="pets">🐕 สัตว์เลี้ยง</button>
           </div>
 
-          <div class="shop-items" id="shop-items"><!-- ไอเทมร้านค้าจะถูกสร้างโดย JS --></div>
-        </section>
-
-      
-          </div>
+          <div class="shop-items" id="shop-items"></div>
         </section>
       </main>
     </div>
@@ -323,45 +395,30 @@
     <p>กำลังโหลด...</p>
   </div>
 
-  <!-- JavaScript Files -->
+  <!-- 🆕 JavaScript Files - ลำดับสำคัญ! -->
+  <!-- 1. โหลด Items ก่อน -->
+  <script src="/data/items.js"></script>
+  
+  <!-- 2. โหลด Utils -->
   <script src="js/utils/constants.js"></script>
   <script src="js/utils/helpers.js"></script>
   <script src="js/utils/storage.js"></script>
+  
+  <!-- 3. โหลด Core Systems (ไม่ใช้ module เพราะ character.js เก่ายังอยู่) -->
   <script src="js/dataManager.js"></script>
   <script src="js/auth.js"></script>
-  <script type="module" src="/js/character.js"></script>
-  <script type="module" src="/js/economy-unified.js"></script>
-  <script type="module" src="/js/inventory-enhanced.js"></script>
+  
+  <!-- 4. โหลด Character System แบบเก่า (สำหรับ backward compatibility) -->
+  <script type="module" src="js/character.js"></script>
+  
+  <!-- 5. 🆕 โหลดระบบใหม่ (ไม่ใช้ module เพื่อให้ใช้ได้ทันที) -->
+  <script src="js/character-simple-nomodule.js"></script>
+  <script src="js/economy-unified-nomodule.js"></script>
+  <script src="js/inventory-enhanced-nomodule.js"></script>
+  
+  <!-- 6. โหลด Main App และ Loader -->
   <script src="js/app.js"></script>
-
-  <style id="bigger-emotion-effects">
-  /* ใหญ่ขึ้น + ลอยสูงขึ้นนิด เพื่อไม่ทับหัว */
-  #image-character-container .effect-hearts,
-  #image-character-container .effect-sparkles,
-  #image-character-container .effect-thought,
-  #image-character-container .effect-love{
-    font-size: 2.4rem !important;   /* เดิม ~1rem */
-    top: -48px !important;          /* ขยับขึ้นเล็กน้อย */
-    text-shadow: 0 2px 6px rgba(0,0,0,.12);
-  }
-
-  /* เพิ่มระยะลอยให้ดูมีมิติมากขึ้น */
-  #image-character-container @keyframes effectFloat{
-    0%,100%{ transform: translateX(-50%) translateY(0);    opacity:1 }
-    50%   { transform: translateX(-50%) translateY(-22px); opacity:.85 }
-  }
-
-  /* มือถือ: ยังใหญ่ แต่ลดนิดให้พอดีจอเล็ก */
-  @media (max-width:768px){
-    #image-character-container .effect-hearts,
-    #image-character-container .effect-sparkles,
-    #image-character-container .effect-thought,
-    #image-character-container .effect-love{
-      font-size: 2.1rem !important;
-      top: -42px !important;
-    }
-  }
-</style>
+  <script src="js/main.js"></script>
 
 </body>
 </html>
