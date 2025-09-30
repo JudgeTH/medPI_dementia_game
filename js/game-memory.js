@@ -327,6 +327,24 @@ function endSession(){
 
   // 🆕 แสดงรูปตามเกรด (7 ระดับ)
   const gradeImagePath = getGradeImage(state.correct, CONFIG.QUESTIONS_PER_SESSION);
+  // รองรับทั้ง <img id="gradeImage"> และ <div id="customAnimationSlot"> ที่ต้องการวางรูปแบบไดนามิก
+  const slotEl = document.getElementById('customAnimationSlot');
+  if (slotEl) {
+    // เคลียร์คอนเทนต์เดิม และใส่รูปใหม่ตามเกรด
+    slotEl.innerHTML = "";
+    const dynImg = document.createElement('img');
+    dynImg.id = 'gradeImage'; // ตั้ง id ไว้เผื่อโค้ดส่วนอื่นอ้างถึง
+    dynImg.src = gradeImagePath;
+    dynImg.alt = `คุณตอบถูก ${state.correct} ข้อ`;
+    dynImg.style.maxWidth = '100%';
+    dynImg.style.height = 'auto';
+    slotEl.appendChild(dynImg);
+    // อัปเดตตัวชี้ UI.gradeImage ให้ชี้มายังรูปที่เพิ่งสร้าง (ถ้าจำเป็น)
+    if (UI && !UI.gradeImage) {
+      UI.gradeImage = dynImg;
+    }
+  }
+
   if (UI.gradeImage) {
     UI.gradeImage.src = gradeImagePath;
     UI.gradeImage.alt = `คุณตอบถูก ${state.correct} ข้อ`;
