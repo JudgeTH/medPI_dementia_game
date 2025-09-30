@@ -1,56 +1,18 @@
 /* ========================================
-   Image Character System – Fixed Paths
-   รองรับ Avatar แบบเต็มตัว + Pet
+   Image Character System — Safari/LINE Proof
+   Slots: head, face, body, pet only
    ======================================== */
 
 class ImageCharacterSystem {
   constructor() {
     this.sceneBg = 'green';
-    this.currentMode = 'full-avatar'; // 'full-avatar' หรือ 'layer' (เก่า)
 
-    // ใช้ root-absolute paths
+    // ใช้ root-absolute paths เพื่อความเสถียรบน Safari/LINE
     this.imagePaths = {
-      // Avatar แบบเต็มตัว (ใหม่)
-      avatars: {
-        'elderly_male_base':    '/assets/images/characters/base/elderly_male_base.png',
-        'elderly_female_base':  '/assets/images/characters/base/elderly_female_base.png',
-        'elderly_male_sport':   '/assets/images/characters/avatars/elderly_male_sport.png',
-        'elderly_female_sport': '/assets/images/characters/avatars/elderly_female_sport.png',
-      },
-      
-      // Pet
-      pets: {
-        'pet_cat_orange':  '/assets/images/characters/pets/cat_orange.png',
-        'pet_dog_brown':   '/assets/images/characters/pets/dog_brown.png',
-        'pet_bird_blue':   '/assets/images/characters/pets/bird_blue.png',
-        'pet_rabbit_white': '/assets/images/characters/pets/rabbit_white.png',
-        'pet_panda':       '/assets/images/characters/pets/panda.png',
-      },
-      
-      // Equipment แบบเก่า (สำหรับ backward compatibility)
       base: {
         male:   '/assets/images/characters/base/elderly_male_base.png',
         female: '/assets/images/characters/base/elderly_female_base.png',
       },
-      equipment: {
-        head: {
-          'hat_01':    '/assets/images/characters/equipment/head/hat_01.png',
-          'hat_02':    '/assets/images/characters/equipment/head/hat_02.png',
-          'cap_01':    '/assets/images/characters/equipment/head/cap_01.png',
-          'beret_01':  '/assets/images/characters/equipment/head/beret_01.png',
-        },
-        face: {
-          'glasses_01':     '/assets/images/characters/equipment/face/glasses_01.png',
-          'glasses_02':     '/assets/images/characters/equipment/face/glasses_02.png',
-          'sunglasses_01':  '/assets/images/characters/equipment/face/sunglasses_01.png',
-        },
-        body: {
-          'shirt_male_01':    '/assets/images/characters/equipment/body/shirt_male_01.png',
-          'shirt_male_02':    '/assets/images/characters/equipment/body/shirt_male_02.png',
-          'dress_female_01':  '/assets/images/characters/equipment/body/dress_female_01.png',
-          'dress_female_02':  '/assets/images/characters/equipment/body/dress_female_02.png',
-          'sweater_01':       '/assets/images/characters/equipment/body/sweater_01.png',
-        },
         pet: {
           'cat_01':  '/assets/images/characters/pets/cat_01.png',
           'dog_01':  '/assets/images/characters/pets/dog_01.png',
@@ -59,25 +21,8 @@ class ImageCharacterSystem {
       },
     };
 
-    // Equipment data (เก่า)
+    // เหลือเฉพาะ 4 หมวด
     this.equipmentData = {
-      head: {
-        'hat_01':   { name: 'หมวกไหมพรม',        price: 50, gender: 'both' },
-        'hat_02':   { name: 'หมวกกันแดด',        price: 30, gender: 'both' },
-        'cap_01':   { name: 'หมวกแก๊ป',          price: 40, gender: 'both' },
-        'beret_01': { name: 'หมวกเบเร่',         price: 80, gender: 'female' },
-      },
-      face: {
-        'glasses_01':    { name: 'แว่นตาอ่านหนังสือ', price: 35, gender: 'both' },
-        'glasses_02':    { name: 'แว่นทรงสี่เหลี่ยม', price: 40, gender: 'both' },
-        'sunglasses_01': { name: 'แว่นกันแดด',       price: 60, gender: 'both' },
-      },
-      body: {
-        'shirt_male_01':   { name: 'เสื้อเชิ้ตสีฟ้า', price: 0,  gender: 'male' },
-        'shirt_male_02':   { name: 'เสื้อโปโลสีเขียว', price: 45, gender: 'male' },
-        'dress_female_01': { name: 'เดรสสีม่วง',      price: 0,  gender: 'female' },
-        'dress_female_02': { name: 'เดรสลายดอก',     price: 60, gender: 'female' },
-        'sweater_01':      { name: 'เสื้อกันหนาว',    price: 70, gender: 'both' },
       },
       pet: {
         'cat_01':  { name: 'แมวน้อยสีส้ม',       price: 200, gender: 'both' },
@@ -86,6 +31,7 @@ class ImageCharacterSystem {
       },
     };
 
+    // default equipment เหลือเฉพาะ 4 slot
     this.defaultEquipment = {
       male:   { head: null, face: 'glasses_01', body: 'shirt_male_01',  pet: null },
       female: { head: null, face: null,         body: 'dress_female_01', pet: null },
@@ -98,7 +44,7 @@ class ImageCharacterSystem {
     this.isInitialized = false;
   }
 
-  /* ---------- Loader ทน Safari/LINE ---------- */
+  /* ---------- Loader แบบทน Safari/LINE ---------- */
   makeCandidates(src) {
     const clean = src.replace(/^\.?\//, '');
     return [ src, '/' + clean, `${window.location.origin}/${clean}` ];
@@ -109,7 +55,7 @@ class ImageCharacterSystem {
       const img = new Image();
       img.loading = 'eager';
       img.decoding = 'sync';
-      const to = setTimeout(() => resolve(url), 12000);
+      const to = setTimeout(() => resolve(url), 12000); // อย่า fail ทั้งระบบ
       img.onload  = () => { clearTimeout(to); resolve(url); };
       img.onerror = () => { clearTimeout(to); reject(new Error('img-error')); };
       img.src = url;
@@ -118,7 +64,6 @@ class ImageCharacterSystem {
 
   async loadImage(src) {
     if (this.imageCache.has(src)) return this.imageCache.get(src);
-    
     const candidates = this.makeCandidates(src);
     for (const u of candidates) {
       try {
@@ -127,18 +72,6 @@ class ImageCharacterSystem {
         return ok;
       } catch { /* try next */ }
     }
-    
-    // ถ้าโหลดไม่ได้เลย ลอง fallback จาก items.js
-    if (window.ShopUtils) {
-      const itemId = src.split('/').pop().replace('.png', '');
-      const item = window.ShopUtils.getById(itemId);
-      if (item && item.fallbackAsset) {
-        console.log('Using fallback for:', itemId);
-        this.imageCache.set(src, item.fallbackAsset);
-        return item.fallbackAsset;
-      }
-    }
-    
     return null;
   }
 
@@ -166,13 +99,9 @@ class ImageCharacterSystem {
           <div class="character-display-area">
             <div class="character-container" id="character-container">
               <div class="character-shadow"></div>
-              
-              <!-- Base layer สำหรับ Avatar เต็มตัว -->
-              <div class="character-layer base-layer">
-                <img id="character-base" class="character-image base-image" alt="Base">
-              </div>
+              <div class="character-layer base-layer"><img id="character-base" class="character-image base-image" alt="Base"></div>
 
-              <!-- Equipment layers (สำหรับโหมดเก่า) -->
+              <!-- ONLY 4 SLOTS -->
               <div class="character-layer body-layer"><img id="equip-body" class="character-image equipment-image" alt="Body"></div>
               <div class="character-layer head-layer"><img id="equip-head" class="character-image equipment-image" alt="Head"></div>
               <div class="character-layer face-layer"><img id="equip-face" class="character-image equipment-image" alt="Face"></div>
@@ -224,28 +153,13 @@ class ImageCharacterSystem {
 
     try {
       const gender = userData.character.gender || 'male';
-      
-      // ตรวจสอบว่าใช้โหมดไหน
-      if (userData.character.avatarId) {
-        // โหมดใหม่: Avatar เต็มตัว
-        this.currentMode = 'full-avatar';
-        await this.loadFullAvatar(userData.character.avatarId);
-        
-        // โหลด Pet ถ้ามี
-        if (userData.character.petId) {
-          await this.loadPet(userData.character.petId);
-        }
-      } else {
-        // โหมดเก่า: Equipment แยกชิ้น
-        this.currentMode = 'layer';
-        if (!userData.character.equipment) {
-          userData.character.equipment = { ...this.defaultEquipment[gender] };
-          if (window.gameAuth) window.gameAuth.saveCurrentUser();
-        }
-
-        await this.loadBaseCharacter(gender);
-        await this.loadAllEquipment(userData.character.equipment);
+      if (!userData.character.equipment) {
+        userData.character.equipment = { ...this.defaultEquipment[gender] };
+        if (window.gameAuth) window.gameAuth.saveCurrentUser();
       }
+
+      await this.loadBaseCharacter(gender);
+      await this.loadAllEquipment(userData.character.equipment);
 
       this.updateCharacterInfo(userData);
       this.setupEmotionControls();
@@ -256,81 +170,6 @@ class ImageCharacterSystem {
     } finally {
       this.showLoading(false);
     }
-  }
-
-  async loadFullAvatar(avatarId) {
-    const baseImg = document.getElementById('character-base');
-    if (!baseImg) return;
-
-    // ลอง path จาก avatars ก่อน
-    let path = this.imagePaths.avatars[avatarId];
-    
-    // ถ้าไม่มี ลองหาจาก items.js
-    if (!path && window.ShopUtils) {
-      const item = window.ShopUtils.getById(avatarId);
-      if (item && item.asset) {
-        path = item.asset;
-      }
-    }
-
-    if (!path) {
-      console.warn('Avatar path not found:', avatarId);
-      baseImg.src = this.getPlaceholderDataUrl();
-      baseImg.style.display = 'block';
-      return;
-    }
-
-    const okUrl = await this.loadImage(path);
-    if (okUrl) {
-      baseImg.src = okUrl;
-      baseImg.style.display = 'block';
-      baseImg.loading = 'eager';
-      baseImg.decoding = 'sync';
-      console.log('✅ Avatar loaded:', avatarId, okUrl);
-      
-      // ซ่อน equipment layers
-      this.hideAllEquipmentLayers();
-    } else {
-      console.warn('Failed to load avatar:', avatarId);
-      baseImg.src = this.getPlaceholderDataUrl();
-      baseImg.style.display = 'block';
-    }
-  }
-
-  async loadPet(petId) {
-    const petImg = document.getElementById('pet-image');
-    const petContainer = document.getElementById('pet-container');
-    if (!petImg || !petContainer) return;
-
-    let path = this.imagePaths.pets[petId];
-    
-    // ถ้าไม่มี ลองหาจาก items.js
-    if (!path && window.ShopUtils) {
-      const item = window.ShopUtils.getById(petId);
-      if (item && item.asset) {
-        path = item.asset;
-      }
-    }
-
-    if (!path) return;
-
-    const okUrl = await this.loadImage(path);
-    if (okUrl) {
-      petImg.src = okUrl;
-      petImg.style.display = 'block';
-      petContainer.style.display = 'block';
-      console.log('✅ Pet loaded:', petId);
-    }
-  }
-
-  hideAllEquipmentLayers() {
-    ['head', 'face', 'body'].forEach(slot => {
-      const el = document.getElementById(`equip-${slot}`);
-      if (el) {
-        el.style.display = 'none';
-        el.removeAttribute('src');
-      }
-    });
   }
 
   async loadBaseCharacter(gender) {
@@ -344,12 +183,13 @@ class ImageCharacterSystem {
       baseImg.loading = 'eager';
       baseImg.decoding = 'sync';
     } else {
-      baseImg.src = this.getPlaceholderDataUrl();
+      baseImg.src = this.getPlaceholderDataUrl(); // placeholder เฉพาะ base เท่านั้น
       baseImg.style.display = 'block';
     }
   }
 
   async loadAllEquipment(equipment) {
+    // โหลดเฉพาะ 4 slot เท่านั้น
     const SLOTS = ['head', 'face', 'body', 'pet'];
     const tasks = SLOTS.map(slot => {
       const id = equipment[slot];
@@ -381,6 +221,7 @@ class ImageCharacterSystem {
         if (pc) pc.style.display = 'block';
       }
     } catch {
+      // สำคัญ: ซ่อนทันที ห้ามวาง placeholder บัง base
       this.hideEquipmentSlot(slot);
     }
   }
@@ -391,7 +232,7 @@ class ImageCharacterSystem {
       : document.getElementById(`equip-${slot}`);
     if (el) {
       el.style.display = 'none';
-      el.removeAttribute('src');
+      el.removeAttribute('src'); // กัน render ค้าง/บัง
     }
     if (slot === 'pet') {
       const pc = document.getElementById('pet-container');
@@ -400,6 +241,7 @@ class ImageCharacterSystem {
   }
 
   getPlaceholderDataUrl() {
+    // ใช้กับ base เท่านั้น
     return "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='128' height='192' viewBox='0 0 128 192'%3E%3Crect width='128' height='192' fill='%23F3F4F6' stroke='%23E5E7EB' stroke-width='2' rx='10'/%3E%3Ccircle cx='64' cy='60' r='20' fill='%23D1D5DB'/%3E%3Crect x='44' y='85' width='40' height='60' fill='%23D1D5DB' rx='6'/%3E%3Crect x='49' y='150' width='10' height='30' fill='%23D1D5DB'/%3E%3Crect x='69' y='150' width='10' height='30' fill='%23D1D5DB'/%3E%3C/svg%3E";
   }
 
@@ -460,6 +302,7 @@ class ImageCharacterSystem {
     if (c) c.innerHTML = `<div class="character-error"><h3>😞 เกิดข้อผิดพลาด</h3><p>${msg}</p><button onclick="location.reload()" class="retry-btn">ลองใหม่</button></div>`;
   }
 
+  /* — minimal styles: พื้นหลังสีอ่อน, ไม่มีการ์ดขาวทับ — */
   addResponsiveStyles() {
     if (document.getElementById('character-responsive-styles')) return;
     const style = document.createElement('style');
@@ -480,6 +323,7 @@ class ImageCharacterSystem {
       .character-info.in-stage{background:transparent;box-shadow:none;padding:0;max-width:220px}
       .character-nameplate{margin:0 0 6px 0;padding-bottom:6px;border-bottom:1px solid #E8E8E8}
       .character-nameplate h3{margin:0;font-size:1.15rem;color:#2C3E50;font-weight:800}
+      .character-level{font-size:.8rem;color:#7F8C8D;margin-top:2px}
       .character-stats{display:flex;flex-direction:column;gap:6px}
       .stat-item{display:flex;align-items:center;gap:6px;font-size:.9rem}
       .stat-icon{font-size:1rem;min-width:20px}
@@ -503,5 +347,3 @@ class ImageCharacterSystem {
 
 /* global instance */
 window.characterSystem = new ImageCharacterSystem();
-
-console.log('✅ Character System loaded (Fixed Paths + Full Avatar Support)');
