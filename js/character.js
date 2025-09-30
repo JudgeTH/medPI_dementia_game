@@ -13,6 +13,25 @@ class ImageCharacterSystem {
         male:   '/assets/images/characters/base/elderly_male_base.png',
         female: '/assets/images/characters/base/elderly_female_base.png',
       },
+      equipment: {
+        head: {
+          'hat_01':    '/assets/images/characters/equipment/head/hat_01.png',
+          'hat_02':    '/assets/images/characters/equipment/head/hat_02.png',
+          'cap_01':    '/assets/images/characters/equipment/head/cap_01.png',
+          'beret_01':  '/assets/images/characters/equipment/head/beret_01.png',
+        },
+        face: {
+          'glasses_01':     '/assets/images/characters/equipment/face/glasses_01.png',
+          'glasses_02':     '/assets/images/characters/equipment/face/glasses_02.png',
+          'sunglasses_01':  '/assets/images/characters/equipment/face/sunglasses_01.png',
+        },
+        body: {
+          'shirt_male_01':    '/assets/images/characters/equipment/body/shirt_male_01.png',
+          'shirt_male_02':    '/assets/images/characters/equipment/body/shirt_male_02.png',
+          'dress_female_01':  '/assets/images/characters/equipment/body/dress_female_01.png',
+          'dress_female_02':  '/assets/images/characters/equipment/body/dress_female_02.png',
+          'sweater_01':       '/assets/images/characters/equipment/body/sweater_01.png',
+        },
         pet: {
           'cat_01':  '/assets/images/characters/pets/cat_01.png',
           'dog_01':  '/assets/images/characters/pets/dog_01.png',
@@ -23,6 +42,23 @@ class ImageCharacterSystem {
 
     // เหลือเฉพาะ 4 หมวด
     this.equipmentData = {
+      head: {
+        'hat_01':   { name: 'หมวกไหมพรม',        price: 50, gender: 'both' },
+        'hat_02':   { name: 'หมวกกันแดด',        price: 30, gender: 'both' },
+        'cap_01':   { name: 'หมวกแก๊ป',          price: 40, gender: 'both' },
+        'beret_01': { name: 'หมวกเบเร่',         price: 80, gender: 'female' },
+      },
+      face: {
+        'glasses_01':    { name: 'แว่นตาอ่านหนังสือ', price: 35, gender: 'both' },
+        'glasses_02':    { name: 'แว่นทรงสี่เหลี่ยม', price: 40, gender: 'both' },
+        'sunglasses_01': { name: 'แว่นกันแดด',       price: 60, gender: 'both' },
+      },
+      body: {
+        'shirt_male_01':   { name: 'เสื้อเชิ้ตสีฟ้า', price: 0,  gender: 'male' },
+        'shirt_male_02':   { name: 'เสื้อโปโลสีเขียว', price: 45, gender: 'male' },
+        'dress_female_01': { name: 'เดรสสีม่วง',      price: 0,  gender: 'female' },
+        'dress_female_02': { name: 'เดรสลายดอก',     price: 60, gender: 'female' },
+        'sweater_01':      { name: 'เสื้อกันหนาว',    price: 70, gender: 'both' },
       },
       pet: {
         'cat_01':  { name: 'แมวน้อยสีส้ม',       price: 200, gender: 'both' },
