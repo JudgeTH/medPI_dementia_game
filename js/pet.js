@@ -3,7 +3,7 @@
   function qs(sel, root){ return (root||document).querySelector(sel); }
   function el(tag, cls){ const x=document.createElement(tag); if(cls) x.className=cls; return x; }
 
-  const PETS_BASE   = '/assets/pets/';   // โฟลเดอร์รูปสัตว์เลี้ยงของคุณ
+  const PETS_BASE   = '/assets/images/characters/pets/';   // โฟลเดอร์รูปสัตว์เลี้ยงของคุณ
   const STORAGE_KEY = 'currentPet';
   const DEFAULT_PET = 'dog_01.png';
 
