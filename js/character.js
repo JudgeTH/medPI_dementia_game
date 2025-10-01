@@ -309,15 +309,47 @@ class ImageCharacterSystem {
       #image-character-container.bg-green{background:var(--bg-green)}
       #image-character-container.bg-blue{background:var(--bg-blue)}
       .character-scene{width:100%;height:100%;position:relative}
-      .character-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+      /* จัด stage ให้ตัวละครอยู่กึ่งกลางแนวตั้ง แต่เว้นซ้ายไว้สำหรับชื่อ */
+      .character-stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:flex-end}
+      
+      /* กลุ่มแสดงตัวละครอยู่ฝั่งขวา */
       .character-display-area{display:flex;align-items:center;gap:16px;z-index:10;background:transparent;box-shadow:none;padding:0}
+      
+      /* เอากล่องข้อมูล/ชื่อไป "ลอย" มุมซ้ายบนของกรอบพื้นหลัง */
+      .character-info.in-stage{
+        position:absolute;top:16px;left:24px;
+        background:transparent;box-shadow:none;padding:0;max-width:220px;z-index:15
+      }
+      
+      /* nameplate เดิมยังใช้ได้ */
+      .character-nameplate{margin:0 0 6px 0;padding-bottom:6px;border-bottom:1px solid #E8E8E8}
+      .character-nameplate h3{margin:0;font-size:1.15rem;color:#2C3E50;font-weight:800}
+      
+      /* สร้างสลอตสัตว์เลี้ยงให้อยู่ใกล้ๆ พื้น (เท้าตัวละคร) */
+      .character-container{position:relative;width:128px;height:192px;transition:all .3s ease}
+      .pet-slot{
+        position:absolute;bottom:-4px;left:-24px;
+        width:96px;height:96px;border-radius:16px;
+        background:rgba(255,255,255,.65);backdrop-filter:blur(4px);
+        box-shadow:0 6px 16px rgba(0,0,0,.12);
+        display:flex;align-items:flex-end;justify-content:center;
+        overflow:hidden;z-index:12
+      }
+      .pet-slot img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+      
+      /* มือถือก็ยังโอเค */
+      @media (max-width:768px){
+        .character-stage{justify-content:center}
+        .character-info.in-stage{top:12px;left:16px}
+        .pet-slot{left:-16px;width:80px;height:80px}
+      }
       .character-container{position:relative;width:128px;height:192px;transition:all .3s ease}
       .character-shadow{position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);width:80px;height:20px;background:rgba(0,0,0,.12);border-radius:50%;animation:shadowPulse 3s ease-in-out infinite}
       .character-layer{position:absolute;top:0;left:0;width:100%;height:100%}
       .base-layer{z-index:1}.effects-layer{z-index:8}
       .character-image{width:100%;height:100%;object-fit:contain;display:none;transition:opacity .3s ease}
       .character-image.base-image{display:block}
-      .character-info.in-stage{background:transparent;box-shadow:none;padding:0;max-width:220px}
+      
       .character-nameplate{margin:0 0 6px 0;padding-bottom:6px;border-bottom:1px solid #E8E8E8}
       .character-nameplate h3{margin:0;font-size:1.15rem;color:#2C3E50;font-weight:800}
       .character-stats{display:flex;flex-direction:column;gap:6px}
