@@ -345,3 +345,5 @@ class ImageCharacterSystem {
     document.head.appendChild(style);
   }
 }
+/* global instance */
+window.characterSystem = new ImageCharacterSystem();
