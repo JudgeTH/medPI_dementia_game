@@ -465,5 +465,10 @@
     window.setPet = setPet;
   })();
   </script>
+  <script>
+  window.addEventListener('error', (e) => {
+    if (e.filename) console.warn('Resource load error:', e.filename, e.message);
+  }, true);
+  </script>
 </body>
 </html>
