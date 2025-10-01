@@ -434,6 +434,106 @@
   });
 })();
 </script>
+
+  <style id="character-hotfix" nonce="">
+  /* === Character hotfix for #character-display-area === */
+  #character-display-area{--bg-green:#EFFFF4;--bg-blue:#EAF6FF; width:100%; height:500px; position:relative; border-radius:20px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.06); margin-bottom:30px;}
+  #character-display-area.bg-green{background:var(--bg-green)}
+  #character-display-area.bg-blue{background:var(--bg-blue)}
+  #character-display-area .character-scene{width:100%;height:100%;position:relative}
   
+  /* เวที: ตัวละครกึ่งกลางแนวตั้ง เว้นซ้ายไว้ให้ nameplate */
+  #character-display-area .character-stage{position:absolute; inset:0; display:flex; align-items:center; justify-content:space-between}
+  
+  /* กลุ่มตัวละครอยู่ฝั่งขวา */
+  #character-display-area .character-display-area{display:flex; align-items:center; gap:16px; z-index:10; background:transparent; box-shadow:none; padding:0}
+  
+  /* ชื่อมุมซ้ายบน */
+  #character-display-area .character-info.in-stage{position:absolute; top:16px; left:24px; background:transparent; box-shadow:none; padding:0; max-width:220px; z-index:15}
+  #character-display-area .character-nameplate{margin:0 0 6px 0; padding-bottom:6px; border-bottom:1px solid #E8E8E8}
+  #character-display-area .character-nameplate h3{margin:0; font-size:1.15rem; color:#2C3E50; font-weight:800}
+  
+  /* คอนเทนเนอร์ตัวละคร + ช่องสัตว์เลี้ยงใกล้เท้า */
+  #character-display-area .character-container{position:relative; width:128px; height:192px; transition:all .3s ease}
+  #character-display-area .pet-slot{position:absolute; bottom:-4px; left:-24px; width:96px; height:96px; border-radius:16px; background:rgba(255,255,255,.65); backdrop-filter:blur(4px); box-shadow:0 6px 16px rgba(0,0,0,.12); overflow:hidden; display:flex; align-items:flex-end; justify-content:center; z-index:12}
+  #character-display-area .pet-slot img{max-width:100%; max-height:100%; object-fit:contain; display:block}
+  
+  @media (max-width:768px){
+    #character-display-area{height:360px; margin-bottom:20px}
+    #character-display-area .character-stage{justify-content:center}
+    #character-display-area .character-info.in-stage{top:12px; left:16px}
+    #character-display-area .pet-slot{left:-16px; width:80px; height:80px}
+  }
+  </style>
+
+  <script>
+  /* === Character & Pet path fix + pet slot bootstrap === */
+  (function(){
+    // ตั้ง base path ให้เป็น "relative" กัน 404 เวลาโฮสต์ใต้ sub-folder
+    window.AVATAR_BASE = window.AVATAR_BASE || 'assets/avatars/';
+    window.PETS_BASE   = window.PETS_BASE   || 'assets/pets/';
+    const STORAGE_KEY  = 'currentPet';
+    const DEFAULT_PET  = 'dog-1.png';
+  
+    function qs(s,r){return (r||document).querySelector(s);}
+    function el(t,c){const x=document.createElement(t); if(c) x.className=c; return x;}
+    function resolveFile(x){return !x ? DEFAULT_PET : (/\.(png|jpe?g|gif|webp|svg)$/i.test(x)?x:(x+'.png'));}
+  
+    // ซ่อม src ของ avatar ที่อาจเป็น /assets/... ให้เป็น relative base
+    function fixAvatarPath(){
+      const img = qs('#character-display-area img.character-image, #characterImg');
+      if (!img) return;
+      const src = img.getAttribute('src')||'';
+      const m = src.match(/\/assets\/avatars\/([^?#]+)/);
+      if (m) img.src = (window.AVATAR_BASE.replace(/\/+$/,'/') + m[1]);
+    }
+  
+    // เตรียมช่องสัตว์เลี้ยง (ถ้ายังไม่มีให้สร้างใน .character-container)
+    function ensurePetSlot(){
+      const container = qs('#character-display-area .character-container') ||
+                        qs('#character-display-area .character-display-area .character-container');
+      if (!container) return null;
+      let slot = qs('.pet-slot', container);
+      if (!slot){ slot = el('div','pet-slot'); slot.id='petSlot'; slot.setAttribute('aria-label','pet'); container.appendChild(slot); }
+      return slot;
+    }
+  
+    function renderPet(idOrFile){
+      const slot = ensurePetSlot(); if(!slot) return;
+      const file = resolveFile(idOrFile);
+      const src  = window.PETS_BASE.replace(/\/+$/,'/') + file;
+      slot.innerHTML = '';
+      const img = new Image();
+      img.alt='สัตว์เลี้ยง'; img.loading='lazy'; img.decoding='async';
+      img.onload  = ()=>{/* ok */};
+      img.onerror = ()=>{ console.error('[PET] load error:', src); };
+      img.src = src;
+      slot.appendChild(img);
+    }
+  
+    function setPet(x){
+      try{ localStorage.setItem(STORAGE_KEY, x); }catch(_){}
+      renderPet(x);
+    }
+  
+    // init เมื่อหน้าโหลดเสร็จ (character.js วาด DOM เสร็จก่อน)
+    window.addEventListener('load', function(){
+      fixAvatarPath();
+      const saved = (function(){ try{ return localStorage.getItem(STORAGE_KEY); }catch(_){ return null; }})();
+      renderPet(saved || DEFAULT_PET);
+    });
+  
+    // รองรับเปลี่ยนสัตว์เลี้ยงจาก “ร้านค้า”
+    window.addEventListener('shop:petChange', function(ev){
+      const v = ev && ev.detail && ev.detail.pet;
+      if (v) setPet(v);
+    });
+  
+    // เผื่อดีบักจากคอนโซล
+    window.setPet = setPet;
+  })();
+  </script>
+
+
 </body>
 </html>
