@@ -72,32 +72,32 @@
       box-shadow: 0 6px 18px rgba(14, 35, 69, 0.12) !important;
     }
 
-    /* Pet slot */
+    /* Pet slot - พื้นหลังใส ขนาดใหญ่ขึ้น */
     .pet-slot {
       position: absolute;
-      bottom: -10px;
-      right: -30px;
-      width: 90px;
-      height: 90px;
-      border-radius: 16px;
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(4px);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      bottom: -20px;
+      right: -40px;
+      width: 130px;
+      height: 130px;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
       display: flex;
       align-items: center;
       justify-content: center;
-      overflow: hidden;
+      overflow: visible;
       z-index: 12;
       transition: all 0.3s ease;
     }
     .pet-slot:hover {
-      transform: scale(1.05);
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+      transform: scale(1.1);
     }
     .pet-slot img {
       width: 100%;
       height: 100%;
       object-fit: contain;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
     }
 
     /* Emotion effects */
@@ -123,7 +123,7 @@
       .action-card{ min-height:150px !important; padding:18px 16px !important; }
       .action-card .action-icon{ font-size:2.4rem !important; }
       .action-card h3{ font-size:1.35rem !important; }
-      .pet-slot { width: 70px; height: 70px; right: -20px; bottom: -5px; }
+      .pet-slot { width: 100px; height: 100px; right: -30px; bottom: -15px; }
       #image-character-container .effect-hearts,
       #image-character-container .effect-sparkles,
       #image-character-container .effect-thought,
@@ -329,7 +329,7 @@
 
       img.onerror = function() {
         console.error('❌ Pet load failed:', petPath);
-        petSlot.innerHTML = '<div style="font-size:3rem">🐕</div>';
+        petSlot.innerHTML = '<div style="font-size:4rem">🐕</div>';
         petSlot.style.display = 'flex';
       };
 
