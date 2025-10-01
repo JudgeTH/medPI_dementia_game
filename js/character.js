@@ -345,5 +345,135 @@ class ImageCharacterSystem {
     document.head.appendChild(style);
   }
 }
+<script>
+/* ==== CHARACTER LAYOUT + PET SLOT + FORM GUARD (drop-in) ==== */
+(function () {
+  /* 0) ป้องกันฟอร์ม Welcome เด้ง 404 (เช่น กดปุ่ม "เริ่มเล่นเกม") */
+  document.addEventListener('submit', function (e) {
+    var f = e.target;
+    if (!f || f.tagName !== 'FORM') return;
+    // ฟอร์มที่ไม่มี action หรือ action เป็นหน้าเดิม มักจะยิง GET แล้ว 404
+    var action = (f.getAttribute('action') || '').trim();
+    if (action === '' || action === '#' || action === window.location.pathname) {
+      e.preventDefault();
+      var nameInput = f.querySelector('input[name="playerName"], input[type="text"]');
+      var val = (nameInput && nameInput.value || '').trim();
+      if (!val) { try { f.reportValidity && f.reportValidity(); } catch(_){} return; }
+      try { localStorage.setItem('playerName', val); } catch(_) {}
+      // ถ้ามีฟังก์ชันเริ่มเกมของคุณ ให้เรียกแทนการเปลี่ยนหน้า
+      if (window.startGame) { window.startGame(val); }
+      // หรือสลับเป็นหน้าโฮมด้วย hash (เลี่ยง 404)
+      else { location.hash = '#/home'; }
+    }
+  }, true);
+
+  /* 1) ฉีด CSS (ไม่ต้องมีไฟล์สไตล์) */
+  var css = `
+  .character-stage{
+    position: relative !important;
+    display: flex !important;
+    align-items: center !important;      /* ตัวละครกลางแนวตั้ง */
+    justify-content: space-between !important;
+    min-height: 260px !important;
+  }
+  .character-nameplate{
+    position: absolute !important;
+    inset: 16px auto auto 24px !important; /* top right bottom left */
+    margin: 0 !important;
+    text-align: left !important;
+    z-index: 5 !important;
+  }
+  .character-art{
+    position: relative !important;
+    display: inline-block !important;
+    align-self: center !important;
+    margin-right: 28px !important;
+  }
+  .pet-slot{
+    position: absolute !important;
+    bottom: 0 !important;
+    left: -24px !important;
+    width: 96px !important; height: 96px !important;
+    border-radius: 16px !important;
+    background: rgba(255,255,255,0.65) !important;
+    backdrop-filter: blur(4px) !important;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.12) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: center !important;
+    z-index: 4 !important;
+  }
+  .pet-slot img{ max-width:100% !important; max-height:100% !important; object-fit:contain !important; display:block !important; }
+  `;
+  var style = document.createElement('style');
+  style.appendChild(document.createTextNode(css));
+  document.head.appendChild(style);
+
+  /* 2) จัด DOM ให้ครบ: ครอบรูปตัวละคร + ใส่ช่องสัตว์เลี้ยง */
+  function $(sel, root){ return (root||document).querySelector(sel); }
+  function create(tag, cls){ var el=document.createElement(tag); if(cls) el.className=cls; return el; }
+
+  var stage = $('.character-stage');
+  var nameplate = $('.character-nameplate'); // ถ้ามีอยู่แล้วจะถูกจัดตำแหน่งซ้ายบนให้เอง
+
+  // หา <img> ตัวละคร (ถ้ามี id="characterImg" จะดีที่สุด)
+  var charImg = $('#characterImg') || (stage ? $('img', stage) : null);
+  // ครอบด้วย .character-art ถ้ายังไม่มี
+  var charArt = $('.character-art');
+  if (charImg && !charArt) {
+    charArt = create('div', 'character-art');
+    charImg.parentNode.insertBefore(charArt, charImg);
+    charArt.appendChild(charImg);
+  }
+  // ใส่สลอตสัตว์เลี้ยง
+  var petSlot = $('#petSlot') || (charArt ? $('.pet-slot', charArt) : null);
+  if (!petSlot && charArt) {
+    petSlot = create('div', 'pet-slot'); petSlot.id = 'petSlot';
+    petSlot.setAttribute('aria-label', 'pet');
+    charArt.appendChild(petSlot);
+  }
+
+  /* 3) ระบบสัตว์เลี้ยง: โหลดจาก /assets/pets และเปลี่ยนได้ภายหลัง */
+  var PET_STORAGE_KEY = 'currentPet';
+  var PETS_ASSET_BASE = '/assets/pets/';       // โฟลเดอร์รูปสัตว์เลี้ยงของคุณ
+  var PET_CATALOG = {                          // อัปเดตชื่อไฟล์ตามที่มีจริง
+    'dog-1': 'dog-1.png',
+    'cat-1': 'cat-1.png',
+    'bird-1': 'bird-1.png'
+  };
+
+  function resolvePetFile(pet){ return PET_CATALOG[pet] || pet || PET_CATALOG['dog-1']; }
+  function renderPet(pet){
+    if (!petSlot) return;
+    var file = resolvePetFile(pet);
+    petSlot.innerHTML = '';
+    var img = new Image();
+    img.alt = 'สัตว์เลี้ยง'; img.loading = 'lazy'; img.decoding = 'async';
+    img.src = PETS_ASSET_BASE + file;
+    petSlot.appendChild(img);
+  }
+  function setPet(pet){
+    try { localStorage.setItem(PET_STORAGE_KEY, pet); } catch(_){}
+    renderPet(pet);
+  }
+
+  // init ครั้งแรก
+  var saved = null; try { saved = localStorage.getItem(PET_STORAGE_KEY); } catch(_){}
+  renderPet(saved || 'dog-1');
+
+  // hook จากร้านค้า: ยิงแบบนี้เวลาเปลี่ยนสัตว์เลี้ยง
+  // window.dispatchEvent(new CustomEvent('shop:petChange', { detail: { pet: 'cat-1' } }));
+  window.addEventListener('shop:petChange', function (ev) {
+    var p = ev && ev.detail && ev.detail.pet;
+    if (p) setPet(p);
+  });
+
+  // เผื่อดีบักผ่านคอนโซล
+  window.setPet = setPet;
+})();
+</script>
+
+
 /* global instance */
 window.characterSystem = new ImageCharacterSystem();
