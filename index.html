@@ -9,11 +9,11 @@
   <link rel="manifest" href="manifest.json" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="เกมฝึกสมอง" />
+  <meta name="apple-mobile-web-app-title" content="เกมกึ๋นสมอง" />
 
-  <title>เกมฝึกสมองสำหรับผู้สูงอายุ</title>
+  <title>เกมกึ๋นสมองสำหรับผู้สูงอายุ</title>
 
-  <!-- CSS Files (คงลิงก์เดิมไว้ตามโปรเจกต์) -->
+  <!-- CSS Files -->
   <link rel="stylesheet" href="css/reset.css" />
   <link rel="stylesheet" href="css/variables.css" />
   <link rel="stylesheet" href="css/base.css" />
@@ -21,155 +21,129 @@
   <link rel="stylesheet" href="css/animations.css" />
   <link rel="stylesheet" href="css/responsive.css" />
 
-  <!-- Combined UI Hotfix (clean) -->
   <style>
-    /* ===== Character layout: info ซ้าย / ตัวละคร ขวา ===== */
+    /* Character layout */
     #image-character-container .character-display-area{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      width:92%;
-      max-width:980px;
-      padding:0 16px;
+      display:flex; justify-content:space-between; align-items:center;
+      width:92%; max-width:980px; padding:0 16px;
     }
     #image-character-container .character-info.in-stage{ 
-      order:1; 
-      text-align:left; 
-      max-width:240px; 
+      order:1; text-align:left; max-width:240px; 
     }
     #image-character-container .character-container{ 
-      order:2; 
-      width:220px !important; 
-      height:330px !important; 
+      order:2; width:220px !important; height:330px !important; 
     }
-
-    /* ชื่อผู้เล่น/ป้ายชื่อ */
     #image-character-container .character-nameplate h3{ 
-      font-size:3.5rem !important; 
-      letter-spacing:.2px; 
+      font-size:3.5rem !important; letter-spacing:.2px; 
     }
-
-    /* แถวสถิติ – อ่านง่ายขึ้น */
     #image-character-container .character-stats{ gap:10px !important; }
     #image-character-container .stat-item{ font-size:1.1rem !important; }
     #image-character-container .stat-icon{
-      font-size:1.6rem !important;
-      min-width:26px !important;
+      font-size:1.6rem !important; min-width:26px !important;
     }
     #image-character-container .stat-label{ font-weight:600; }
     #image-character-container .stat-value{ font-size:1.35rem !important; }
-
-    /* ปุ่มอารมณ์ – กดง่ายขึ้น */
     #image-character-container .emotion-controls{ gap:12px !important; }
     #image-character-container .emotion-btn{
-      width:52px !important;
-      height:52px !important;
-      font-size:1.35rem !important;
+      width:52px !important; height:52px !important; font-size:1.35rem !important;
     }
-
-    /* ตัดเงาตัวละคร + ขยาย */
     #image-character-container .character-shadow{ display:none !important; }
     #image-character-container .character-container{
-      width:240px !important;
-      height:360px !important;
+      width:240px !important; height:360px !important;
     }
 
-    /* การจัดวางเมนูการ์ด */
+    /* Action cards */
     .action-buttons{ padding-left:16px !important; padding-right:16px !important; }
     .action-grid{
-      display:grid !important;
-      grid-template-columns:repeat(2,1fr) !important;
-      gap:16px !important;
+      display:grid !important; grid-template-columns:repeat(2,1fr) !important; gap:16px !important;
     }
     .action-card{
-      min-height:140px !important;
-      padding:16px 14px !important;
-      border-radius:16px !important;
-      box-shadow:0 2px 8px rgba(0,0,0,.06) !important;
+      min-height:140px !important; padding:16px 14px !important; border-radius:16px !important;
+      background-color: #EAF4FF !important; border: 1px solid #CFE3FF !important;
+      box-shadow: 0 2px 8px rgba(14, 35, 69, 0.08) !important;
     }
     .action-card .action-icon{
-      font-size:10.2rem !important;
-      margin-bottom:10px !important;
-      line-height:1 !important;
+      font-size:2.2rem !important; margin-bottom:10px !important; line-height:1 !important; opacity: 1 !important;
     }
-    .action-card h3{ font-size:1.3rem !important; margin:6px 0 4px !important; }
-    .action-card p{ font-size:.95rem !important; opacity:.85; }
+    .action-card h3{ font-size:1.3rem !important; margin:6px 0 4px !important; color: #0A2540 !important; }
+    .action-card p{ font-size:.95rem !important; color: #1F2A44 !important; opacity: 1 !important; }
+    .action-card:hover{
+      background-color: #E3F0FF !important; transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(14, 35, 69, 0.12) !important;
+    }
 
-    /* ====== Mobile (≤768px) ====== */
     @media (max-width:768px){
       #image-character-container{ height:480px !important; }
-      #image-character-container .character-container{
-        width:220px !important;
-        height:330px !important;
-      }
+      #image-character-container .character-container{ width:220px !important; height:330px !important; }
       #image-character-container .character-nameplate h3{ font-size:2.35rem !important; }
       #image-character-container .stat-item{ font-size:1.05rem !important; }
       #image-character-container .stat-icon{ font-size:1.5rem !important; min-width:24px !important; }
       #image-character-container .stat-value{ font-size:1.3rem !important; }
-      #image-character-container .emotion-btn{
-        width:48px !important; height:48px !important; font-size:1.25rem !important;
-      }
-
+      #image-character-container .emotion-btn{ width:48px !important; height:48px !important; font-size:1.25rem !important; }
       .action-buttons{ padding-left:18px !important; padding-right:18px !important; }
       .action-grid{ gap:14px !important; }
-      .action-card{
-        min-height:150px !important;
-        padding:18px 16px !important;
-      }
+      .action-card{ min-height:150px !important; padding:18px 16px !important; }
       .action-card .action-icon{ font-size:2.4rem !important; }
       .action-card h3{ font-size:1.35rem !important; }
     }
-      /* ทำให้การ์ดเป็นฟ้าอ่อน อ่านง่ายขึ้น */
-    .action-card{
-      background-color: #EAF4FF !important;   /* ฟ้าอ่อน */
-      border: 1px solid #CFE3FF !important;
-      box-shadow: 0 2px 8px rgba(14, 35, 69, 0.08) !important; /* เงาอ่อนโทนฟ้า */
+
+    /* Character display area styles */
+    #character-display-area{
+      --bg-green:#EFFFF4; --bg-blue:#EAF6FF; width:100%; height:500px; position:relative;
+      border-radius:20px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.06); margin-bottom:30px;
     }
-    .action-card h3{
-      color: #0A2540 !important;   /* น้ำเงินเข้มอ่านชัด */
+    #character-display-area.bg-green{background:var(--bg-green)}
+    #character-display-area.bg-blue{background:var(--bg-blue)}
+    #character-display-area .character-scene{width:100%;height:100%;position:relative}
+    #character-display-area .character-stage{
+      position:absolute; inset:0; display:flex; align-items:center; justify-content:space-between
     }
-    .action-card p{
-      color: #1F2A44 !important;   /* ตัวรายละเอียด */
-      opacity: 1 !important;       /* เอาความโปร่งออกเพื่อความคมชัด */
+    #character-display-area .character-display-area{
+      display:flex; align-items:center; gap:16px; z-index:10; background:transparent; box-shadow:none; padding:0
     }
-    .action-card .action-icon{
-      opacity: 1 !important;       /* ไอคอนชัดขึ้นบนพื้นฟ้าอ่อน */
+    #character-display-area .character-info.in-stage{
+      position:absolute; top:16px; left:24px; background:transparent; box-shadow:none; padding:0; max-width:220px; z-index:15
     }
-  
-    /* เอฟเฟกต์โฮเวอร์ให้ตัดกับพื้นหลัง */
-    .action-card:hover{
-      background-color: #E3F0FF !important;   /* ฟ้าอ่อนลงอีกนิดตอนโฮเวอร์ */
-      transform: translateY(-1px);
-      transition: background-color .2s ease, transform .2s ease, box-shadow .2s ease;
-      box-shadow: 0 6px 18px rgba(14, 35, 69, 0.12) !important;
+    #character-display-area .character-nameplate{margin:0 0 6px 0; padding-bottom:6px; border-bottom:1px solid #E8E8E8}
+    #character-display-area .character-nameplate h3{margin:0; font-size:1.15rem; color:#2C3E50; font-weight:800}
+    #character-display-area .character-container{position:relative; width:128px; height:192px; transition:all .3s ease}
+    #character-display-area .pet-slot{
+      position:absolute; bottom:-4px; left:-24px; width:96px; height:96px; border-radius:16px;
+      background:rgba(255,255,255,.65); backdrop-filter:blur(4px); box-shadow:0 6px 16px rgba(0,0,0,.12);
+      overflow:hidden; display:flex; align-items:flex-end; justify-content:center; z-index:12
     }
-  
-    /* ป้าย "ใหม่!" หรือป้ายจำนวนเกม ให้ยังคงโดดเด่น */
-    .action-card .action-badge{
-      background: #D7EAFF !important;
-      color: #0A2540 !important;
-      border: 1px solid #BEDBFF !important;
+    #character-display-area .pet-slot img{max-width:100%; max-height:100%; object-fit:contain; display:block}
+
+    @media (max-width:768px){
+      #character-display-area{height:360px; margin-bottom:20px}
+      #character-display-area .character-stage{justify-content:center}
+      #character-display-area .character-info.in-stage{top:12px; left:16px}
+      #character-display-area .pet-slot{left:-16px; width:80px; height:80px}
     }
-  
-    /* รองรับโหมดมืด: ยังคงฟ้าอ่อนที่อ่านง่าย */
-    @media (prefers-color-scheme: dark){
-      .action-card{
-        background-color: #DAECFF !important;
-        border-color: #BFD8FF !important;
-        box-shadow: 0 2px 10px rgba(0,0,0,.25) !important;
-      }
-      .action-card:hover{
-        background-color: #D1E6FF !important;
+
+    /* Emotion effects */
+    #image-character-container .effect-hearts,
+    #image-character-container .effect-sparkles,
+    #image-character-container .effect-thought,
+    #image-character-container .effect-love{
+      font-size: 2.4rem !important; top: -48px !important; text-shadow: 0 2px 6px rgba(0,0,0,.12);
+    }
+    @media (max-width:768px){
+      #image-character-container .effect-hearts,
+      #image-character-container .effect-sparkles,
+      #image-character-container .effect-thought,
+      #image-character-container .effect-love{
+        font-size: 2.1rem !important; top: -42px !important;
       }
     }
   </style>
 </head>
 <body>
-  <!-- หน้า Login/Welcome -->
+  <!-- หน้า Login -->
   <div id="login-page" class="page active">
     <div class="container">
       <header class="header">
-        <h1 class="game-title">🧠 เกมฝึกสมอง</h1>
+        <h1 class="game-title">🧠 เกมกึ๋นสมอง</h1>
         <p class="game-subtitle">สำหรับผู้สูงอายุ</p>
       </header>
 
@@ -195,10 +169,7 @@
                 maxlength="20"
               />
             </div>
-
-            <button type="submit" class="btn btn-primary btn-large">
-              เริ่มเล่นเกม
-            </button>
+            <button type="submit" class="btn btn-primary btn-large">เริ่มเล่นเกม</button>
           </form>
         </div>
       </main>
@@ -222,12 +193,10 @@
       <main class="dashboard-content">
         <section class="character-section">
           <div id="character-display-area">
-            <!-- Ragnarok Character จะถูกสร้างที่นี่โดย JavaScript -->
             <div class="character-loading">กำลังโหลดตัวละคร... ⚡</div>
           </div>
         </section>
 
-        <!-- Action Buttons -->
         <section class="action-buttons">
           <div class="action-grid">
             <button class="action-card shop-card" id="open-shop">
@@ -279,7 +248,7 @@
             <button class="game-card addtion-game" data-game="addition">
               <div class="game-icon">🧮</div>
               <h3>เกมคิดเลขเร็ว</h3>
-              <p>ทดสอบการคำนวน</p>
+              <p>ทดสอบการคำนวณ</p>
             </button>
 
             <button class="game-card logic-game" data-game="logic">
@@ -300,11 +269,7 @@
             </div>
             <button class="btn btn-secondary back-to-main">← กลับหน้าหลัก</button>
           </div>
-          <div class="shop-items" id="shop-items"><!-- ไอเทมร้านค้าจะถูกสร้างโดย JS --></div>
-        </section>
-
-      
-          </div>
+          <div class="shop-items" id="shop-items"></div>
         </section>
       </main>
     </div>
@@ -316,11 +281,10 @@
     <p>กำลังโหลด...</p>
   </div>
 
-    <!-- JavaScript Files -->
+  <!-- JavaScript Files -->
   <script type="module">
     import * as Constants from '/js/utils/constants.js';
     import * as Storage from '/js/utils/storage.js';
-    // โยนขึ้นเป็นตัวแปร global ให้ไฟล์ non-module เรียกใช้ได้
     window.Constants = Constants;
     window.Storage = Storage;
   </script>
@@ -333,180 +297,147 @@
   <script src="js/economy-unified.js"></script>
   <script src="js/inventory-enhanced.js"></script>
   <script src="js/app.js"></script>
-  
-  <style id="bigger-emotion-effects">
-  /* ใหญ่ขึ้น + ลอยสูงขึ้นนิด เพื่อไม่ทับหัว */
-  #image-character-container .effect-hearts,
-  #image-character-container .effect-sparkles,
-  #image-character-container .effect-thought,
-  #image-character-container .effect-love{
-    font-size: 2.4rem !important;   /* เดิม ~1rem */
-    top: -48px !important;          /* ขยับขึ้นเล็กน้อย */
-    text-shadow: 0 2px 6px rgba(0,0,0,.12);
-  }
 
-  /* เพิ่มระยะลอยให้ดูมีมิติมากขึ้น */
-  #image-character-container @keyframes effectFloat{
-    0%,100%{ transform: translateX(-50%) translateY(0);    opacity:1 }
-    50%   { transform: translateX(-50%) translateY(-22px); opacity:.85 }
-  }
-
-  /* มือถือ: ยังใหญ่ แต่ลดนิดให้พอดีจอเล็ก */
-  @media (max-width:768px){
-    #image-character-container .effect-hearts,
-    #image-character-container .effect-sparkles,
-    #image-character-container .effect-thought,
-    #image-character-container .effect-love{
-      font-size: 2.1rem !important;
-      top: -42px !important;
+  <script>
+  /* WELCOME FORM HANDLER */
+  (function () {
+    function startFlow(name) {
+      try { localStorage.setItem('playerName', name); } catch(_) {}
+      var dn = document.getElementById('display-name');
+      if (dn) dn.textContent = name;
+      if (typeof window.startGame === 'function') {
+        try { window.startGame(name); } catch(e) { console.warn(e); }
+      }
+      var login = document.getElementById('login-page');
+      var dash  = document.getElementById('dashboard-page');
+      if (login) login.classList.remove('active');
+      if (dash)  dash.classList.add('active');
+      
+      // เรียก init character หลังจากเข้า dashboard
+      setTimeout(initCharacter, 100);
+      return false;
     }
-  }</style>
 
-<script>
-/* ===== WELCOME FORM HARD-GUARD ===== */
-(function () {
-  function startFlow(name) {
-    try { localStorage.setItem('playerName', name); } catch(_) {}
-    // อัปเดตชื่อที่หน้า dashboard ถ้ามี
-    var dn = document.getElementById('display-name');
-    if (dn) dn.textContent = name;
-    // ถ้าแอปคุณมีฟังก์ชันเริ่มเกม ให้เรียกก่อน
-    if (typeof window.startGame === 'function') {
-      try { window.startGame(name); } catch(e) { console.warn(e); }
-    }
-    // สลับหน้าแบบไม่รีเฟรช (เลี่ยง 404)
-    var login = document.getElementById('login-page');
-    var dash  = document.getElementById('dashboard-page');
-    if (login) login.classList.remove('active');
-    if (dash)  dash.classList.add('active');
-    // กันการ submit แอบหลุดจาก handler อื่น
-    return false;
-  }
+    function guardForm(form) {
+      if (!form) return;
+      form.setAttribute('novalidate', 'novalidate');
+      form.setAttribute('onsubmit', 'return false;');
 
-  function guardForm(form) {
-    if (!form) return;
-    // ชั้นที่ 1: ปิด validation เดิมและปิดการส่ง form
-    form.setAttribute('novalidate', 'novalidate');
-    form.setAttribute('onsubmit', 'return false;'); // กันสุดทาง
+      var input = form.querySelector('#player-name, [name="playerName"], input[type="text"]');
+      var submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+      
+      if (submitBtn) {
+        submitBtn.setAttribute('type', 'button');
+        submitBtn.addEventListener('click', function () {
+          var name = (input && input.value || '').trim();
+          if (!name) { try { form.reportValidity && form.reportValidity(); } catch(_) {} return; }
+          startFlow(name);
+        });
+      }
 
-    // หา input ชื่อผู้เล่น
-    var input = form.querySelector('#player-name, [name="playerName"], input[type="text"]');
-
-    // ชั้นที่ 2: เปลี่ยนปุ่ม submit -> button แล้วทำงานเอง
-    var submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
-    if (submitBtn) {
-      submitBtn.setAttribute('type', 'button');
-      submitBtn.addEventListener('click', function () {
-        var name = (input && input.value || '').trim();
-        if (!name) { try { form.reportValidity && form.reportValidity(); } catch(_) {} return; }
-        startFlow(name);
+      form.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          var name = (input && input.value || '').trim();
+          if (!name) { try { form.reportValidity && form.reportValidity(); } catch(_) {} return; }
+          startFlow(name);
+        }
       });
-    }
 
-    // เผื่อมีการกด Enter ในช่อง input
-    form.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') {
+      form.addEventListener('submit', function (e) {
+        e.stopImmediatePropagation();
         e.preventDefault();
         var name = (input && input.value || '').trim();
         if (!name) { try { form.reportValidity && form.reportValidity(); } catch(_) {} return; }
         startFlow(name);
-      }
+        return false;
+      }, true);
+    }
+
+    window.addEventListener('load', function () {
+      var form = document.getElementById('login-form') ||
+                 document.getElementById('welcome-form') ||
+                 document.querySelector('form');
+      guardForm(form);
     });
+  })();
 
-    // กันทุก submit ที่อาจถูก bind ไว้ที่อื่น
-    form.addEventListener('submit', function (e) {
-      e.stopImmediatePropagation();
-      e.preventDefault();
-      var name = (input && input.value || '').trim();
-      if (!name) { try { form.reportValidity && form.reportValidity(); } catch(_) {} return; }
-      startFlow(name);
-      return false;
-    }, true);
+  /* CHARACTER INITIALIZATION */
+  function initCharacter() {
+    console.log('🔧 Initializing character system...');
+    
+    if (!window.characterSystem) {
+      console.error('❌ characterSystem not found');
+      return;
+    }
+
+    const displayArea = document.getElementById('character-display-area');
+    if (!displayArea) {
+      console.warn('⚠️ character-display-area not found');
+      return;
+    }
+
+    try {
+      const container = window.characterSystem.setupCharacterContainer();
+      displayArea.innerHTML = '';
+      displayArea.appendChild(container);
+
+      const userData = {
+        displayName: localStorage.getItem('playerName') || 'ผู้เล่น',
+        character: {
+          gender: 'male',
+          petId: 'dog_01'
+        },
+        stats: {
+          totalStars: 0,
+          totalGames: 0
+        }
+      };
+
+      window.characterSystem.loadCharacter(userData);
+      console.log('✅ Character system initialized successfully');
+    } catch (error) {
+      console.error('❌ Error initializing character:', error);
+    }
   }
 
-  // ผูกกับฟอร์มตัวแรกที่เจอบนหน้า หรือ id ยอดฮิต
-  window.addEventListener('load', function () {
-    var form =
-      document.getElementById('login-form') ||
-      document.getElementById('welcome-form') ||
-      document.querySelector('form'); // ตัวแรกบนหน้า
-    guardForm(form);
-  });
-})();
-</script>
-
-  <style id="character-hotfix" nonce="">
-  /* === Character hotfix for #character-display-area === */
-  #character-display-area{--bg-green:#EFFFF4;--bg-blue:#EAF6FF; width:100%; height:500px; position:relative; border-radius:20px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.06); margin-bottom:30px;}
-  #character-display-area.bg-green{background:var(--bg-green)}
-  #character-display-area.bg-blue{background:var(--bg-blue)}
-  #character-display-area .character-scene{width:100%;height:100%;position:relative}
-  
-  /* เวที: ตัวละครกึ่งกลางแนวตั้ง เว้นซ้ายไว้ให้ nameplate */
-  #character-display-area .character-stage{position:absolute; inset:0; display:flex; align-items:center; justify-content:space-between}
-  
-  /* กลุ่มตัวละครอยู่ฝั่งขวา */
-  #character-display-area .character-display-area{display:flex; align-items:center; gap:16px; z-index:10; background:transparent; box-shadow:none; padding:0}
-  
-  /* ชื่อมุมซ้ายบน */
-  #character-display-area .character-info.in-stage{position:absolute; top:16px; left:24px; background:transparent; box-shadow:none; padding:0; max-width:220px; z-index:15}
-  #character-display-area .character-nameplate{margin:0 0 6px 0; padding-bottom:6px; border-bottom:1px solid #E8E8E8}
-  #character-display-area .character-nameplate h3{margin:0; font-size:1.15rem; color:#2C3E50; font-weight:800}
-  
-  /* คอนเทนเนอร์ตัวละคร + ช่องสัตว์เลี้ยงใกล้เท้า */
-  #character-display-area .character-container{position:relative; width:128px; height:192px; transition:all .3s ease}
-  #character-display-area .pet-slot{position:absolute; bottom:-4px; left:-24px; width:96px; height:96px; border-radius:16px; background:rgba(255,255,255,.65); backdrop-filter:blur(4px); box-shadow:0 6px 16px rgba(0,0,0,.12); overflow:hidden; display:flex; align-items:flex-end; justify-content:center; z-index:12}
-  #character-display-area .pet-slot img{max-width:100%; max-height:100%; object-fit:contain; display:block}
-  
-  @media (max-width:768px){
-    #character-display-area{height:360px; margin-bottom:20px}
-    #character-display-area .character-stage{justify-content:center}
-    #character-display-area .character-info.in-stage{top:12px; left:16px}
-    #character-display-area .pet-slot{left:-16px; width:80px; height:80px}
-  }
-  </style>
-
-  <script>
-  /* === Character & Pet path fix + pet slot bootstrap === */
+  /* CHARACTER & PET PATH FIX */
   (function(){
-    // ตั้ง base path ให้เป็น "relative" กัน 404 เวลาโฮสต์ใต้ sub-folder
-    window.AVATAR_BASE = window.AVATAR_BASE || 'assets/avatars/';
-    window.PETS_BASE   = window.PETS_BASE   || 'assets/pets/';
+    window.AVATAR_BASE = window.AVATAR_BASE || 'assets/images/characters/base/';
+    window.PETS_BASE   = window.PETS_BASE   || 'assets/images/characters/pets/';
     const STORAGE_KEY  = 'currentPet';
-    const DEFAULT_PET  = 'dog-1.png';
+    const DEFAULT_PET  = 'dog_01.png';
   
     function qs(s,r){return (r||document).querySelector(s);}
     function el(t,c){const x=document.createElement(t); if(c) x.className=c; return x;}
     function resolveFile(x){return !x ? DEFAULT_PET : (/\.(png|jpe?g|gif|webp|svg)$/i.test(x)?x:(x+'.png'));}
   
-    // ซ่อม src ของ avatar ที่อาจเป็น /assets/... ให้เป็น relative base
-    function fixAvatarPath(){
-      const img = qs('#character-display-area img.character-image, #characterImg');
-      if (!img) return;
-      const src = img.getAttribute('src')||'';
-      const m = src.match(/\/assets\/avatars\/([^?#]+)/);
-      if (m) img.src = (window.AVATAR_BASE.replace(/\/+$/,'/') + m[1]);
-    }
-  
-    // เตรียมช่องสัตว์เลี้ยง (ถ้ายังไม่มีให้สร้างใน .character-container)
     function ensurePetSlot(){
       const container = qs('#character-display-area .character-container') ||
-                        qs('#character-display-area .character-display-area .character-container');
+                        qs('.character-container');
       if (!container) return null;
       let slot = qs('.pet-slot', container);
-      if (!slot){ slot = el('div','pet-slot'); slot.id='petSlot'; slot.setAttribute('aria-label','pet'); container.appendChild(slot); }
+      if (!slot){ 
+        slot = el('div','pet-slot'); 
+        slot.id='petSlot'; 
+        slot.setAttribute('aria-label','pet'); 
+        container.appendChild(slot); 
+      }
       return slot;
     }
   
     function renderPet(idOrFile){
-      const slot = ensurePetSlot(); if(!slot) return;
+      const slot = ensurePetSlot(); 
+      if(!slot) return;
       const file = resolveFile(idOrFile);
       const src  = window.PETS_BASE.replace(/\/+$/,'/') + file;
       slot.innerHTML = '';
       const img = new Image();
-      img.alt='สัตว์เลี้ยง'; img.loading='lazy'; img.decoding='async';
-      img.onload  = ()=>{/* ok */};
-      img.onerror = ()=>{ console.error('[PET] load error:', src); };
+      img.alt='สัตว์เลี้ยง'; 
+      img.loading='lazy'; 
+      img.decoding='async';
+      img.onload  = ()=>{ console.log('✅ Pet loaded:', src); };
+      img.onerror = ()=>{ console.error('❌ Pet load error:', src); };
       img.src = src;
       slot.appendChild(img);
     }
@@ -516,24 +447,23 @@
       renderPet(x);
     }
   
-    // init เมื่อหน้าโหลดเสร็จ (character.js วาด DOM เสร็จก่อน)
     window.addEventListener('load', function(){
-      fixAvatarPath();
-      const saved = (function(){ try{ return localStorage.getItem(STORAGE_KEY); }catch(_){ return null; }})();
-      renderPet(saved || DEFAULT_PET);
+      setTimeout(function() {
+        const saved = (function(){ 
+          try{ return localStorage.getItem(STORAGE_KEY); }
+          catch(_){ return null; }
+        })();
+        renderPet(saved || DEFAULT_PET);
+      }, 500);
     });
   
-    // รองรับเปลี่ยนสัตว์เลี้ยงจาก “ร้านค้า”
     window.addEventListener('shop:petChange', function(ev){
       const v = ev && ev.detail && ev.detail.pet;
       if (v) setPet(v);
     });
   
-    // เผื่อดีบักจากคอนโซล
     window.setPet = setPet;
   })();
   </script>
-
-
 </body>
 </html>
