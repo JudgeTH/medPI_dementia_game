@@ -360,30 +360,79 @@
       top: -42px !important;
     }
   }</style>
+
 <script>
+/* ===== WELCOME FORM HARD-GUARD ===== */
 (function () {
-  var form = document.getElementById('login-form');
-  if (!form) return;
-
-  form.addEventListener('submit', function (e) {
-    e.preventDefault();
-    var input = document.getElementById('player-name');
-    var name  = (input && input.value || '').trim();
-    if (!name) { try { form.reportValidity(); } catch(_){} return; }
-
-    try { localStorage.setItem('playerName', name); } catch(_){}
-    // อัปเดตชื่อ + สลับหน้า
+  function startFlow(name) {
+    try { localStorage.setItem('playerName', name); } catch(_) {}
+    // อัปเดตชื่อที่หน้า dashboard ถ้ามี
     var dn = document.getElementById('display-name');
     if (dn) dn.textContent = name;
+    // ถ้าแอปคุณมีฟังก์ชันเริ่มเกม ให้เรียกก่อน
+    if (typeof window.startGame === 'function') {
+      try { window.startGame(name); } catch(e) { console.warn(e); }
+    }
+    // สลับหน้าแบบไม่รีเฟรช (เลี่ยง 404)
     var login = document.getElementById('login-page');
     var dash  = document.getElementById('dashboard-page');
     if (login) login.classList.remove('active');
     if (dash)  dash.classList.add('active');
-    // เลี่ยงรีเฟรชทั้งหน้า (กัน 404)
+    // กันการ submit แอบหลุดจาก handler อื่น
     return false;
-  }, { once:false });
+  }
+
+  function guardForm(form) {
+    if (!form) return;
+    // ชั้นที่ 1: ปิด validation เดิมและปิดการส่ง form
+    form.setAttribute('novalidate', 'novalidate');
+    form.setAttribute('onsubmit', 'return false;'); // กันสุดทาง
+
+    // หา input ชื่อผู้เล่น
+    var input = form.querySelector('#player-name, [name="playerName"], input[type="text"]');
+
+    // ชั้นที่ 2: เปลี่ยนปุ่ม submit -> button แล้วทำงานเอง
+    var submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+    if (submitBtn) {
+      submitBtn.setAttribute('type', 'button');
+      submitBtn.addEventListener('click', function () {
+        var name = (input && input.value || '').trim();
+        if (!name) { try { form.reportValidity && form.reportValidity(); } catch(_) {} return; }
+        startFlow(name);
+      });
+    }
+
+    // เผื่อมีการกด Enter ในช่อง input
+    form.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        var name = (input && input.value || '').trim();
+        if (!name) { try { form.reportValidity && form.reportValidity(); } catch(_) {} return; }
+        startFlow(name);
+      }
+    });
+
+    // กันทุก submit ที่อาจถูก bind ไว้ที่อื่น
+    form.addEventListener('submit', function (e) {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      var name = (input && input.value || '').trim();
+      if (!name) { try { form.reportValidity && form.reportValidity(); } catch(_) {} return; }
+      startFlow(name);
+      return false;
+    }, true);
+  }
+
+  // ผูกกับฟอร์มตัวแรกที่เจอบนหน้า หรือ id ยอดฮิต
+  window.addEventListener('load', function () {
+    var form =
+      document.getElementById('login-form') ||
+      document.getElementById('welcome-form') ||
+      document.querySelector('form'); // ตัวแรกบนหน้า
+    guardForm(form);
+  });
 })();
 </script>
-
+  
 </body>
 </html>
