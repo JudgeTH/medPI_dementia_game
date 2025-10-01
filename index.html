@@ -13,7 +13,7 @@
 
   <title>เกมฝึกสมองสำหรับผู้สูงอายุ</title>
 
-  <!-- CSS Files (คงลิงก์เดิมไว้ตามโปรเจกต์) -->
+  <!-- CSS Files -->
   <link rel="stylesheet" href="css/reset.css" />
   <link rel="stylesheet" href="css/variables.css" />
   <link rel="stylesheet" href="css/base.css" />
@@ -21,151 +21,120 @@
   <link rel="stylesheet" href="css/animations.css" />
   <link rel="stylesheet" href="css/responsive.css" />
 
-  <!-- Combined UI Hotfix (clean) -->
   <style>
-    /* ===== Character layout: info ซ้าย / ตัวละคร ขวา ===== */
+    /* Character layout */
     #image-character-container .character-display-area{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      width:92%;
-      max-width:980px;
-      padding:0 16px;
+      display:flex; justify-content:space-between; align-items:center;
+      width:92%; max-width:980px; padding:0 16px;
     }
     #image-character-container .character-info.in-stage{ 
-      order:1; 
-      text-align:left; 
-      max-width:240px; 
+      order:1; text-align:left; max-width:240px; 
     }
     #image-character-container .character-container{ 
-      order:2; 
-      width:220px !important; 
-      height:330px !important; 
+      order:2; width:220px !important; height:330px !important; 
     }
-
-    /* ชื่อผู้เล่น/ป้ายชื่อ */
     #image-character-container .character-nameplate h3{ 
-      font-size:3.5rem !important; 
-      letter-spacing:.2px; 
+      font-size:3.5rem !important; letter-spacing:.2px; 
     }
-
-    /* แถวสถิติ – อ่านง่ายขึ้น */
     #image-character-container .character-stats{ gap:10px !important; }
     #image-character-container .stat-item{ font-size:1.1rem !important; }
     #image-character-container .stat-icon{
-      font-size:1.6rem !important;
-      min-width:26px !important;
+      font-size:1.6rem !important; min-width:26px !important;
     }
     #image-character-container .stat-label{ font-weight:600; }
     #image-character-container .stat-value{ font-size:1.35rem !important; }
-
-    /* ปุ่มอารมณ์ – กดง่ายขึ้น */
     #image-character-container .emotion-controls{ gap:12px !important; }
     #image-character-container .emotion-btn{
-      width:52px !important;
-      height:52px !important;
-      font-size:1.35rem !important;
+      width:52px !important; height:52px !important; font-size:1.35rem !important;
     }
-
-    /* ตัดเงาตัวละคร + ขยาย */
     #image-character-container .character-shadow{ display:none !important; }
     #image-character-container .character-container{
-      width:240px !important;
-      height:360px !important;
+      width:240px !important; height:360px !important;
     }
 
-    /* การจัดวางเมนูการ์ด */
+    /* Action cards */
     .action-buttons{ padding-left:16px !important; padding-right:16px !important; }
     .action-grid{
-      display:grid !important;
-      grid-template-columns:repeat(2,1fr) !important;
-      gap:16px !important;
+      display:grid !important; grid-template-columns:repeat(2,1fr) !important; gap:16px !important;
     }
     .action-card{
-      min-height:140px !important;
-      padding:16px 14px !important;
-      border-radius:16px !important;
-      box-shadow:0 2px 8px rgba(0,0,0,.06) !important;
+      min-height:140px !important; padding:16px 14px !important; border-radius:16px !important;
+      background-color: #EAF4FF !important; border: 1px solid #CFE3FF !important;
+      box-shadow: 0 2px 8px rgba(14, 35, 69, 0.08) !important;
     }
     .action-card .action-icon{
-      font-size:2.2rem !important;
-      margin-bottom:10px !important;
-      line-height:1 !important;
+      font-size:2.2rem !important; margin-bottom:10px !important; line-height:1 !important;
     }
-    .action-card h3{ font-size:1.3rem !important; margin:6px 0 4px !important; }
-    .action-card p{ font-size:.95rem !important; opacity:.85; }
+    .action-card h3{ font-size:1.3rem !important; margin:6px 0 4px !important; color: #0A2540 !important; }
+    .action-card p{ font-size:.95rem !important; color: #1F2A44 !important; opacity: 1 !important; }
+    .action-card:hover{
+      background-color: #E3F0FF !important; transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(14, 35, 69, 0.12) !important;
+    }
 
-    /* ====== Mobile (≤768px) ====== */
+    /* Pet slot */
+    .pet-slot {
+      position: absolute;
+      bottom: -10px;
+      right: -30px;
+      width: 90px;
+      height: 90px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(4px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      z-index: 12;
+      transition: all 0.3s ease;
+    }
+    .pet-slot:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
+    .pet-slot img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* Emotion effects */
+    #image-character-container .effect-hearts,
+    #image-character-container .effect-sparkles,
+    #image-character-container .effect-thought,
+    #image-character-container .effect-love{
+      font-size: 2.4rem !important; top: -48px !important;
+      text-shadow: 0 2px 6px rgba(0,0,0,.12);
+    }
+
+    /* Mobile */
     @media (max-width:768px){
       #image-character-container{ height:480px !important; }
-      #image-character-container .character-container{
-        width:220px !important;
-        height:330px !important;
-      }
+      #image-character-container .character-container{ width:220px !important; height:330px !important; }
       #image-character-container .character-nameplate h3{ font-size:2.35rem !important; }
       #image-character-container .stat-item{ font-size:1.05rem !important; }
       #image-character-container .stat-icon{ font-size:1.5rem !important; min-width:24px !important; }
       #image-character-container .stat-value{ font-size:1.3rem !important; }
-      #image-character-container .emotion-btn{
-        width:48px !important; height:48px !important; font-size:1.25rem !important;
-      }
-
+      #image-character-container .emotion-btn{ width:48px !important; height:48px !important; font-size:1.25rem !important; }
       .action-buttons{ padding-left:18px !important; padding-right:18px !important; }
       .action-grid{ gap:14px !important; }
-      .action-card{
-        min-height:150px !important;
-        padding:18px 16px !important;
-      }
+      .action-card{ min-height:150px !important; padding:18px 16px !important; }
       .action-card .action-icon{ font-size:2.4rem !important; }
       .action-card h3{ font-size:1.35rem !important; }
-    }
-      /* ทำให้การ์ดเป็นฟ้าอ่อน อ่านง่ายขึ้น */
-    .action-card{
-      background-color: #EAF4FF !important;   /* ฟ้าอ่อน */
-      border: 1px solid #CFE3FF !important;
-      box-shadow: 0 2px 8px rgba(14, 35, 69, 0.08) !important; /* เงาอ่อนโทนฟ้า */
-    }
-    .action-card h3{
-      color: #0A2540 !important;   /* น้ำเงินเข้มอ่านชัด */
-    }
-    .action-card p{
-      color: #1F2A44 !important;   /* ตัวรายละเอียด */
-      opacity: 1 !important;       /* เอาความโปร่งออกเพื่อความคมชัด */
-    }
-    .action-card .action-icon{
-      opacity: 1 !important;       /* ไอคอนชัดขึ้นบนพื้นฟ้าอ่อน */
-    }
-  
-    /* เอฟเฟกต์โฮเวอร์ให้ตัดกับพื้นหลัง */
-    .action-card:hover{
-      background-color: #E3F0FF !important;   /* ฟ้าอ่อนลงอีกนิดตอนโฮเวอร์ */
-      transform: translateY(-1px);
-      transition: background-color .2s ease, transform .2s ease, box-shadow .2s ease;
-      box-shadow: 0 6px 18px rgba(14, 35, 69, 0.12) !important;
-    }
-  
-    /* ป้าย "ใหม่!" หรือป้ายจำนวนเกม ให้ยังคงโดดเด่น */
-    .action-card .action-badge{
-      background: #D7EAFF !important;
-      color: #0A2540 !important;
-      border: 1px solid #BEDBFF !important;
-    }
-  
-    /* รองรับโหมดมืด: ยังคงฟ้าอ่อนที่อ่านง่าย */
-    @media (prefers-color-scheme: dark){
-      .action-card{
-        background-color: #DAECFF !important;
-        border-color: #BFD8FF !important;
-        box-shadow: 0 2px 10px rgba(0,0,0,.25) !important;
-      }
-      .action-card:hover{
-        background-color: #D1E6FF !important;
+      .pet-slot { width: 70px; height: 70px; right: -20px; bottom: -5px; }
+      #image-character-container .effect-hearts,
+      #image-character-container .effect-sparkles,
+      #image-character-container .effect-thought,
+      #image-character-container .effect-love{
+        font-size: 2.1rem !important; top: -42px !important;
       }
     }
   </style>
 </head>
 <body>
-  <!-- หน้า Login/Welcome -->
+  <!-- หน้า Login -->
   <div id="login-page" class="page active">
     <div class="container">
       <header class="header">
@@ -185,20 +154,9 @@
           <form id="login-form">
             <div class="input-group">
               <label for="player-name">ชื่อของคุณ:</label>
-              <input
-                type="text"
-                id="player-name"
-                name="playerName"
-                placeholder="ใส่ชื่อของคุณ..."
-                required
-                minlength="2"
-                maxlength="20"
-              />
+              <input type="text" id="player-name" name="playerName" placeholder="ใส่ชื่อของคุณ..." required minlength="2" maxlength="20" />
             </div>
-
-            <button type="submit" class="btn btn-primary btn-large">
-              เริ่มเล่นเกม
-            </button>
+            <button type="submit" class="btn btn-primary btn-large">เริ่มเล่นเกม</button>
           </form>
         </div>
       </main>
@@ -214,20 +172,16 @@
     <div class="container">
       <header class="header">
         <h1>สวัสดี <span id="display-name">ผู้เล่น</span>! 👋</h1>
-        <button class="btn btn-ghost logout-btn" style="position:absolute; top:20px; right:20px;">
-          ออกจากระบบ
-        </button>
+        <button class="btn btn-ghost logout-btn" style="position:absolute; top:20px; right:20px;">ออกจากระบบ</button>
       </header>
 
       <main class="dashboard-content">
         <section class="character-section">
           <div id="character-display-area">
-            <!-- Ragnarok Character จะถูกสร้างที่นี่โดย JavaScript -->
             <div class="character-loading">กำลังโหลดตัวละคร... ⚡</div>
           </div>
         </section>
 
-        <!-- Action Buttons -->
         <section class="action-buttons">
           <div class="action-grid">
             <button class="action-card shop-card" id="open-shop">
@@ -256,7 +210,6 @@
           </div>
         </section>
 
-        <!-- Mini Games Selection -->
         <section class="games-menu" id="games-selection" style="display:none;">
           <div class="games-header">
             <h2>เลือกเกมที่ต้องการเล่น</h2>
@@ -290,7 +243,6 @@
           </div>
         </section>
 
-        <!-- Shop Section -->
         <section class="shop-menu" id="shop-section" style="display:none;">
           <div class="shop-header">
             <h2>ร้านค้า</h2>
@@ -307,17 +259,12 @@
             <button class="shop-tab" data-category="pets">🐕 สัตว์เลี้ยง</button>
           </div>
 
-          <div class="shop-items" id="shop-items"><!-- ไอเทมร้านค้าจะถูกสร้างโดย JS --></div>
-        </section>
-
-      
-          </div>
+          <div class="shop-items" id="shop-items"></div>
         </section>
       </main>
     </div>
   </div>
 
-  <!-- Loading Overlay -->
   <div id="loading-overlay" class="loading-overlay">
     <div class="loading-spinner"></div>
     <p>กำลังโหลด...</p>
@@ -334,34 +281,110 @@
   <script type="module" src="/js/inventory-enhanced.js"></script>
   <script src="js/app.js"></script>
 
-  <style id="bigger-emotion-effects">
-  /* ใหญ่ขึ้น + ลอยสูงขึ้นนิด เพื่อไม่ทับหัว */
-  #image-character-container .effect-hearts,
-  #image-character-container .effect-sparkles,
-  #image-character-container .effect-thought,
-  #image-character-container .effect-love{
-    font-size: 2.4rem !important;   /* เดิม ~1rem */
-    top: -48px !important;          /* ขยับขึ้นเล็กน้อย */
-    text-shadow: 0 2px 6px rgba(0,0,0,.12);
-  }
+  <script>
+  /* PET SYSTEM */
+  (function(){
+    const PETS_BASE = 'assets/images/characters/pets/';
+    const DEFAULT_PET = 'dog_01.png';
+    
+    function createPetSlot() {
+      const charContainer = document.querySelector('#image-character-container .character-container') ||
+                           document.querySelector('.character-container');
+      
+      if (!charContainer) {
+        console.warn('⚠️ Character container not found');
+        return null;
+      }
 
-  /* เพิ่มระยะลอยให้ดูมีมิติมากขึ้น */
-  #image-character-container @keyframes effectFloat{
-    0%,100%{ transform: translateX(-50%) translateY(0);    opacity:1 }
-    50%   { transform: translateX(-50%) translateY(-22px); opacity:.85 }
-  }
+      let petSlot = charContainer.querySelector('.pet-slot');
+      if (petSlot) {
+        console.log('✅ Pet slot exists');
+        return petSlot;
+      }
 
-  /* มือถือ: ยังใหญ่ แต่ลดนิดให้พอดีจอเล็ก */
-  @media (max-width:768px){
-    #image-character-container .effect-hearts,
-    #image-character-container .effect-sparkles,
-    #image-character-container .effect-thought,
-    #image-character-container .effect-love{
-      font-size: 2.1rem !important;
-      top: -42px !important;
+      petSlot = document.createElement('div');
+      petSlot.className = 'pet-slot';
+      petSlot.id = 'petSlot';
+      charContainer.appendChild(petSlot);
+      console.log('✅ Pet slot created');
+      return petSlot;
     }
-  }
-</style>
 
+    function loadPet(petFileName) {
+      const petSlot = createPetSlot();
+      if (!petSlot) return;
+
+      petSlot.innerHTML = '';
+      const img = new Image();
+      img.alt = 'สัตว์เลี้ยง';
+      img.style.cssText = 'width:100%; height:100%; object-fit:contain;';
+      
+      const petPath = PETS_BASE + petFileName;
+      console.log('🐕 Loading pet:', petPath);
+
+      img.onload = function() {
+        console.log('✅ Pet loaded:', petPath);
+        petSlot.style.display = 'flex';
+      };
+
+      img.onerror = function() {
+        console.error('❌ Pet load failed:', petPath);
+        petSlot.innerHTML = '<div style="font-size:3rem">🐕</div>';
+        petSlot.style.display = 'flex';
+      };
+
+      img.src = petPath;
+      petSlot.appendChild(img);
+    }
+
+    function setPet(petFileName) {
+      try {
+        localStorage.setItem('currentPet', petFileName);
+      } catch(e) {}
+      loadPet(petFileName);
+    }
+
+    function getSavedPet() {
+      try {
+        return localStorage.getItem('currentPet') || DEFAULT_PET;
+      } catch(e) {
+        return DEFAULT_PET;
+      }
+    }
+
+    function initPet() {
+      const charContainer = document.querySelector('.character-container');
+      if (!charContainer) {
+        console.log('⏳ Waiting for character...');
+        setTimeout(initPet, 500);
+        return;
+      }
+
+      const savedPet = getSavedPet();
+      console.log('🎯 Init pet:', savedPet);
+      loadPet(savedPet);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(initPet, 1000);
+      });
+    } else {
+      setTimeout(initPet, 1000);
+    }
+
+    window.addEventListener('shop:petChange', function(event) {
+      const petFile = event.detail && event.detail.pet;
+      if (petFile) {
+        console.log('🛒 Changing pet:', petFile);
+        setPet(petFile);
+      }
+    });
+
+    window.setPet = setPet;
+    window.loadPet = loadPet;
+    console.log('✅ Pet system ready');
+  })();
+  </script>
 </body>
 </html>
