@@ -345,6 +345,12 @@ class ImageCharacterSystem {
     document.head.appendChild(style);
   }
 }
+
+
+
+/* global instance */
+window.characterSystem = new ImageCharacterSystem();
+
 <script>
 /* ==== CHARACTER LAYOUT + PET SLOT + FORM GUARD (drop-in) ==== */
 (function () {
@@ -474,6 +480,3 @@ class ImageCharacterSystem {
 })();
 </script>
 
-
-/* global instance */
-window.characterSystem = new ImageCharacterSystem();
