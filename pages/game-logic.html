@@ -1,96 +1,386 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PI Game — เกมวิเคราะห์</title>
-  <link rel="stylesheet" href="/css/reset.css">
-  <link rel="stylesheet" href="/css/variables.css">
-  <link rel="stylesheet" href="/css/base.css">
+  <title>เกมเปิดแผ่นป้าย 7 ใบ | Clue Flip Quiz</title>
   <style>
-    :root{--radius:16px;--space:16px;}
-    body{font-family:system-ui,"Noto Sans Thai",sans-serif;background:#fff;color:#111}
-    .container{max-width:900px;margin:0 auto;padding:24px}
-    .card{background:#f7f7f7;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.08);padding:24px}
-    .header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
-    .pill{background:#eee;border-radius:999px;padding:6px 12px;font-size:14px}
+    :root{
+      --bg:#0b0b0b; --fg:#fff; --card:#1e1e1e; --accent:#5eead4; --warn:#ef4444; --ok:#22c55e;
+      --muted:#94a3b8; --radius:18px; --space:14px; --shadow:0 8px 24px rgba(0,0,0,.25);
+      --tile-w: min(160px, 26vw); --tile-h: min(120px, 20vw);
+    }
+    html,body{height:100%}
+    body{margin:0; font-family:system-ui, "Noto Sans Thai", sans-serif; background:var(--bg); color:var(--fg)}
+    .wrap{display:grid; grid-template-columns: 360px 1fr; gap:22px; padding:24px; align-items:start}
+    @media (max-width: 900px){ .wrap{grid-template-columns: 1fr; padding:14px} }
 
-    /* แถบจับเวลาสำหรับช่วงดูภาพ */
-    .progress{height:10px;border-radius:999px;background:#e9e9e9;overflow:hidden;margin:6px 0 16px}
-    .progress>div{height:100%;width:0;background:linear-gradient(90deg,#1976D2,#2E7D32);transition:width .15s linear}
+    .panel{background:var(--card); border-radius:var(--radius); padding:18px; box-shadow:var(--shadow)}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .hint-grid{
+      position:relative; border-radius:var(--radius); padding:16px; overflow:hidden;
+      background:#0f172a;
+      min-height: calc(var(--tile-h) * 2 + 64px);
+    }
+    .bg-overlay{position:absolute; inset:0; background-position:center; background-size:cover; filter:brightness(.45); opacity:.9}
+    .grid{position:relative; display:grid; gap:12px; grid-template-columns: repeat(3, var(--tile-w)); justify-content:center}
+    @media (max-width:700px){ .grid{grid-template-columns: repeat(2, 1fr)} }
 
-    .image-stage{display:grid;place-items:center;min-height:300px;background:#fafafa;border-radius:16px;overflow:hidden;position:relative}
-    .image-stage img{width:100%;height:100%;object-fit:contain}
-    .q-card{display:grid;gap:16px}
-    .prompt{font-size:22px;font-weight:700}
-    .choices{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-    .choice{position:relative;display:flex;align-items:center;justify-content:center;min-height:84px;padding:14px;border-radius:18px;border:2px solid transparent;background:#fff;box-shadow:0 6px 20px rgba(0,0,0,.08);cursor:pointer;font-size:20px;text-align:center}
-    .choice[disabled]{opacity:.6;pointer-events:none}
-    .choice.correct{border-color:#1B5E20}
-    .choice.wrong{border-color:#C62828}
-    .emoji{position:absolute;right:10px;bottom:10px;font-size:24px;opacity:0;transform:scale(.8);transition:opacity .15s ease,transform .2s ease}
-    .choice.show-emoji .emoji{opacity:1;transform:scale(1)}
-    .summary{display:none}
-    .summary.active{display:block}
-    .big{font-size:48px;font-weight:800}
-    #customAnimationSlot{display:grid;place-items:center;min-height:160px;background:#f2f7ff;border:2px dashed #c9ddff;border-radius:16px;margin:12px 0 20px}
-    @media (max-width:640px){.choices{grid-template-columns:1fr}}
+    .tile{position:relative; width:var(--tile-w); height:var(--tile-h); border-radius:16px; border:1px solid rgba(255,255,255,.08);
+      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(0,0,0,.25)); color:#e2e8f0; display:flex; align-items:center; justify-content:center;
+      cursor:pointer; transition: transform .15s ease, background .2s ease, border-color .2s ease; user-select:none; padding:10px; text-align:center}
+    .tile:hover{transform:translateY(-2px)}
+    .tile.open{background:rgba(15,23,42,.82); border-color: rgba(94,234,212,.35)}
+    .tile .num{position:absolute; top:6px; left:8px; font-size:12px; color:var(--muted)}
+
+    .choices{display:grid; gap:10px}
+    .choice{padding:12px 14px; border-radius:14px; background:#0b1220; border:1px solid rgba(255,255,255,.08); cursor:pointer; text-align:left}
+    .choice:hover{border-color:rgba(94,234,212,.35)}
+    .choice.correct{background:rgba(34,197,94,.18); border-color:#22c55e}
+    .choice.wrong{background:rgba(239,68,68,.18); border-color:#ef4444}
+
+    .badge{display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; background:rgba(94,234,212,.15); color:#a7f3d0; font-weight:600}
+    .muted{color:var(--muted)}
+    .btn{background:transparent; color:#e2e8f0; border:1px solid rgba(255,255,255,.18); border-radius:12px; padding:10px 14px; cursor:pointer}
+    .btn.primary{background:linear-gradient(90deg, #10b981, #06b6d4); color:#002; border:none}
+    .btn:disabled{opacity:.6; cursor:not-allowed}
+    .kpi{display:flex; gap:10px; flex-wrap:wrap}
+    .kpi .card{background:#0a0f1a; border-radius:12px; padding:10px 12px; border:1px solid rgba(255,255,255,.06)}
+    .toast{position:fixed; inset:auto 12px 12px auto; background:#111827; color:#e5e7eb; padding:10px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.1); box-shadow:var(--shadow); display:none}
+    .footer{opacity:.8; font-size:12px; margin-top:8px}
   </style>
 </head>
 <body>
-  <main class="container">
-    <section class="card">
-      <div class="header">
-        <div class="pill" id="phasePill">ดูภาพ</div>
-        <div class="pill">ข้อที่ <b id="qIndex">0</b>/<span id="qTotal">7</span></div>
-        <div class="pill">ถูก <b id="correctCount">0</b></div>
-        <div class="pill">⭐ <b id="starsCount">0</b></div>
+  <div class="wrap">
+
+    <!-- Left: Control & Score -->
+    <section class="panel" id="left">
+      <div class="row" style="justify-content:space-between">
+        <h2 style="margin:0">เกมเปิดแผ่นป้าย <span class="badge" id="badgeRound">รอบที่ 1</span></h2>
+        <button class="btn" id="btnNew">สุ่มข้อใหม่</button>
+      </div>
+      <p id="qText" style="font-size:18px; margin:10px 0 12px">–</p>
+
+      <div class="kpi" style="margin-bottom:12px">
+        <div class="card">เวลา: <b id="timer">0.00s</b></div>
+        <div class="card">แผ่นป้ายที่ยังไม่เปิด: <b id="kUnopened">7</b></div>
+        <div class="card">คะแนนรอบนี้: <b id="kScore">0</b></div>
+        <div class="card">⭐ ดาวรวม: <b id="kStars">0</b></div>
       </div>
 
-      <!-- แถบจับเวลา: แสดงเฉพาะตอนดูภาพ (JS จะซ่อน/แสดงให้) -->
-      <div id="imgProgress" class="progress" aria-hidden="true">
-        <div id="progressBar"></div>
-      </div>
-
-      <!-- IMAGE PHASE (โชว์ ~10 วิ) -->
-      <div id="imageStage" class="image-stage">
-        <img id="qImage" alt="รูปสำหรับจดจำ" />
-      </div>
-
-      <!-- QUESTION PHASE (ข้อความ + 4 ตัวเลือก) -->
-      <div id="questionStage" class="q-card" hidden>
-        <div class="prompt" id="prompt">กำลังโหลดคำถาม…</div>
+      <div class="panel" style="background:#0a0f1a">
+        <h3 style="margin-top:0">ตัวเลือกคำตอบ (4 ตัวเลือก)</h3>
         <div class="choices" id="choices"></div>
-      </div>
-
-      <!-- SUMMARY -->
-      <div id="summary" class="summary">
-        <h2>สรุปผล</h2>
-        <!-- แอนิเมชันอยู่บนสุดใต้หัวข้อ -->
-        <div id="customAnimationSlot">
-          <div style="color:#7a8aa1">วาง GIF/ภาพแอนิเมชันของคุณที่นี่ตอนสรุปผล</div>
-          <!-- ตัวอย่าง: <img src="/assets/animations/celebrate.gif" alt=""> -->
-        </div>
-
-        <div class="card" style="margin-bottom:12px">
-          <div>คะแนนถูกต้อง</div>
-          <div class="big" id="sumCorrect">0</div>
-          <div>จากทั้งหมด <b id="sumTotal">7</b> ข้อ</div>
-        </div>
-
-        <div class="card">
-          <div>ดาวที่ได้รับ (รวมโบนัส)</div>
-          <div class="big">⭐ <span id="sumStars">0</span></div>
-        </div>
-
-        <div style="display:flex;gap:8px;margin-top:16px">
-          <a class="pill" href="/">← กลับหน้าหลัก</a>
-          <button id="playAgain" class="pill">เล่นอีกครั้ง</button>
+        <div class="row" style="margin-top:10px; justify-content:space-between">
+          <div class="muted">คลิกเปิดคำใบ้ก่อน แล้วจึงตอบ</div>
+          <button class="btn primary" id="btnRevealAll" disabled>เปิดคำใบ้ทั้งหมด</button>
         </div>
       </div>
+
+      <div class="panel" style="margin-top:14px">
+        <div class="row" style="justify-content:space-between; align-items:center">
+          <div>
+            <b>พื้นหลังกระดาน</b>
+            <div class="footer">อัปโหลดภาพเพื่อใช้เป็นพื้นหลังแผ่นป้าย</div>
+          </div>
+          <div class="row">
+            <input type="file" id="bgInput" accept="image/*" class="btn" />
+            <button class="btn" id="bgReset">ล้าง</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:14px">
+        <div class="row" style="justify-content:space-between; align-items:center">
+          <div>
+            <b>บันทึกข้อมูล</b>
+            <div class="footer">ระบบบันทึกความไว (ms) + จำนวนแผ่นที่ไม่ได้เปิด ลง localStorage</div>
+          </div>
+          <div class="row">
+            <button class="btn" id="btnShowLog">ดูข้อมูล</button>
+            <button class="btn" id="btnClearLog">ล้างข้อมูล</button>
+          </div>
+        </div>
+      </div>
+
     </section>
-  </main>
 
-  <script type="module" src="/js/game-logic.js"></script>
+    <!-- Right: Hints Board -->
+    <section class="panel hint-grid">
+      <div class="bg-overlay" id="boardBg"></div>
+      <div class="grid" id="hintGrid" aria-label="กระดานคำใบ้ 7 ใบ"></div>
+    </section>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+  // --------------------- Sample Data (อ่านจาก JS เอง) ---------------------
+  // คุณสามารถแยกไฟล์ questions.js ได้ภายหลัง
+  const QUESTION_BANK = [
+    {
+      id: 'animal-tiger',
+      prompt: 'สัตว์ดังกล่าวคืออะไร?',
+      hints: [
+        'อยู่ในป่า',
+        'กินเนื้อ',
+        'มีสีส้ม',
+        'มีลายสีดำ',
+        'ปีนต้นไม้ได้',
+        'บินไม่ได้',
+        'เป็นสัตว์สงวน'
+      ],
+      choices: ['เสือโคร่ง', 'หมีหมา', 'หมูป่า', 'กวางป่า'],
+      answerIndex: 0,
+      tags: ['animal']
+    },
+    {
+      id: 'planet-mars',
+      prompt: 'วัตถุท้องฟ้านี้คืออะไร?',
+      hints: [
+        'เป็นดาวเคราะห์', 'สีออกแดงสนิม', 'เล็กกว่าโลก', 'มีภูเขาไฟขนาดใหญ่',
+        'มีขั้วน้ำแข็ง', 'มีหุ่นยนต์สำรวจ', 'อยู่วงโคจรถัดจากโลก'
+      ],
+      choices: ['ดาวอังคาร', 'ดาวพุธ', 'ดวงจันทร์', 'ดาวศุกร์'],
+      answerIndex: 0,
+      tags: ['space']
+    },
+    {
+      id: 'food-sushi',
+      prompt: 'อาหารดังกล่าวคืออะไร?',
+      hints: [
+        'เกิดจากข้าวและปลา', 'นิยมในญี่ปุ่น', 'เสิร์ฟกับวาซาบิ', 'กินแบบคำเล็กๆ',
+        'มีหลายหน้าให้เลือก', 'ใช้ซอสถั่วเหลือง', 'มักจัดเป็นคำบนสาหร่าย'
+      ],
+      choices: ['ราเม็ง', 'ซูชิ', 'ปลาดิบย่าง', 'ทาโกะยากิ'],
+      answerIndex: 1,
+      tags: ['food']
+    }
+  ];
+
+  // --------------------- State ---------------------
+  const state = {
+    question: null,
+    opened: new Set(),
+    startTs: 0,
+    answered: false,
+    round: 1,
+    starsTotal: Number(localStorage.getItem('flipq_stars')||0),
+    scoreThisRound: 0,
+  };
+
+  const els = {
+    grid: document.getElementById('hintGrid'),
+    qText: document.getElementById('qText'),
+    choices: document.getElementById('choices'),
+    kUnopened: document.getElementById('kUnopened'),
+    kScore: document.getElementById('kScore'),
+    kStars: document.getElementById('kStars'),
+    timer: document.getElementById('timer'),
+    btnNew: document.getElementById('btnNew'),
+    btnRevealAll: document.getElementById('btnRevealAll'),
+    badgeRound: document.getElementById('badgeRound'),
+    toast: document.getElementById('toast'),
+    bgInput: document.getElementById('bgInput'),
+    bgReset: document.getElementById('bgReset'),
+    boardBg: document.getElementById('boardBg'),
+    btnShowLog: document.getElementById('btnShowLog'),
+    btnClearLog: document.getElementById('btnClearLog'),
+  };
+
+  let timerId = null;
+
+  function toast(msg){
+    els.toast.textContent = msg; els.toast.style.display='block';
+    setTimeout(()=> els.toast.style.display='none', 1600);
+  }
+
+  function formatSec(ms){ return (ms/1000).toFixed(2)+'s'; }
+
+  function startTimer(){
+    state.startTs = performance.now();
+    stopTimer();
+    timerId = setInterval(()=>{
+      const elapsed = performance.now()-state.startTs;
+      els.timer.textContent = formatSec(elapsed);
+    }, 60);
+  }
+  function stopTimer(){ if(timerId) clearInterval(timerId); timerId = null; }
+
+  function pickRandomQuestion(){
+    const idx = Math.floor(Math.random()*QUESTION_BANK.length);
+    return JSON.parse(JSON.stringify(QUESTION_BANK[idx])); // deep-ish copy
+  }
+
+  function setupBoard(){
+    els.grid.innerHTML = '';
+    state.opened = new Set();
+    state.answered = false;
+    state.scoreThisRound = 0;
+    els.kScore.textContent = '0';
+    els.kUnopened.textContent = '7';
+    els.btnRevealAll.disabled = false;
+
+    const placeholders = Array.from({length:7}, (_,i)=> i);
+    placeholders.forEach(i=>{
+      const tile = document.createElement('button');
+      tile.className = 'tile';
+      tile.setAttribute('aria-label', `แผ่นป้ายหมายเลข ${i+1}`);
+      tile.innerHTML = `<span class="num">#${i+1}</span><span class="txt">คลิกเพื่อดูคำใบ้</span>`;
+      tile.addEventListener('click', ()=> openHint(i, tile));
+      els.grid.appendChild(tile);
+    });
+  }
+
+  function openHint(index, tileEl){
+    if(state.answered) return; // lock after answered
+    if(state.opened.has(index)) return;
+    state.opened.add(index);
+    tileEl.classList.add('open');
+    const hint = state.question.hints[index] || '(ไม่มีข้อมูล)';
+    tileEl.querySelector('.txt').textContent = hint;
+    els.kUnopened.textContent = 7 - state.opened.size < 0 ? '0' : (7 - state.opened.size);
+  }
+
+  function renderChoices(){
+    els.choices.innerHTML = '';
+    state.question.choices.forEach((choice, idx)=>{
+      const btn = document.createElement('button');
+      btn.className = 'choice';
+      btn.textContent = `${String.fromCharCode(65+idx)}. ${choice}`;
+      btn.addEventListener('click', ()=> onAnswer(idx));
+      els.choices.appendChild(btn);
+    });
+  }
+
+  function revealAllHints(){
+    const tiles = els.grid.querySelectorAll('.tile');
+    tiles.forEach((tile, i)=>{
+      tile.classList.add('open');
+      const hint = state.question.hints[i] || '(ไม่มีข้อมูล)';
+      tile.querySelector('.txt').textContent = hint;
+    });
+    els.kUnopened.textContent = 0;
+  }
+
+  function onAnswer(idx){
+    if(state.answered) return;
+    state.answered = true;
+    stopTimer();
+
+    // Reveal all hints and lock tiles
+    revealAllHints();
+    els.btnRevealAll.disabled = true;
+    els.grid.querySelectorAll('.tile').forEach(t=> t.style.pointerEvents='none');
+
+    // Mark choices
+    const nodes = [...document.querySelectorAll('.choice')];
+    const correct = idx === state.question.answerIndex;
+    nodes.forEach((n,i)=>{
+      if(i === state.question.answerIndex) n.classList.add('correct');
+      if(i === idx && i !== state.question.answerIndex) n.classList.add('wrong');
+      n.disabled = true;
+    });
+
+    // Scoring: คะแนนจากแผ่นป้ายที่ยังไม่เปิด (ถ้าตอบถูก)
+    const unopened = Math.max(0, 7 - state.opened.size);
+    let score = correct ? unopened : 0;
+
+    // Small star bonus by speed (เฉพาะตอบถูก)
+    const rt = performance.now() - state.startTs; // ms
+    let bonusStars = 0;
+    if(correct){
+      if(rt < 5000) bonusStars = 1; // ไวมาก
+      else if(rt < 10000) bonusStars = 0.5; // ปานกลาง
+    }
+
+    // Update state
+    state.scoreThisRound = score;
+    els.kScore.textContent = String(score);
+
+    const starsEarned = (correct ? 1 : 0) + bonusStars; // ดาวฐาน 1 ถ้าถูก + โบนัสความไวเล็กน้อย
+    state.starsTotal += starsEarned;
+    localStorage.setItem('flipq_stars', state.starsTotal);
+    els.kStars.textContent = String(state.starsTotal);
+
+    // Log
+    const log = JSON.parse(localStorage.getItem('flipq_logs')||'[]');
+    log.push({
+      at: new Date().toISOString(),
+      qid: state.question.id,
+      correct,
+      responseMs: Math.round(rt),
+      unopened,
+      starsEarned,
+      score,
+      round: state.round
+    });
+    localStorage.setItem('flipq_logs', JSON.stringify(log));
+
+    toast(correct ? `ถูกต้อง! +${score} คะแนน, ⭐ +${starsEarned}` : 'ยังไม่ถูก ลองใหม่รอบถัดไปนะ');
+  }
+
+  function nextRound(){
+    state.round += 1; els.badgeRound.textContent = `รอบที่ ${state.round}`;
+    startNewQuestion();
+  }
+
+  function startNewQuestion(){
+    state.question = pickRandomQuestion();
+    state.opened.clear();
+    state.answered = false;
+    els.qText.textContent = state.question.prompt;
+    els.kStars.textContent = String(state.starsTotal);
+    els.kScore.textContent = '0';
+    els.kUnopened.textContent = '7';
+    els.btnRevealAll.disabled = false;
+    renderChoices();
+    setupBoard();
+    startTimer();
+  }
+
+  // --------------------- Background Upload ---------------------
+  els.bgInput.addEventListener('change', (e)=>{
+    const file = e.target.files?.[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev)=>{
+      const url = ev.target.result;
+      els.boardBg.style.backgroundImage = `url(${url})`;
+      localStorage.setItem('flipq_bg', url);
+    };
+    reader.readAsDataURL(file);
+  });
+  els.bgReset.addEventListener('click', ()=>{
+    els.boardBg.style.backgroundImage = '';
+    localStorage.removeItem('flipq_bg');
+  });
+
+  // --------------------- Log View/Clear ---------------------
+  els.btnShowLog.addEventListener('click', ()=>{
+    const logs = JSON.parse(localStorage.getItem('flipq_logs')||'[]');
+    if(!logs.length) return alert('ยังไม่มีข้อมูลบันทึก');
+    const text = logs.map(l=>`[${l.at}] ${l.qid} | correct:${l.correct} | rt:${l.responseMs}ms | unopened:${l.unopened} | stars:+${l.starsEarned} | score:${l.score}`).join('\n');
+    alert(text);
+  });
+  els.btnClearLog.addEventListener('click', ()=>{
+    if(confirm('ล้างข้อมูลบันทึกทั้งหมด?')) localStorage.removeItem('flipq_logs');
+  });
+
+  // --------------------- Controls ---------------------
+  els.btnRevealAll.addEventListener('click', ()=>{
+    revealAllHints();
+  });
+  els.btnNew.addEventListener('click', ()=>{
+    nextRound();
+  });
+
+  // --------------------- Init ---------------------
+  (function init(){
+    const savedBg = localStorage.getItem('flipq_bg');
+    if(savedBg) els.boardBg.style.backgroundImage = `url(${savedBg})`;
+    startNewQuestion();
+  })();
+  </script>
 </body>
 </html>
