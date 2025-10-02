@@ -118,7 +118,22 @@
 
   <script>
   // ===== Dataset hook =====
-  const DATASET = (window.FLIP_QUESTIONS && window.FLIP_QUESTIONS.items) || (window.QUESTION_BANK || []);
+  // Fallback sample data (ถ้ายังไม่ได้โหลดไฟล์คลังคำถาม)
+const SAMPLE_DATA = [
+  {
+    id: 'animal-tiger',
+    prompt: 'สัตว์ดังกล่าวคืออะไร?',
+    hints: ['อยู่ในป่า','กินเนื้อ','มีสีส้ม','มีลายสีดำ','ปีนต้นไม้ได้','บินไม่ได้','เป็นสัตว์สงวน'],
+    choices: ['เสือโคร่ง','หมีหมา','หมูป่า','กวางป่า'],
+    answerIndex: 0
+  }
+];
+
+const DATASET = (window.FLIP_QUESTIONS && Array.isArray(window.FLIP_QUESTIONS.items) && window.FLIP_QUESTIONS.items.length)
+  ? window.FLIP_QUESTIONS.items
+  : (Array.isArray(window.QUESTION_BANK) && window.QUESTION_BANK.length ? window.QUESTION_BANK : SAMPLE_DATA);
+
+if(DATASET === SAMPLE_DATA){ console.warn('ใช้ SAMPLE_DATA ชั่วคราว: ยังไม่ได้เชื่อมไฟล์คลังคำถาม (questions-flip.js)'); }
 
   // ===== Config: tile cover image URL (optional) =====
   let TILE_COVER_URL = '';
