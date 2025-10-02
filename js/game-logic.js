@@ -1,251 +1,165 @@
-// ===== helpers =====
-const $ = (s, r=document)=>r.querySelector(s);
-const $$ = (s, r=document)=>[...r.querySelectorAll(s)];
-const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
-const now = ()=>performance.now();
-function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function pickUnique(a,n){return shuffle(a).slice(0,n)}
-function choiceWithNewAnswerIndex(choices,idx){
-  const pairs = choices.map((t,i)=>({t,ok:i===idx}));
-  const sh = shuffle(pairs);
-  return { items: sh.map(p=>p.t), correctIndex: sh.findIndex(p=>p.ok) };
-}
-// บังคับ show/hide ให้ชัวร์ (กัน CSS ทับ)
-function showEl(el){ if(!el) return; el.hidden=false; el.style.display=''; }
-function hideEl(el){ if(!el) return; el.hidden=true;  el.style.display='none'; }
+/*
+  Flip-Card Clue Quiz – Question dataset (JS format)
+  --------------------------------------------------
+  โครงสร้าง: วางเป็นอ็อบเจ็กต์ที่มีฟิลด์ items (array)
+  แต่ละ item มี: id, prompt, hints[7], choices[4], answerIndex และ (ถ้ามี) image
+  หมายเหตุ: image เป็นทางเลือก (optional) — สำหรับเกมเปิดแผ่นป้ายจะไม่ใช้ก็ได้
 
-// ===== config =====
-const LS={TIME_ON_IMAGE_MS:'memory.timeOnImageMs', TIME_TO_ANSWER_MS:'memory.timeToAnswerMs', DAILY_STAR_CAP:'game.dailyStarCap', BONUS_T1_MS:'game.bonusT1Ms', BONUS_T2_MS:'game.bonusT2Ms'};
-const readNum=(k,d)=>{const v=Number(localStorage.getItem(k));return Number.isFinite(v)&&v>0?v:d}
-const CONFIG={
-  QUESTIONS_PER_SESSION:7,
-  MOVE_ON_DELAY_MS:700,
-  REVEAL_REACTION_MS:400,
-  STAR_PER_CORRECT:1,
-  STAR_STREAK_BONUS:1,
-  TIME_ON_IMAGE_MS: readNum(LS.TIME_ON_IMAGE_MS, 10000), // 10s
-  TIME_TO_ANSWER_MS: readNum(LS.TIME_TO_ANSWER_MS, 15000),
-  DAILY_STAR_CAP:    readNum(LS.DAILY_STAR_CAP, 50),
-  BONUS_T1_MS:       readNum(LS.BONUS_T1_MS, 1500),
-  BONUS_T2_MS:       readNum(LS.BONUS_T2_MS, 3000),
-};
-// override ผ่าน query เช่น ?timeOnImageSec=8&timeToAnswerSec=12
-const qp=new URLSearchParams(location.search);
-if(qp.has('timeOnImageSec')){const v=Math.max(1,Number(qp.get('timeOnImageSec'))|0)*1000;localStorage.setItem(LS.TIME_ON_IMAGE_MS,String(v));CONFIG.TIME_ON_IMAGE_MS=v}
-if(qp.has('timeToAnswerSec')){const v=Math.max(1,Number(qp.get('timeToAnswerSec'))|0)*1000;localStorage.setItem(LS.TIME_TO_ANSWER_MS,String(v));CONFIG.TIME_TO_ANSWER_MS=v}
+  การใช้งาน (สองทางเลือก):
+    1) โหลดไฟล์นี้ด้วยแท็ก <script> แล้วอ่านจาก window.FLIP_QUESTIONS.items
+       <script src="questions-flip.js"></script>
+       จากนั้นในโค้ดหลัก: const dataset = window.FLIP_QUESTIONS;
 
-// ===== storage =====
-const UID = localStorage.getItem('ecg_current_uid') || 'guest';
-const K_STARS=`pi.stars_ledger.${UID}`, K_SESS=`pi.sessions.${UID}`, K_ATT=`pi.attempts.${UID}`;
-const jget=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}}
-const jset=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
-const addStars=(delta,reason)=>{if(!delta)return; const a=jget(K_STARS,[]); a.push({delta,reason,at:new Date().toISOString()}); jset(K_STARS,a)}
-const starsToday=()=>jget(K_STARS,[]).filter(x=>String(x.at||'').startsWith(new Date().toISOString().slice(0,10))).reduce((s,x)=>s+(x.delta||0),0)
-const addAttempt=(x)=>{const a=jget(K_ATT,[]); a.push(x); jset(K_ATT,a)}
-const addSession=(x)=>{const a=jget(K_SESS,[]); a.push(x); jset(K_SESS,a)}
+    2) ถ้าระบบเดิม fetch JSON ที่ "/data/questions/logic.json"
+       คุณสามารถแปลงไฟล์นี้เป็น JSON ได้ง่าย ๆ โดยคัดลอกเฉพาะตัวโครงของ items
+       แล้วบันทึกเป็น logic.json ด้วยรูปแบบ { "items": [ ... ] }
+*/
 
-// ===== UI refs =====
-const UI={
-  phasePill:$('#phasePill'), qIndex:$('#qIndex'), qTotal:$('#qTotal'),
-  correctCount:$('#correctCount'), starsCount:$('#starsCount'),
-  imageStage:$('#imageStage'), qImage:$('#qImage'),
-  questionStage:$('#questionStage'), prompt:$('#prompt'), choices:$('#choices'),
-  progressWrap:$('#imgProgress'), progressBar:$('#progressBar'),
-  summary:$('#summary'), sumCorrect:$('#sumCorrect'), sumTotal:$('#sumTotal'), sumStars:$('#sumStars'),
-  playAgain:$('#playAgain')
-};
-UI.qTotal.textContent=CONFIG.QUESTIONS_PER_SESSION;
+window.FLIP_QUESTIONS = {
+  items: [
+    // 1) สัตว์ – เสือโคร่ง
+    {
+      id: 'animal-tiger',
+      prompt: 'สัตว์ดังกล่าวคืออะไร?',
+      hints: [
+        'อยู่ในป่า',
+        'กินเนื้อ',
+        'มีสีส้ม',
+        'มีลายสีดำ',
+        'ปีนต้นไม้ได้',
+        'บินไม่ได้',
+        'เป็นสัตว์สงวน'
+      ],
+      choices: ['เสือโคร่ง', 'หมีหมา', 'หมูป่า', 'กวางป่า'],
+      answerIndex: 0,
+      image: null,
+      tags: ['animal']
+    },
 
-// progress helper
-const setProgress = (ratio) => {
-  const r = Math.max(0, Math.min(1, ratio));
-  if (UI.progressBar) UI.progressBar.style.width = (r*100).toFixed(1) + '%';
-};
+    // 2) ดาราศาสตร์ – ดาวอังคาร
+    {
+      id: 'planet-mars',
+      prompt: 'วัตถุท้องฟ้านี้คืออะไร?',
+      hints: [
+        'เป็นดาวเคราะห์', 'สีออกแดงสนิม', 'เล็กกว่าโลก', 'มีภูเขาไฟขนาดใหญ่',
+        'มีขั้วน้ำแข็ง', 'มีหุ่นยนต์สำรวจ', 'อยู่วงโคจรถัดจากโลก'
+      ],
+      choices: ['ดาวอังคาร', 'ดาวพุธ', 'ดวงจันทร์', 'ดาวศุกร์'],
+      answerIndex: 0,
+      image: null,
+      tags: ['space']
+    },
 
-// ===== dataset (image + text question) =====
-const SAMPLE={ items:[
-  {id:'m-001', image:'/assets/images/logic/fruits.jpg',  prompt:'จากภาพที่เห็น ผลไม้ชนิดใด "ไม่ได้" ปรากฏอยู่?', choices:['สตรอว์เบอร์รี','กล้วย','กีวี','แตงโม'], answerIndex:2},
-  {id:'m-002', image:'/assets/images/logic/station.jpg', prompt:'ในภาพมี “รถไฟ” หรือไม่?', choices:['มี','ไม่มี','ไม่แน่ใจ','เป็นสถานีรถเมล์'], answerIndex:0},
-  {id:'m-003', image:'/assets/images/logic/kitchen.jpg', prompt:'ในภาพ ห้องครัวมีของชิ้นใด?', choices:['ไมโครเวฟ','ทีวี','โน้ตบุ๊ก','จักรยาน'], answerIndex:0},
-  {id:'m-004', image:'/assets/images/logic/office.jpg',  prompt:'ในภาพมี “เก้าอี้” กี่ตัว?', choices:['1','2','3','มากกว่า 3'], answerIndex:3},
-  {id:'m-005', image:'/assets/images/logic/park.jpg',    prompt:'ภาพสวนสาธารณะมีอะไรเด่นที่สุด?', choices:['ม้านั่ง','สไลเดอร์','ลานสเก็ต','รถเข็น'], answerIndex:0},
-  {id:'m-006', image:'/assets/images/logic/class.jpg',   prompt:'ในภาพห้องเรียน มีวัตถุใดอยู่หน้าห้อง?', choices:['กระดาน','เตียง','ตู้เย็น','พัดลมเพดาน'], answerIndex:0},
-  {id:'m-007', image:'/assets/images/logic/pets.jpg',    prompt:'ในภาพมีสัตว์ชนิดใดมากที่สุด?', choices:['สุนัข','แมว','นก','หนูแฮมสเตอร์'], answerIndex:1},
-]};
-async function loadQuestions(){
-  try{
-    const res=await fetch('/data/questions/logic.json',{cache:'no-store'});
-    if(res.ok){ const d=await res.json(); if(d && Array.isArray(d.items) && d.items.length) return d; }
-  }catch{}
-  return SAMPLE;
-}
+    // 3) อาหาร – ซูชิ
+    {
+      id: 'food-sushi',
+      prompt: 'อาหารดังกล่าวคืออะไร?',
+      hints: [
+        'ทำจากข้าวและปลา', 'นิยมในญี่ปุ่น', 'เสิร์ฟกับวาซาบิ', 'กินแบบคำเล็กๆ',
+        'มีหลายหน้าให้เลือก', 'ใช้ซอสถั่วเหลือง', 'มักจัดเป็นคำบนสาหร่าย'
+      ],
+      choices: ['ราเม็ง', 'ซูชิ', 'ปลาดิบย่าง', 'ทาโกะยากิ'],
+      answerIndex: 1,
+      image: null,
+      tags: ['food']
+    },
 
-// ===== state =====
-const state={ sessionId:`s_${Date.now()}_${Math.random().toString(36).slice(2,8)}`, questions:[], current:-1, correct:0, stars:0, streak:0, imageShownAt:0, questionShownAt:0, answering:false };
+    // 4) เครื่องดนตรี – เปียโน
+    {
+      id: 'music-piano',
+      prompt: 'นี่คือเครื่องดนตรีชนิดใด?',
+      hints: [
+        'มีคีย์สีขาวและดำ', 'เล่นด้วยนิ้วกด', 'ใช้ค้อนตีสายภายใน',
+        'มีทั้งตั้งพื้นและไฟฟ้า', 'ใช้เล่นเดี่ยวหรือประสาน', 'นิยมในดนตรีคลาสสิก', 'ให้เสียงกังวานกว้าง'
+      ],
+      choices: ['กีตาร์', 'ไวโอลิน', 'เปียโน', 'อูคูเลเล่'],
+      answerIndex: 2,
+      image: null,
+      tags: ['music']
+    },
 
-// ===== render =====
-function renderChoices(q){
-  UI.choices.innerHTML='';
-  const {items,correctIndex}=choiceWithNewAnswerIndex(q.choices,q.answerIndex);
-  items.forEach((label,idx)=>{
-    const btn=document.createElement('button');
-    btn.className='choice'; btn.type='button'; btn.textContent=label;
-    const em=document.createElement('span'); em.className='emoji'; btn.appendChild(em);
-    btn.addEventListener('click',()=>handleAnswer(q,idx,idx===correctIndex,btn));
-    UI.choices.appendChild(btn);
-  });
-}
+    // 5) ยานพาหนะ – รถไฟฟ้า (EV)
+    {
+      id: 'vehicle-ev',
+      prompt: 'ยานพาหนะชนิดใดที่ใช้งาน?',
+      hints: [
+        'ไม่ใช้น้ำมันเป็นหลัก', 'ชาร์จพลังงานจากไฟฟ้า', 'เงียบกว่าเครื่องยนต์สันดาป',
+        'มีแบตเตอรี่ขนาดใหญ่', 'มีอัตราเร่งดี', 'ปล่อยมลพิษจากท่อไอเสียเป็นศูนย์', 'นิยมเพิ่มขึ้นทั่วโลก'
+      ],
+      choices: ['รถจักรยานยนต์', 'รถไฟฟ้า (EV)', 'รถบรรทุกดีเซล', 'เรือยนต์'],
+      answerIndex: 1,
+      image: null,
+      tags: ['vehicle']
+    },
 
-async function showImagePhase(q){
-  UI.phasePill.textContent='ดูภาพ';
-  UI.qImage.src=q.image;
+    // 6) ประเทศ – ญี่ปุ่น
+    {
+      id: 'country-japan',
+      prompt: 'ประเทศใดต่อไปนี้?',
+      hints: [
+        'เป็นหมู่เกาะในเอเชียตะวันออก', 'ใช้เงินเยน', 'ภูเขาฟูจิเป็นสัญลักษณ์',
+        'ซูชิ ราเม็ง เป็นอาหารดัง', 'เทคโนโลยีก้าวหน้า', 'วัฒนธรรมอนิเมะโด่งดัง', 'เมืองหลวงคือโตเกียว'
+      ],
+      choices: ['ญี่ปุ่น', 'เกาหลีใต้', 'จีน', 'ไต้หวัน'],
+      answerIndex: 0,
+      image: null,
+      tags: ['geography']
+    },
 
-  // โชว์รูป + แถบเวลา
-  showEl(UI.imageStage);
-  hideEl(UI.questionStage);
-  if (UI.progressWrap) showEl(UI.progressWrap);
+    // 7) อาชีพ – แพทย์
+    {
+      id: 'job-doctor',
+      prompt: 'อาชีพใดต่อไปนี้?',
+      hints: [
+        'ทำงานในโรงพยาบาลหรือคลินิก', 'วินิจฉัยโรค', 'สั่งยาและรักษา',
+        'ต้องเรียนแพทยศาสตร์', 'มีใบประกอบวิชาชีพ', 'ทำงานร่วมกับพยาบาล', 'ให้คำแนะนำด้านสุขภาพ'
+      ],
+      choices: ['ทนายความ', 'สถาปนิก', 'แพทย์', 'นักบิน'],
+      answerIndex: 2,
+      image: null,
+      tags: ['career']
+    },
 
-  setProgress(0);
-  state.imageShownAt=now();
+    // 8) พืช – ต้นไผ่
+    {
+      id: 'plant-bamboo',
+      prompt: 'พืชชนิดนี้คืออะไร?',
+      hints: [
+        'เป็นหญ้าชนิดหนึ่ง', 'ลำต้นกลวงปล้อง', 'เติบโตเร็ว',
+        'แพนด้าชอบกิน', 'ใช้ทำงานฝีมือและก่อสร้าง', 'พบมากในเอเชีย', 'สีเขียวเป็นส่วนใหญ่'
+      ],
+      choices: ['ต้นสน', 'ต้นไผ่', 'กล้วยไม้', 'มะพร้าว'],
+      answerIndex: 1,
+      image: null,
+      tags: ['plant']
+    },
 
-  // แอนิเมตแถบเวลา (RAF)
-  const t = CONFIG.TIME_ON_IMAGE_MS;
-  const start = now();
-  let raf;
-  await new Promise(resolve => {
-    (function loop(){
-      const elapsed = now() - start;
-      setProgress(elapsed / t);
-      if (elapsed >= t){
-        cancelAnimationFrame(raf);
-        setProgress(1);
-        return resolve();
-      }
-      raf = requestAnimationFrame(loop);
-    })();
-  });
-}
+    // 9) กีฬา – ฟุตบอล
+    {
+      id: 'sport-football',
+      prompt: 'กีฬานี้คืออะไร?',
+      hints: [
+        'เล่นเป็นทีม', 'ใช้ลูกบอลทรงกลม', 'ใช้เท้าในการเล่นเป็นหลัก',
+        'ประตูละหนึ่งคนเฝ้า', 'เวลาแข่งขัน 90 นาที', 'ล้ำหน้าเป็นกติกาสำคัญ', 'ได้รับความนิยมทั่วโลก'
+      ],
+      choices: ['บาสเกตบอล', 'วอลเลย์บอล', 'ฟุตบอล', 'รักบี้'],
+      answerIndex: 2,
+      image: null,
+      tags: ['sport']
+    },
 
-function showQuestionPhase(q){
-  UI.phasePill.textContent='คำถาม';
-
-  // ซ่อนรูป + แถบเวลา
-  hideEl(UI.imageStage);
-  if (UI.progressWrap) hideEl(UI.progressWrap);
-  setProgress(0);
-
-  // โชว์คำถามข้อความ
-  showEl(UI.questionStage);
-  UI.prompt.textContent = q.prompt;
-  renderChoices(q);
-
-  state.questionShownAt=now();
-  state.answering=true;
-
-  // time limit หลังบ้าน (ไม่แสดงบนจอ)
-  const start = state.questionShownAt, limit = CONFIG.TIME_TO_ANSWER_MS;
-  (function watch(){
-    if(!state.answering) return;
-    if(now()-start >= limit){
-      state.answering=false;
-      afterAnswer(q,{isCorrect:false,choiceIndex:-1,responseMs:limit});
-    } else {
-      requestAnimationFrame(watch);
+    // 10) สิ่งของ – นาฬิกาทราย
+    {
+      id: 'object-hourglass',
+      prompt: 'สิ่งของนี้คืออะไร?',
+      hints: [
+        'ใช้วัดเวลาโดยการไหลของเม็ดทราย', 'มีสองหลอดต่อกัน', 'ต้องกลับด้านเพื่อเริ่มใหม่',
+        'ไม่มีพลังงานไฟฟ้า', 'ใช้เป็นสัญลักษณ์ของเวลา', 'เคยมักอยู่บนโต๊ะทำงาน', 'แสดงเวลาได้คงที่ตามปริมาณทราย'
+      ],
+      choices: ['นาฬิกาข้อมือ', 'นาฬิกาดิจิทัล', 'นาฬิกาทราย', 'เครื่องตั้งเวลาไขลาน'],
+      answerIndex: 2,
+      image: null,
+      tags: ['object']
     }
-  })();
-}
-
-// ===== answer flow =====
-async function handleAnswer(q,idx,isCorrect,btn){
-  if(!state.answering) return;
-  state.answering=false;
-  const rt=Math.round(now()-state.questionShownAt);
-
-  btn.classList.add(isCorrect?'correct':'wrong');
-  const em=btn.querySelector('.emoji'); em.textContent=isCorrect?'🙂':'😅';
-  btn.classList.add('show-emoji');
-  $$('.choice').forEach(b=>b.setAttribute('disabled',''));
-
-  // ซ่อนคำถามไว้ก่อนจะไปข้อถัดไป
-  hideEl(UI.questionStage);
-
-  await sleep(CONFIG.REVEAL_REACTION_MS);
-  await afterAnswer(q,{isCorrect,choiceIndex:idx,responseMs:rt});
-}
-
-async function afterAnswer(q,{isCorrect,choiceIndex,responseMs}){
-  if(isCorrect){
-    state.correct+=1; state.streak+=1;
-    let bonus=0; if(responseMs<=CONFIG.BONUS_T1_MS) bonus=2; else if(responseMs<=CONFIG.BONUS_T2_MS) bonus=1;
-    let streakBonus=(state.streak>=3)?CONFIG.STAR_STREAK_BONUS:0;
-    state.stars += CONFIG.STAR_PER_CORRECT + bonus + streakBonus;
-  } else {
-    state.streak=0;
-  }
-
-  addAttempt({
-    id:`a_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
-    sessionId:state.sessionId,
-    questionId:q.id,
-    shownImageMs: CONFIG.TIME_ON_IMAGE_MS,
-    answeredAt:new Date().toISOString(),
-    isCorrect, responseMs, choiceIndex
-  });
-
-  UI.correctCount.textContent=state.correct;
-  UI.starsCount.textContent=state.stars;
-
-  await sleep(CONFIG.MOVE_ON_DELAY_MS);
-  nextQuestion();
-}
-
-// ===== session end =====
-function endSession(){
-  hideEl(UI.imageStage);
-  hideEl(UI.questionStage);
-  if (UI.progressWrap) hideEl(UI.progressWrap);
-
-  const awarded=starsToday(); const remain=Math.max(0,CONFIG.DAILY_STAR_CAP - awarded);
-  const grant=Math.min(state.stars,remain); const cut=state.stars-grant;
-  if(grant>0) addStars(grant,`session:${state.sessionId}`);
-
-  addSession({
-    id: state.sessionId,
-    gameType: 'logic',
-    score: state.correct,
-    starsEarned: grant,
-    endedAt: new Date().toISOString()
-  });
-
-  UI.sumCorrect.textContent=state.correct;
-  UI.sumTotal.textContent=CONFIG.QUESTIONS_PER_SESSION;
-  UI.sumStars.textContent=`${grant}${cut>0?` (จำกัด – ตัด ${cut})`:''}`;
-
-  UI.summary.classList.add('active');
-  UI.playAgain.onclick=()=>location.reload();
-}
-
-// ===== driver =====
-async function nextQuestion(){
-  // รีเซ็ตไม่ให้ค้าง
-  hideEl(UI.questionStage);
-  hideEl(UI.imageStage);
-  if (UI.progressWrap) hideEl(UI.progressWrap);
-
-  state.current+=1;
-  $('#qIndex').textContent=Math.min(state.current+1,CONFIG.QUESTIONS_PER_SESSION);
-  if(state.current>=state.questions.length) return endSession();
-
-  const q=state.questions[state.current];
-  await showImagePhase(q);
-  showQuestionPhase(q);
-}
-
-(async function start(){
-  const dataset=await loadQuestions(); const all=dataset.items||[];
-  if(all.length<CONFIG.QUESTIONS_PER_SESSION) console.warn('คลังคำถามมีไม่ครบ 7 ใช้เท่าที่มี');
-  // พรีโหลดภาพ
-  all.forEach(it=>{const im=new Image(); im.src=it.image;});
-  state.questions=pickUnique(all, CONFIG.QUESTIONS_PER_SESSION);
-  nextQuestion();
-})();
+  ]
+};
