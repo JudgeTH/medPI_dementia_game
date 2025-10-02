@@ -74,11 +74,7 @@
     </header>
 
     <!-- Read-only link for tile cover image -->
-    <div class="coverbar">
-      <label for="coverUrl" style="font-weight:800">ลิงก์รูปปกแผ่นป้าย</label>
-      <input id="coverUrl" type="url" placeholder="วาง URL รูป (ไม่บังคับ)" />
-      <button class="btn secondary" id="applyCover">ใช้รูป</button>
-    </div>
+    
 
     <!-- 1) Hints board on top -->
     <section class="panel board">
@@ -136,7 +132,7 @@ const DATASET = (window.FLIP_QUESTIONS && Array.isArray(window.FLIP_QUESTIONS.it
 if(DATASET === SAMPLE_DATA){ console.warn('ใช้ SAMPLE_DATA ชั่วคราว: ยังไม่ได้เชื่อมไฟล์คลังคำถาม (questions-flip.js)'); }
 
   // ===== Config: tile cover image URL (optional) =====
-  let TILE_COVER_URL = '';
+  let TILE_COVER_URL = 'assets/images/logic/card.png';
 
   // ===== State =====
   const state = {
@@ -161,9 +157,7 @@ if(DATASET === SAMPLE_DATA){ console.warn('ใช้ SAMPLE_DATA ชั่วค
     btnRevealAll: document.getElementById('btnRevealAll'),
     summaryModal: document.getElementById('summaryModal'),
     summaryList: document.getElementById('summaryList'),
-    closeSummary: document.getElementById('closeSummary'),
-    coverUrl: document.getElementById('coverUrl'),
-    applyCover: document.getElementById('applyCover'),
+    closeSummary: document.getElementById('closeSummary')
   };
 
   let timerId = null;
@@ -322,8 +316,7 @@ if(DATASET === SAMPLE_DATA){ console.warn('ใช้ SAMPLE_DATA ชั่วค
     nextRound();
   });
   els.closeSummary.addEventListener('click', nextRound);
-  els.applyCover.addEventListener('click', ()=>{
-    TILE_COVER_URL = els.coverUrl.value.trim();
+  
     setupBoard(); // refresh covers
   });
 
