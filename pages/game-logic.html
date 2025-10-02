@@ -17,29 +17,28 @@
 
     .container{max-width:var(--maxw); margin:0 auto; padding:16px}
 
-    /* ===== Senior-friendly type scale ===== */
+    /* Senior-friendly type scale */
     h1{font-size: clamp(22px, 4vw, 34px); margin:0 0 8px 0; letter-spacing:.5px}
     h2{font-size: clamp(18px, 3.5vw, 26px); margin:0}
     p,button,input,label{font-size: clamp(18px, 2.8vw, 20px)}
 
-    /* ===== Panels ===== */
     .panel{background:#fff; border:2px solid #e5e7eb; border-radius:var(--radius); padding:16px; box-shadow:var(--shadow)}
     .row{display:flex; gap:12px; align-items:center; flex-wrap:wrap}
 
-    /* ===== Hint board on top ===== */
+    /* Board */
     .board{margin-bottom:14px}
     .grid{display:grid; gap:12px; grid-template-columns: repeat(3, var(--tile-w)); justify-content:center}
     @media (max-width:700px){ .grid{grid-template-columns: repeat(2, 1fr)} }
 
     .tile{position:relative; width:var(--tile-w); height:var(--tile-h); border-radius:18px; border:2px solid var(--tile-border);
       background:var(--tile-cover); display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none; text-align:center;
-      padding:12px; transition: transform .12s ease, background .2s ease, border-color .2s ease}
+      padding:12px; transition: transform .12s ease, background .2s ease, border-color .2s ease; background-size:cover; background-position:center}
     .tile:hover{transform: translateY(-2px)}
     .tile .num{position:absolute; top:8px; left:10px; font-weight:700; color:#374151}
     .tile .txt{font-weight:800; text-transform:uppercase; color:#111; letter-spacing:.6px}
     .tile.open{background:var(--tile-open)}
 
-    /* ===== Q & Choices beneath ===== */
+    /* Q & Choices */
     .choices{display:grid; gap:12px}
     .choice{padding:16px 18px; border-radius:16px; border:2px solid #d1d5db; background:#fff; text-align:left; font-weight:800;
       text-transform:uppercase; letter-spacing:.6px; cursor:pointer}
@@ -47,19 +46,14 @@
     .choice.correct{background:#e7f9ed; border-color:#34d399}
     .choice.wrong{background:#fee2e2; border-color:#ef4444}
 
-    /* ===== Buttons ===== */
     .btn{border:2px solid #111; background:#111; color:#fff; border-radius:12px; padding:12px 16px; cursor:pointer; font-weight:800; text-transform:uppercase}
     .btn.secondary{background:#fff; color:#111}
     .btn:disabled{opacity:.6; cursor:not-allowed}
 
-    /* ===== Hidden KPIs during play, show only in summary ===== */
+    /* KPIs hidden; shown only in summary */
     .kpi{display:none}
 
-    /* ===== Minimal link input for tile cover ===== */
-    .coverbar{display:flex; gap:8px; align-items:center; margin:8px 0 12px 0}
-    .coverbar input{flex:1; padding:10px 12px; border:2px solid #d1d5db; border-radius:12px}
-
-    /* ===== Summary Modal ===== */
+    /* Summary Modal */
     .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.4)}
     .modal .card{background:#fff; border-radius:20px; padding:18px; max-width:560px; width:92%; border:2px solid #111}
     .summary-list{list-style:none; padding:0; margin:8px 0 0 0}
@@ -72,9 +66,6 @@
       <h1>เกมเปิดแผ่นป้าย 7 ใบ</h1>
       <button class="btn" id="btnNew">ข้อต่อไป</button>
     </header>
-
-    <!-- Read-only link for tile cover image -->
-    
 
     <!-- 1) Hints board on top -->
     <section class="panel board">
@@ -114,25 +105,19 @@
 
   <script>
   // ===== Dataset hook =====
-  // Fallback sample data (ถ้ายังไม่ได้โหลดไฟล์คลังคำถาม)
-const SAMPLE_DATA = [
-  {
-    id: 'animal-tiger',
-    prompt: 'สัตว์ดังกล่าวคืออะไร?',
-    hints: ['อยู่ในป่า','กินเนื้อ','มีสีส้ม','มีลายสีดำ','ปีนต้นไม้ได้','บินไม่ได้','เป็นสัตว์สงวน'],
-    choices: ['เสือโคร่ง','หมีหมา','หมูป่า','กวางป่า'],
-    answerIndex: 0
-  }
-];
+  // ถ้าไม่ได้โหลด questions-flip.js จะใช้ SAMPLE_DATA ชั่วคราว
+  const SAMPLE_DATA = [
+    { id:'animal-tiger', prompt:'สัตว์ดังกล่าวคืออะไร?',
+      hints:['อยู่ในป่า','กินเนื้อ','มีสีส้ม','มีลายสีดำ','ปีนต้นไม้ได้','บินไม่ได้','เป็นสัตว์สงวน'],
+      choices:['เสือโคร่ง','หมีหมา','หมูป่า','กวางป่า'], answerIndex:0 }
+  ];
+  const DATASET = (window.FLIP_QUESTIONS && Array.isArray(window.FLIP_QUESTIONS.items) && window.FLIP_QUESTIONS.items.length)
+    ? window.FLIP_QUESTIONS.items
+    : (Array.isArray(window.QUESTION_BANK) && window.QUESTION_BANK.length ? window.QUESTION_BANK : SAMPLE_DATA);
+  if(DATASET === SAMPLE_DATA){ console.warn('ใช้ SAMPLE_DATA ชั่วคราว: ยังไม่ได้เชื่อมไฟล์คลังคำถาม (questions-flip.js)'); }
 
-const DATASET = (window.FLIP_QUESTIONS && Array.isArray(window.FLIP_QUESTIONS.items) && window.FLIP_QUESTIONS.items.length)
-  ? window.FLIP_QUESTIONS.items
-  : (Array.isArray(window.QUESTION_BANK) && window.QUESTION_BANK.length ? window.QUESTION_BANK : SAMPLE_DATA);
-
-if(DATASET === SAMPLE_DATA){ console.warn('ใช้ SAMPLE_DATA ชั่วคราว: ยังไม่ได้เชื่อมไฟล์คลังคำถาม (questions-flip.js)'); }
-
-  // ===== Config: tile cover image URL (optional) =====
-  let TILE_COVER_URL = 'assets/images/logic/card.png';
+  // ===== Config: tile cover image URL =====
+  const TILE_COVER_URL = 'assets/images/logic/card.png';
 
   // ===== State =====
   const state = {
@@ -142,7 +127,7 @@ if(DATASET === SAMPLE_DATA){ console.warn('ใช้ SAMPLE_DATA ชั่วค
     answered: false,
     round: 1,
     starsTotal: Number(localStorage.getItem('flipq_stars')||0),
-    scoreThisRound: 0,
+    scoreThisRound: 0
   };
 
   const els = {
@@ -165,7 +150,7 @@ if(DATASET === SAMPLE_DATA){ console.warn('ใช้ SAMPLE_DATA ชั่วค
   function startTimer(){
     state.startTs = performance.now();
     stopTimer();
-    timerId = setInterval(()=>{
+    timerId = setInterval(function(){
       const elapsed = performance.now()-state.startTs;
       els.timer.textContent = (elapsed/1000).toFixed(2)+'s';
     }, 120);
@@ -187,45 +172,44 @@ if(DATASET === SAMPLE_DATA){ console.warn('ใช้ SAMPLE_DATA ชั่วค
     els.kUnopened.textContent = '7';
     els.btnRevealAll.disabled = false;
 
-    const placeholders = Array.from({length:7}, (_,i)=> i);
-    placeholders.forEach(i=>{
-      const tile = document.createElement('button');
+    for(var i=0;i<7;i++){
+      var tile = document.createElement('button');
       tile.className = 'tile';
-      tile.setAttribute('aria-label', `แผ่นป้ายหมายเลข ${i+1}`);
-      tile.innerHTML = `<span class="num">#${i+1}</span><span class="txt">คลิกเพื่อดูคำใบ้</span>`;
-      if(TILE_COVER_URL){ tile.style.backgroundImage = `url(${TILE_COVER_URL})`; tile.style.backgroundSize='cover'; tile.style.backgroundPosition='center'; }
-      tile.addEventListener('click', ()=> openHint(i, tile));
+      tile.setAttribute('aria-label', 'แผ่นป้ายหมายเลข ' + (i+1));
+      tile.innerHTML = '<span class="num">#'+(i+1)+'</span><span class="txt">คลิกเพื่อดูคำใบ้</span>';
+      if(TILE_COVER_URL){ tile.style.backgroundImage = 'url('+TILE_COVER_URL+')'; }
+      (function(idx, el){ el.addEventListener('click', function(){ openHint(idx, el); }); })(i, tile);
       els.grid.appendChild(tile);
-    });
+    }
   }
 
   function openHint(index, tileEl){
-    if(state.answered) return; // lock after answered
+    if(state.answered) return;
     if(state.opened.has(index)) return;
     state.opened.add(index);
     tileEl.classList.add('open');
-    tileEl.style.backgroundImage = ''; // remove cover when opened
+    tileEl.style.backgroundImage = '';
     const hint = state.question.hints[index] || '(ไม่มีข้อมูล)';
     tileEl.querySelector('.txt').textContent = hint;
-    tileEl.querySelector('.txt').style.textTransform = 'none'; // ใบ้ไม่ต้องบังคับตัวพิมพ์ใหญ่
+    tileEl.querySelector('.txt').style.textTransform = 'none';
     tileEl.querySelector('.txt').style.fontSize = 'clamp(18px, 2.8vw, 22px)';
     els.kUnopened.textContent = Math.max(0, 7 - state.opened.size);
   }
 
   function renderChoices(){
     els.choices.innerHTML = '';
-    state.question.choices.forEach((choice, idx)=>{
-      const btn = document.createElement('button');
+    state.question.choices.forEach(function(choice, idx){
+      var btn = document.createElement('button');
       btn.className = 'choice';
-      btn.textContent = `${String.fromCharCode(65+idx)}. ${choice}`;
-      btn.addEventListener('click', ()=> onAnswer(idx));
+      btn.textContent = String.fromCharCode(65+idx) + '. ' + choice;
+      btn.addEventListener('click', function(){ onAnswer(idx); });
       els.choices.appendChild(btn);
     });
   }
 
   function revealAllHints(){
-    const tiles = els.grid.querySelectorAll('.tile');
-    tiles.forEach((tile, i)=>{
+    var tiles = els.grid.querySelectorAll('.tile');
+    tiles.forEach(function(tile, i){
       tile.classList.add('open');
       tile.style.backgroundImage = '';
       const hint = state.question.hints[i] || '(ไม่มีข้อมูล)';
@@ -242,46 +226,40 @@ if(DATASET === SAMPLE_DATA){ console.warn('ใช้ SAMPLE_DATA ชั่วค
 
     revealAllHints();
     els.btnRevealAll.disabled = true;
-    els.grid.querySelectorAll('.tile').forEach(t=> t.style.pointerEvents='none');
+    els.grid.querySelectorAll('.tile').forEach(function(t){ t.style.pointerEvents='none'; });
 
-    const nodes = [...document.querySelectorAll('.choice')];
-    const correct = idx === state.question.answerIndex;
-    nodes.forEach((n,i)=>{
+    var nodes = Array.prototype.slice.call(document.querySelectorAll('.choice'));
+    var correct = idx === state.question.answerIndex;
+    nodes.forEach(function(n,i){
       if(i === state.question.answerIndex) n.classList.add('correct');
       if(i === idx && i !== state.question.answerIndex) n.classList.add('wrong');
       n.disabled = true;
     });
 
-    const unopened = Math.max(0, 7 - state.opened.size);
-    const score = correct ? unopened : 0;
-    const rt = performance.now() - state.startTs; // ms
-    let bonusStars = 0;
+    var unopened = Math.max(0, 7 - state.opened.size);
+    var score = correct ? unopened : 0;
+    var rt = performance.now() - state.startTs;
+    var bonusStars = 0;
     if(correct){ if(rt < 5000) bonusStars = 1; else if(rt < 10000) bonusStars = 0.5; }
-    const starsEarned = (correct ? 1 : 0) + bonusStars;
+    var starsEarned = (correct ? 1 : 0) + bonusStars;
 
-    // Update state + hidden KPIs
     state.scoreThisRound = score;
     els.kScore.textContent = String(score);
     state.starsTotal += starsEarned;
     localStorage.setItem('flipq_stars', state.starsTotal);
     els.kStars.textContent = String(state.starsTotal);
 
-    // Behind-the-scenes log only
-    const log = JSON.parse(localStorage.getItem('flipq_logs')||'[]');
-    log.push({
-      at: new Date().toISOString(), qid: state.question.id, correct,
-      responseMs: Math.round(rt), unopened, starsEarned, score, round: state.round
-    });
+    var log = JSON.parse(localStorage.getItem('flipq_logs')||'[]');
+    log.push({ at: new Date().toISOString(), qid: state.question.id, correct: correct,
+      responseMs: Math.round(rt), unopened: unopened, starsEarned: starsEarned, score: score, round: state.round });
     localStorage.setItem('flipq_logs', JSON.stringify(log));
 
-    // Show end-of-round summary (timer/unopened/score/stars)
-    els.summaryList.innerHTML = `
-      <li><b>ผลลัพธ์:</b> ${correct ? 'ตอบถูก' : 'ตอบผิด'}</li>
-      <li><b>เวลา:</b> ${(rt/1000).toFixed(2)} วินาที</li>
-      <li><b>แผ่นป้ายที่ยังไม่เปิด:</b> ${unopened}</li>
-      <li><b>คะแนนรอบนี้:</b> ${score}</li>
-      <li><b>⭐ ดาวสะสม:</b> ${state.starsTotal} (+${starsEarned})</li>
-    `;
+    els.summaryList.innerHTML = ''+
+      '<li><b>ผลลัพธ์:</b> ' + (correct ? 'ตอบถูก' : 'ตอบผิด') + '</li>'+
+      '<li><b>เวลา:</b> ' + (rt/1000).toFixed(2) + ' วินาที</li>'+
+      '<li><b>แผ่นป้ายที่ยังไม่เปิด:</b> ' + unopened + '</li>'+
+      '<li><b>คะแนนรอบนี้:</b> ' + score + '</li>'+
+      '<li><b>⭐ ดาวสะสม:</b> ' + state.starsTotal + ' (+' + starsEarned + ')</li>';
     els.summaryModal.style.display = 'flex';
   }
 
@@ -309,18 +287,15 @@ if(DATASET === SAMPLE_DATA){ console.warn('ใช้ SAMPLE_DATA ชั่วค
     startTimer();
   }
 
-  // ===== Events =====
+  // Events
   els.btnRevealAll.addEventListener('click', revealAllHints);
-  els.btnNew.addEventListener('click', ()=>{
-    if(els.summaryModal.style.display !== 'flex') return; // กดได้หลังจบรอบ
+  els.btnNew.addEventListener('click', function(){
+    if(els.summaryModal.style.display !== 'flex') return;
     nextRound();
   });
   els.closeSummary.addEventListener('click', nextRound);
-  
-    setupBoard(); // refresh covers
-  });
 
-  // ===== Init =====
+  // Init
   (function init(){ startNewQuestion(); })();
   </script>
 </body>
