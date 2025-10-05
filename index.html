@@ -71,6 +71,36 @@
       background-color: #E3F0FF !important; transform: translateY(-1px);
       box-shadow: 0 6px 18px rgba(14, 35, 69, 0.12) !important;
     }
+    /* --- Speech box (กรอบใสสำหรับกล่องข้อความ) --- */
+    #image-character-container{ position: relative; } /* ให้เป็น anchor ของตำแหน่ง absolute */
+    
+    .speechbox-slot{
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 300px;          /* ปรับได้ตามขนาดรูปของคุณ */
+      height: 180px;         /* ปรับได้ตามขนาดรูปของคุณ */
+      pointer-events: none;  /* ไม่บังการกดปุ่มอีโมจิด้านล่าง */
+      z-index: 30;           /* ให้อยู่บนสุด */
+      background: transparent;
+    }
+    
+    .speechbox-slot img{
+      width: 100%;
+      height: 100%;
+      object-fit: contain;   /* รักษาสัดส่วนรูป ไม่บิดเบี้ยว */
+      display: block;
+    }
+    
+    /* มือถือ */
+    @media (max-width: 768px){
+      .speechbox-slot{
+        top: 10px;
+        right: 10px;
+        width: 230px;
+        height: 140px;
+      }
+    }
 
     /* Pet slot - พื้นหลังใส ขนาดใหญ่ขึ้น */
     .pet-slot {
@@ -386,5 +416,100 @@
     console.log('✅ Pet system ready');
   })();
   </script>
+
+  <script>
+  /* SPEECH BOX SYSTEM */
+  (function(){
+    const BASE_PATH = 'assets/images/characters/equipment/';
+    // ใส่ชื่อไฟล์รูปกล่องข้อความของคุณที่นี่
+    // ตัวอย่าง: block01.png, block02.png, block03.png ...
+    const SPEECH_IMAGES = [
+      'block01.png',
+      // 'block02.png',
+      // 'block03.png',
+    ];
+  
+    const INTERVAL_MS = 5000; // เปลี่ยนรูปทุก 5 วินาที
+    let timer = null;
+    let lastIndex = -1;
+  
+    function getContainer(){
+      // ใช้การ์ดตัวละครตัวเดียวกับที่แสดงอวาตาร์
+      // (#image-character-container ถูกสร้างโดย character.js)
+      return document.querySelector('#image-character-container')
+          || document.querySelector('.character-section');
+    }
+  
+    function ensureSlot(){
+      const host = getContainer();
+      if(!host) return null;
+  
+      let slot = host.querySelector('.speechbox-slot');
+      if(!slot){
+        slot = document.createElement('div');
+        slot.className = 'speechbox-slot';
+        host.appendChild(slot);
+      }
+      return slot;
+    }
+  
+    function pickNextIndex(){
+      if(SPEECH_IMAGES.length <= 1) return 0;
+      let i = Math.floor(Math.random() * SPEECH_IMAGES.length);
+      // เลี่ยงซ้ำรูปเดิมติดกัน
+      if(i === lastIndex) i = (i + 1) % SPEECH_IMAGES.length;
+      lastIndex = i;
+      return i;
+    }
+  
+    function showImage(fileName){
+      const slot = ensureSlot();
+      if(!slot) return;
+  
+      const img = new Image();
+      img.alt = 'speech-box';
+      img.decoding = 'async';
+      img.loading = 'eager';
+      img.src = BASE_PATH + fileName;
+  
+      // ป้องกันกระพริบ: รอโหลดเสร็จก่อนค่อยสลับ
+      img.onload = () => {
+        slot.innerHTML = '';
+        slot.appendChild(img);
+      };
+    }
+  
+    function startRotation(){
+      if(!SPEECH_IMAGES.length) return; // ไม่มีไฟล์ให้แสดง
+  
+      // แสดงทันที 1 รูป
+      showImage(SPEECH_IMAGES[pickNextIndex()]);
+  
+      // แล้วค่อยสุ่มเปลี่ยนทุก 5 วิ
+      clearInterval(timer);
+      timer = setInterval(()=>{
+        showImage(SPEECH_IMAGES[pickNextIndex()]);
+      }, INTERVAL_MS);
+    }
+  
+    function init(){
+      const host = getContainer();
+      if(!host){
+        // รอให้ character.js สร้าง DOM เสร็จก่อน
+        setTimeout(init, 500);
+        return;
+      }
+      startRotation();
+    }
+  
+    if(document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', ()=> setTimeout(init, 800));
+    }else{
+      setTimeout(init, 800);
+    }
+  })();
+  </script>
+
+  
 </body>
 </html>
