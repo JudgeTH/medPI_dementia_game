@@ -1,246 +1,515 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="th">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>เกมฝึกสมอง</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#4CAF50" />
 
-  <!-- ฟอนต์พื้นฐาน -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
+  <!-- PWA Meta Tags -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="เกมฝึกสมอง" />
+
+  <title>เกมฝึกสมองสำหรับผู้สูงอายุ</title>
+
+  <!-- CSS Files -->
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/base.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+  <link rel="stylesheet" href="css/responsive.css" />
 
   <style>
-    :root{
-      --bg:#faf7f7;
-      --card:#ecfee9;
-      --panel:#eaf2ff;
-      --text:#0f172a;
-      --muted:#64748b;
-      --shadow:0 8px 20px rgba(15,23,42,.08);
-      --radius:18px;
+    /* Character layout */
+    #image-character-container .character-display-area{
+      display:flex; justify-content:space-between; align-items:center;
+      width:92%; max-width:980px; padding:0 16px;
     }
-    *{ box-sizing:border-box; }
-    html,body{ height:100%; }
-    body{
-      margin:0;
-      font-family:"Noto Sans Thai", system-ui, -apple-system, Segoe UI, Roboto, Arial, "Helvetica Neue", sans-serif;
-      background:var(--bg);
-      color:var(--text);
+    #image-character-container .character-info.in-stage{ 
+      order:1; text-align:left; max-width:240px; 
     }
-    .container{
-      max-width:980px;
-      margin:28px auto 56px;
-      padding:0 20px;
+    #image-character-container .character-container{ 
+      order:2; width:220px !important; height:330px !important; 
     }
-
-    /* Header */
-    .page-title{
-      font-weight:800;
-      font-size:42px;
-      letter-spacing:.5px;
-      margin:0 0 14px;
+    #image-character-container .character-nameplate h3{ 
+      font-size:3.5rem !important; letter-spacing:.2px; 
     }
-
-    /* Character card (พื้นที่สีเขียวอ่อน) */
-    .character-card{
-      position:relative;
-      background:var(--card);
-      border-radius:28px;
-      box-shadow:var(--shadow);
-      min-height:260px;
-      padding:24px 24px 20px 24px;
-      overflow:hidden;
+    #image-character-container .character-stats{ gap:10px !important; }
+    #image-character-container .stat-item{ font-size:1.1rem !important; }
+    #image-character-container .stat-icon{
+      font-size:1.6rem !important; min-width:26px !important;
     }
-    .character-inner{
-      display:flex;
-      gap:16px;
-      align-items:flex-end;
+    #image-character-container .stat-label{ font-weight:600; }
+    #image-character-container .stat-value{ font-size:1.35rem !important; }
+    #image-character-container .emotion-controls{ gap:12px !important; }
+    #image-character-container .emotion-btn{
+      width:52px !important; height:52px !important; font-size:1.35rem !important;
     }
-    .avatar-wrap{
-      width:180px;
-      min-width:180px;
-    }
-    .avatar{
-      width:180px;
-      height:auto;
-      display:block;
-      user-select:none;
-      -webkit-user-drag:none;
-    }
-    .pet{
-      width:160px;
-      height:auto;
-      display:block;
-      margin-top:-6px;
-      user-select:none;
-      -webkit-user-drag:none;
+    #image-character-container .character-shadow{ display:none !important; }
+    #image-character-container .character-container{
+      width:240px !important; height:360px !important;
     }
 
-    /* ปุ่มอีโมจิ */
-    .emoji-bar{
-      position:absolute;
-      right:22px;
-      bottom:20px;
-      display:flex;
-      gap:12px;
+    /* Action cards */
+    .action-buttons{ padding-left:16px !important; padding-right:16px !important; }
+    .action-grid{
+      display:grid !important; grid-template-columns:repeat(2,1fr) !important; gap:16px !important;
     }
-    .emoji-btn{
-      width:40px;
-      height:40px;
-      border-radius:999px;
-      border:2px solid #c7e1ff;
-      background:#fff;
-      display:grid;
-      place-items:center;
-      box-shadow:var(--shadow);
-      cursor:pointer;
-      transition:transform .08s ease;
+    .action-card{
+      min-height:140px !important; padding:16px 14px !important; border-radius:16px !important;
+      background-color: #EAF4FF !important; border: 1px solid #CFE3FF !important;
+      box-shadow: 0 2px 8px rgba(14, 35, 69, 0.08) !important;
     }
-    .emoji-btn:active{ transform:scale(.96); }
-
-    /* การ์ดเมนู */
-    .grid{
-      display:grid;
-      grid-template-columns:repeat(2,1fr);
-      gap:22px;
-      margin-top:28px;
+    .action-card .action-icon{
+      font-size:2.2rem !important; margin-bottom:10px !important; line-height:1 !important;
     }
-    .tile{
-      background:#eaf2ff;
-      border-radius:var(--radius);
-      padding:30px 18px;
-      text-align:center;
-      box-shadow:var(--shadow);
+    .action-card h3{ font-size:1.3rem !important; margin:6px 0 4px !important; color: #0A2540 !important; }
+    .action-card p{ font-size:.95rem !important; color: #1F2A44 !important; opacity: 1 !important; }
+    .action-card:hover{
+      background-color: #E3F0FF !important; transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(14, 35, 69, 0.12) !important;
     }
-    .tile h3{ margin:10px 0 6px; font-size:20px; }
-    .tile p{ margin:0; color:var(--muted); font-size:14px; }
-
-    /* ===== Speech box (กรอบใสสำหรับกล่องข้อความ) ===== */
-    #image-character-container{ position:relative; }
+    /* --- Speech box (กรอบใสสำหรับกล่องข้อความ) --- */
+    #image-character-container{ position: relative; } /* ให้เป็น anchor ของตำแหน่ง absolute */
+    
     .speechbox-slot{
-      position:absolute;
-      top:12px;
-      right:12px;
-      width:300px;     /* ปรับได้ตามขนาดรูปกล่องข้อความ */
-      height:180px;    /* ปรับได้ตามขนาดรูปกล่องข้อความ */
-      pointer-events:none;
-      z-index:30;
-      background:transparent;
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 300px;          /* ปรับได้ตามขนาดรูปของคุณ */
+      height: 180px;         /* ปรับได้ตามขนาดรูปของคุณ */
+      pointer-events: none;  /* ไม่บังการกดปุ่มอีโมจิด้านล่าง */
+      z-index: 30;           /* ให้อยู่บนสุด */
+      background: transparent;
     }
+    
     .speechbox-slot img{
-      width:100%;
-      height:100%;
-      object-fit:contain;
-      display:block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;   /* รักษาสัดส่วนรูป ไม่บิดเบี้ยว */
+      display: block;
+    }
+    
+    /* มือถือ */
+    @media (max-width: 768px){
+      .speechbox-slot{
+        top: 10px;
+        right: 10px;
+        width: 230px;
+        height: 140px;
+      }
     }
 
-    /* Responsive */
-    @media (max-width: 820px){
-      .avatar-wrap{ width:150px; min-width:150px; }
-      .avatar{ width:150px; }
-      .pet{ width:135px; }
-      .speechbox-slot{ width:230px; height:140px; top:10px; right:10px; }
-      .grid{ grid-template-columns:1fr; }
+    /* Pet slot - พื้นหลังใส ขนาดใหญ่ขึ้น */
+    .pet-slot {
+      position: absolute;
+      bottom: -20px;
+      right: -40px;
+      width: 180px;
+      height: 180px;
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      backdrop-filter: none !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: visible;
+      z-index: 12;
+      transition: all 0.3s ease;
+    }
+    .pet-slot:hover {
+      transform: scale(1.1);
+    }
+    .pet-slot img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.15));
+    }
+
+    /* Emotion effects */
+    #image-character-container .effect-hearts,
+    #image-character-container .effect-sparkles,
+    #image-character-container .effect-thought,
+    #image-character-container .effect-love{
+      font-size: 2.4rem !important; top: -48px !important;
+      text-shadow: 0 2px 6px rgba(0,0,0,.12);
+    }
+
+    /* Mobile */
+    @media (max-width:768px){
+      #image-character-container{ height:480px !important; }
+      #image-character-container .character-container{ width:220px !important; height:330px !important; }
+      #image-character-container .character-nameplate h3{ font-size:2.35rem !important; }
+      #image-character-container .stat-item{ font-size:1.05rem !important; }
+      #image-character-container .stat-icon{ font-size:1.5rem !important; min-width:24px !important; }
+      #image-character-container .stat-value{ font-size:1.3rem !important; }
+      #image-character-container .emotion-btn{ width:48px !important; height:48px !important; font-size:1.25rem !important; }
+      .action-buttons{ padding-left:18px !important; padding-right:18px !important; }
+      .action-grid{ gap:14px !important; }
+      .action-card{ min-height:150px !important; padding:18px 16px !important; }
+      .action-card .action-icon{ font-size:2.4rem !important; }
+      .action-card h3{ font-size:1.35rem !important; }
+      .pet-slot { width: 180px; height: 180px; right: -80px; bottom: -15px; }
+      #image-character-container .effect-hearts,
+      #image-character-container .effect-sparkles,
+      #image-character-container .effect-thought,
+      #image-character-container .effect-love{
+        font-size: 2.1rem !important; top: -42px !important;
+      }
     }
   </style>
 </head>
 <body>
-  <main class="container">
-    <h1 class="page-title">สมชาย</h1>
+  <!-- หน้า Login -->
+  <div id="login-page" class="page active">
+    <div class="container">
+      <header class="header">
+        <h1 class="game-title">🧠 เกมฝึกสมอง</h1>
+        <p class="game-subtitle">สำหรับผู้สูงอายุ</p>
+      </header>
 
-    <!-- การ์ดตัวละคร -->
-    <section class="character-card" id="image-character-container">
-      <div class="character-inner">
-        <div class="avatar-wrap">
-          <img class="avatar" src="/assets/images/characters/owner.png" alt="owner">
-          <img class="pet" src="/assets/images/characters/pets/dog_01.png" alt="pet">
+      <main class="login-form">
+        <div class="welcome-card">
+          <div class="character-preview">
+            <div class="character-simple">👵</div>
+          </div>
+
+          <h2>ยินดีต้อนรับ!</h2>
+          <p>กรุณาใส่ชื่อของคุณเพื่อเริ่มเล่นเกม</p>
+
+          <form id="login-form">
+            <div class="input-group">
+              <label for="player-name">ชื่อของคุณ:</label>
+              <input type="text" id="player-name" name="playerName" placeholder="ใส่ชื่อของคุณ..." required minlength="2" maxlength="20" />
+            </div>
+            <button type="submit" class="btn btn-primary btn-large">เริ่มเล่นเกม</button>
+          </form>
         </div>
-        <!-- พื้นที่ว่างสำหรับฉาก/พื้นหลัง เพิ่มคอนเทนต์อื่น ๆ ได้ -->
-        <div style="flex:1 1 auto;"></div>
-      </div>
+      </main>
 
-      <!-- กรอบวางรูปกล่องข้อความ (จะถูกสคริปต์เติม <img> ให้เอง) -->
-      <div class="speechbox-slot" aria-hidden="true"></div>
+      <footer class="footer">
+        <p>พัฒนาเพื่อติดตามสุขภาพสมองของผู้สูงอายุ</p>
+      </footer>
+    </div>
+  </div>
 
-      <!-- ปุ่มอีโมจิ -->
-      <div class="emoji-bar">
-        <button class="emoji-btn">😊</button>
-        <button class="emoji-btn">👋</button>
-        <button class="emoji-btn">🤔</button>
-        <button class="emoji-btn">💖</button>
-      </div>
-    </section>
+  <!-- หน้า Dashboard -->
+  <div id="dashboard-page" class="page">
+    <div class="container">
+      <header class="header">
+        <h1>สวัสดี <span id="display-name">ผู้เล่น</span>! 👋</h1>
+        <button class="btn btn-ghost logout-btn" style="position:absolute; top:20px; right:20px;">ออกจากระบบ</button>
+      </header>
 
-    <!-- เมนูหลัก -->
-    <section class="grid">
-      <article class="tile">
-        <div style="font-size:30px">🛒</div>
-        <h3>ร้านค้า</h3>
-        <p>ซื้อเสื้อผ้าและสัตว์เลี้ยง</p>
-      </article>
-      <article class="tile">
-        <div style="font-size:30px">🎮</div>
-        <h3>เล่นเกม</h3>
-        <p>ทดสอบความจำและสมาธิ</p>
-      </article>
-      <article class="tile">
-        <div style="font-size:30px">📊</div>
-        <h3>สถิติ</h3>
-        <p>ดูผลการเล่นของคุณ</p>
-      </article>
-      <article class="tile">
-        <div style="font-size:30px">✨✨</div>
-        <h3>แต่งตัว</h3>
-        <p>ปรับแต่งตัวละครของคุณ</p>
-      </article>
-    </section>
-  </main>
+      <main class="dashboard-content">
+        <section class="character-section">
+          <div id="character-display-area">
+            <div class="character-loading">กำลังโหลดตัวละคร... ⚡</div>
+          </div>
+        </section>
 
-  <!-- ===== SPEECH BOX SYSTEM (สุ่มรูปทุก 5 วิ) ===== -->
+        <section class="action-buttons">
+          <div class="action-grid">
+            <button class="action-card shop-card" id="open-shop">
+              <div class="action-icon">🛒</div>
+              <h3>ร้านค้า</h3>
+              <p>ซื้อเสื้อผ้าและสัตว์เลี้ยง</p>
+            </button>
+
+            <button class="action-card games-card" id="open-games">
+              <div class="action-icon">🎮</div>
+              <h3>เล่นเกม</h3>
+              <p>ทดสอบความจำและสมาธิ</p>
+            </button>
+
+            <button class="action-card stats-card" id="view-stats">
+              <div class="action-icon">📊</div>
+              <h3>สถิติ</h3>
+              <p>ดูผลการเล่นของคุณ</p>
+            </button>
+
+            <button class="action-card customize-card" id="customize-character">
+              <div class="action-icon">✨</div>
+              <h3>แต่งตัว</h3>
+              <p>ปรับแต่งตัวละครของคุณ</p>
+            </button>
+          </div>
+        </section>
+
+        <section class="games-menu" id="games-selection" style="display:none;">
+          <div class="games-header">
+            <h2>เลือกเกมที่ต้องการเล่น</h2>
+            <button class="btn btn-secondary back-to-main">← กลับหน้าหลัก</button>
+          </div>
+
+          <div class="games-grid">
+            <button class="game-card memory-game" data-game="memory">
+              <div class="game-icon">🧩</div>
+              <h3>เกมจำภาพ</h3>
+              <p>ทดสอบความจำระยะสั้น</p>
+            </button>
+
+            <button class="game-card pattern-game" data-game="pattern">
+              <div class="game-icon">🔄</div>
+              <h3>เกมจำลำดับ</h3>
+              <p>จำรูปแบบและลำดับ</p>
+            </button>
+
+            <button class="game-card addtion-game" data-game="addition">
+              <div class="game-icon">🧮</div>
+              <h3>เกมคิดเลขเร็ว</h3>
+              <p>ทดสอบการคำนวน</p>
+            </button>
+
+            <button class="game-card logic-game" data-game="logic">
+              <div class="game-icon">💭</div>
+              <h3>เกมตรรกะ</h3>
+              <div class="game-difficulty">ยาก</div>
+            </button>
+          </div>
+        </section>
+
+        <section class="shop-menu" id="shop-section" style="display:none;">
+          <div class="shop-header">
+            <h2>ร้านค้า</h2>
+            <div class="player-coins">
+              <span class="coin-icon">⭐</span>
+              <span id="player-coins">0</span> เหรียญ
+            </div>
+            <button class="btn btn-secondary back-to-main">← กลับหน้าหลัก</button>
+          </div>
+
+          <div class="shop-categories">
+            <button class="shop-tab active" data-category="clothes">👕 เสื้อผ้า</button>
+            <button class="shop-tab" data-category="accessories">👒 เครื่องประดับ</button>
+            <button class="shop-tab" data-category="pets">🐕 สัตว์เลี้ยง</button>
+          </div>
+
+          <div class="shop-items" id="shop-items"></div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <div id="loading-overlay" class="loading-overlay">
+    <div class="loading-spinner"></div>
+    <p>กำลังโหลด...</p>
+  </div>
+
+  <!-- JavaScript Files -->
+  <script src="js/utils/constants.js"></script>
+  <script src="js/utils/helpers.js"></script>
+  <script src="js/utils/storage.js"></script>
+  <script src="js/dataManager.js"></script>
+  <script src="js/auth.js"></script>
+  <script type="module" src="/js/character.js"></script>
+  <script type="module" src="/js/economy-unified.js"></script>
+  <script type="module" src="/js/inventory-enhanced.js"></script>
+  <script src="js/app.js"></script>
+
   <script>
-    (function(){
-      // ใช้ absolute path เพื่อกัน path เพี้ยนเวลาเปลี่ยนตำแหน่งไฟล์ HTML
-      const BASE_PATH = '/assets/images/characters/equipment/';
-      // รายชื่อไฟล์รูปกล่องข้อความของคุณ (เพิ่ม/ลบได้ตามต้องการ)
-      const SPEECH_IMAGES = [
-        'block01.png',
-        'block02.png',
-        'block03.png'
-      ];
-      const INTERVAL_MS = 5000;
+  /* PET SYSTEM */
+  (function(){
+    const PETS_BASE = 'assets/images/characters/pets/';
+    const DEFAULT_PET = 'dog_01.png';
+    
+    function createPetSlot() {
+      const charContainer = document.querySelector('#image-character-container .character-container') ||
+                           document.querySelector('.character-container');
+      
+      if (!charContainer) {
+        console.warn('⚠️ Character container not found');
+        return null;
+      }
 
-      let timer = null, lastIndex = -1;
+      let petSlot = charContainer.querySelector('.pet-slot');
+      if (petSlot) {
+        console.log('✅ Pet slot exists');
+        return petSlot;
+      }
 
-      function pickNext(){
-        if(SPEECH_IMAGES.length <= 1) return 0;
-        let i = Math.floor(Math.random() * SPEECH_IMAGES.length);
-        if(i === lastIndex) i = (i + 1) % SPEECH_IMAGES.length;
-        lastIndex = i;
-        return i;
+      petSlot = document.createElement('div');
+      petSlot.className = 'pet-slot';
+      petSlot.id = 'petSlot';
+      charContainer.appendChild(petSlot);
+      console.log('✅ Pet slot created');
+      return petSlot;
+    }
+
+    function loadPet(petFileName) {
+      const petSlot = createPetSlot();
+      if (!petSlot) return;
+
+      petSlot.innerHTML = '';
+      const img = new Image();
+      img.alt = 'สัตว์เลี้ยง';
+      img.style.cssText = 'width:100%; height:100%; object-fit:contain;';
+      
+      const petPath = PETS_BASE + petFileName;
+      console.log('🐕 Loading pet:', petPath);
+
+      img.onload = function() {
+        console.log('✅ Pet loaded:', petPath);
+        petSlot.style.display = 'flex';
+      };
+
+      img.onerror = function() {
+        console.error('❌ Pet load failed:', petPath);
+        petSlot.innerHTML = '<div style="font-size:4rem">🐕</div>';
+        petSlot.style.display = 'flex';
+      };
+
+      img.src = petPath;
+      petSlot.appendChild(img);
+    }
+
+    function setPet(petFileName) {
+      try {
+        localStorage.setItem('currentPet', petFileName);
+      } catch(e) {}
+      loadPet(petFileName);
+    }
+
+    function getSavedPet() {
+      try {
+        return localStorage.getItem('currentPet') || DEFAULT_PET;
+      } catch(e) {
+        return DEFAULT_PET;
       }
-      function showImage(name){
-        const slot = document.querySelector('.speechbox-slot');
-        if(!slot) return;
-        const img = new Image();
-        img.alt = 'speech-box';
-        img.decoding = 'async';
-        img.src = name.startsWith('/') ? name : (BASE_PATH + name);
-        img.onload = () => { slot.innerHTML=''; slot.appendChild(img); };
-        img.onerror = () => console.warn('🔴 ไม่พบไฟล์กล่องข้อความ:', img.src);
+    }
+
+    function initPet() {
+      const charContainer = document.querySelector('.character-container');
+      if (!charContainer) {
+        console.log('⏳ Waiting for character...');
+        setTimeout(initPet, 500);
+        return;
       }
-      function start(){
-        if(!SPEECH_IMAGES.length) return;
-        showImage(SPEECH_IMAGES[pickNext()]);
-        clearInterval(timer);
-        timer = setInterval(()=> showImage(SPEECH_IMAGES[pickNext()]), INTERVAL_MS);
+
+      const savedPet = getSavedPet();
+      console.log('🎯 Init pet:', savedPet);
+      loadPet(savedPet);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(initPet, 1000);
+      });
+    } else {
+      setTimeout(initPet, 1000);
+    }
+
+    window.addEventListener('shop:petChange', function(event) {
+      const petFile = event.detail && event.detail.pet;
+      if (petFile) {
+        console.log('🛒 Changing pet:', petFile);
+        setPet(petFile);
       }
-      if(document.readyState === 'loading'){
-        document.addEventListener('DOMContentLoaded', start);
-      }else{
-        start();
-      }
-    })();
+    });
+
+    window.setPet = setPet;
+    window.loadPet = loadPet;
+    console.log('✅ Pet system ready');
+  })();
   </script>
+
+  <script>
+  /* SPEECH BOX SYSTEM */
+  (function(){
+    const BASE_PATH = 'assets/images/characters/equipment/';
+    // ใส่ชื่อไฟล์รูปกล่องข้อความของคุณที่นี่
+    // ตัวอย่าง: block01.png, block02.png, block03.png ...
+    const SPEECH_IMAGES = [
+      'block01.png',
+      // 'block02.png',
+      // 'block03.png',
+    ];
+  
+    const INTERVAL_MS = 5000; // เปลี่ยนรูปทุก 5 วินาที
+    let timer = null;
+    let lastIndex = -1;
+  
+    function getContainer(){
+      // ใช้การ์ดตัวละครตัวเดียวกับที่แสดงอวาตาร์
+      // (#image-character-container ถูกสร้างโดย character.js)
+      return document.querySelector('#image-character-container')
+          || document.querySelector('.character-section');
+    }
+  
+    function ensureSlot(){
+      const host = getContainer();
+      if(!host) return null;
+  
+      let slot = host.querySelector('.speechbox-slot');
+      if(!slot){
+        slot = document.createElement('div');
+        slot.className = 'speechbox-slot';
+        host.appendChild(slot);
+      }
+      return slot;
+    }
+  
+    function pickNextIndex(){
+      if(SPEECH_IMAGES.length <= 1) return 0;
+      let i = Math.floor(Math.random() * SPEECH_IMAGES.length);
+      // เลี่ยงซ้ำรูปเดิมติดกัน
+      if(i === lastIndex) i = (i + 1) % SPEECH_IMAGES.length;
+      lastIndex = i;
+      return i;
+    }
+  
+    function showImage(fileName){
+      const slot = ensureSlot();
+      if(!slot) return;
+  
+      const img = new Image();
+      img.alt = 'speech-box';
+      img.decoding = 'async';
+      img.loading = 'eager';
+      img.src = BASE_PATH + fileName;
+  
+      // ป้องกันกระพริบ: รอโหลดเสร็จก่อนค่อยสลับ
+      img.onload = () => {
+        slot.innerHTML = '';
+        slot.appendChild(img);
+      };
+    }
+  
+    function startRotation(){
+      if(!SPEECH_IMAGES.length) return; // ไม่มีไฟล์ให้แสดง
+  
+      // แสดงทันที 1 รูป
+      showImage(SPEECH_IMAGES[pickNextIndex()]);
+  
+      // แล้วค่อยสุ่มเปลี่ยนทุก 5 วิ
+      clearInterval(timer);
+      timer = setInterval(()=>{
+        showImage(SPEECH_IMAGES[pickNextIndex()]);
+      }, INTERVAL_MS);
+    }
+  
+    function init(){
+      const host = getContainer();
+      if(!host){
+        // รอให้ character.js สร้าง DOM เสร็จก่อน
+        setTimeout(init, 500);
+        return;
+      }
+      startRotation();
+    }
+  
+    if(document.readyState === 'loading'){
+      document.addEventListener('DOMContentLoaded', ()=> setTimeout(init, 800));
+    }else{
+      setTimeout(init, 800);
+    }
+  })();
+  </script>
+
+  
 </body>
 </html>
