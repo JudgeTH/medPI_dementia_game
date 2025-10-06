@@ -6,18 +6,6 @@ const TOTAL_QUESTIONS = 7;             // เล่นรอบละ 7 ข้�
 const MIN_A = 0, MAX_A = 99;           // ช่วงตัวตั้ง/ตัวบวก
 const FAST_BONUS_MS = 1800;            // ตอบถูก ≤ 1.8s ได้โบนัส 1 ดาว
 const NORMAL_MS = 3500;                // > 3.5s ถือว่าช้า (ไม่มีโบนัส)
-const BADGE_IMAGES = [
-  // กำหนดไฟล์รูปสรุประดับ 0–7 (ใส่เป็น path ของคุณเอง)
-  // ตัวอย่างโฟลเดอร์: /assets/summary/level-0.png ... /assets/summary/level-7.png
-  "/assets/summary/level-0.png",
-  "/assets/summary/level-1.png",
-  "/assets/summary/level-2.png",
-  "/assets/summary/level-3.png",
-  "/assets/summary/level-4.png",
-  "/assets/summary/level-5.png",
-  "/assets/summary/level-6.png",
-  "/assets/summary/level-7.png"
-];
 
 /***** ตัวช่วยสุ่มโจทย์บวก *****/
 function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
@@ -52,8 +40,33 @@ const summaryEl     = document.getElementById('summary');
 const sumCorrectEl  = document.getElementById('sumCorrect');
 const sumTotalEl    = document.getElementById('sumTotal');
 const sumStarsEl    = document.getElementById('sumStars');
-const animSlot      = document.getElementById('customAnimationSlot');
 const playAgainBtn  = document.getElementById('playAgain');
+
+/***** ฟังก์ชันแสดงรูปสรุปตามที่ผู้ใช้กำหนด *****/
+function renderSummaryAnimation(correctCount) {
+  const slot = document.getElementById('customAnimationSlot');
+  if (!slot) return;
+  slot.innerHTML = "";
+  let imgSrc = null;
+  if (correctCount <= 0) imgSrc = "/assets/animations/celebrate1.png";
+  else if (correctCount === 1) imgSrc = "/assets/animations/celebrate2.png";
+  else if (correctCount === 2) imgSrc = "/assets/animations/celebrate3.png";
+  else if (correctCount === 3) imgSrc = "/assets/animations/celebrate4.png";
+  else if (correctCount === 4) imgSrc = "/assets/animations/celebrate5.png";
+  else if (correctCount === 5) imgSrc = "/assets/animations/celebrate6.png";
+  else if (correctCount === 6) imgSrc = "/assets/animations/celebrate7.png";
+  // กันพลาดกรณีถูกครบ 7 ข้อ ให้ใช้รูป celebrate7 เช่นกัน
+  else if (correctCount >= 7) imgSrc = "/assets/animations/celebrate7.png";
+
+  if (imgSrc) {
+    const img = document.createElement("img");
+    img.src = imgSrc;
+    img.alt = "สรุปผล";
+    img.style.maxWidth = "100%";
+    img.style.height = "auto";
+    slot.appendChild(img);
+  }
+}
 
 /***** ฟังก์ชันหลักของเกม *****/
 function initGame(){
@@ -113,11 +126,9 @@ function handleSubmit(e){
       feedbackEl.textContent = `ถูกต้อง! +2⭐ (เร็วมาก ${rt} ms)`;
       feedbackEl.className = 'feedback ok';
     } else if (rt <= NORMAL_MS) {
-      // ไม่ได้โบนัส แต่ยังถือว่าปกติ
       feedbackEl.textContent = `ถูกต้อง! +1⭐ (${rt} ms)`;
       feedbackEl.className = 'feedback ok';
     } else {
-      // ช้าไปหน่อย
       feedbackEl.textContent = `ถูกต้อง! +1⭐ (ช้า ${rt} ms)`;
       feedbackEl.className = 'feedback ok';
     }
@@ -157,25 +168,8 @@ function showSummary(){
   sumTotalEl.textContent   = TOTAL_QUESTIONS;
   sumStarsEl.textContent   = stars;
 
-  // แสดงรูป/แอนิเมชัน 7 ระดับ (0..7) อิงจำนวนข้อที่ถูก
-  // หากไม่มีไฟล์จริง จะ fallback เป็นอีโมจิแทน
-  animSlot.innerHTML = ''; // ล้างของเดิม
-  const level = Math.max(0, Math.min(7, correct));
-  const src = BADGE_IMAGES[level];
-
-  if (src && typeof src === 'string') {
-    const img = new Image();
-    img.alt = `ระดับที่ได้: ${level}/7`;
-    img.src = src;
-    animSlot.appendChild(img);
-  } else {
-    // Fallback อีโมจิ 7 ระดับ
-    const EMOJI = ['😵‍💫','😕','🙂','😊','😄','🤩','🏆','👑'];
-    const div = document.createElement('div');
-    div.style.fontSize = '64px';
-    div.textContent = EMOJI[level] ?? '✨';
-    animSlot.appendChild(div);
-  }
+  // เรียกใช้ภาพสรุปตาม mapping ที่กำหนด
+  renderSummaryAnimation(correct);
 
   phasePill.textContent = 'สรุป';
   summaryEl.classList.add('active');
