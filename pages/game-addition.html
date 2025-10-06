@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>PI Game — เกมแบบข้อความ</title>
+  <title>PI Game — เกมบวกเลขเร็ว</title>
   <link rel="stylesheet" href="/css/reset.css">
   <link rel="stylesheet" href="/css/variables.css">
   <link rel="stylesheet" href="/css/base.css">
@@ -12,22 +12,34 @@
     body{font-family:system-ui,"Noto Sans Thai",sans-serif;background:#fff;color:#111}
     .container{max-width:900px;margin:0 auto;padding:24px}
     .card{background:#f7f7f7;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.08);padding:24px}
-    .header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+    .header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px;flex-wrap:wrap}
     .pill{background:#eee;border-radius:999px;padding:6px 12px;font-size:14px}
     .q-card{display:grid;gap:16px}
-    .prompt{font-size:22px;font-weight:700}
-    .choices{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
-    .choice{position:relative;display:flex;align-items:center;justify-content:center;min-height:84px;padding:14px;border-radius:18px;border:2px solid transparent;background:#fff;box-shadow:0 6px 20px rgba(0,0,0,.08);cursor:pointer;font-size:20px;text-align:center}
-    .choice[disabled]{opacity:.6;pointer-events:none}
-    .choice.correct{border-color:#1B5E20}
-    .choice.wrong{border-color:#C62828}
-    .emoji{position:absolute;right:10px;bottom:10px;font-size:24px;opacity:0;transform:scale(.8);transition:opacity .15s ease,transform .2s ease}
-    .choice.show-emoji .emoji{opacity:1;transform:scale(1)}
+    .prompt{font-size:26px;font-weight:800}
+    .answer-form{display:grid;gap:12px}
+    .answer-row{display:flex;gap:10px;align-items:center}
+    .answer-input{
+      flex:1;min-height:56px;border-radius:14px;border:2px solid transparent;
+      background:#fff;box-shadow:0 6px 20px rgba(0,0,0,.08);font-size:22px;
+      padding:0 16px;outline:none;
+    }
+    .answer-input:focus{border-color:#2962FF}
+    .submit-btn{
+      min-height:56px;border:none;border-radius:14px;padding:0 18px;font-size:18px;
+      background:#2E7D32;color:#fff;box-shadow:0 6px 20px rgba(0,0,0,.12);cursor:pointer
+    }
+    .feedback{min-height:28px;font-size:18px}
+    .feedback.ok{color:#1B5E20}
+    .feedback.no{color:#C62828}
     .summary{display:none}
     .summary.active{display:block}
     .big{font-size:48px;font-weight:800}
-    #customAnimationSlot{display:grid;place-items:center;min-height:160px;background:#f2f7ff;border:2px dashed #c9ddff;border-radius:16px;margin:12px 0 20px}
-    @media (max-width:640px){.choices{grid-template-columns:1fr}}
+    #customAnimationSlot{
+      display:grid;place-items:center;min-height:160px;background:#f2f7ff;
+      border:2px dashed #c9ddff;border-radius:16px;margin:12px 0 20px;overflow:hidden
+    }
+    #customAnimationSlot img{max-width:100%;height:auto;display:block}
+    @media (max-width:640px){.answer-row{flex-direction:column;align-items:stretch}}
   </style>
 </head>
 <body>
@@ -40,19 +52,25 @@
         <div class="pill">⭐ <b id="starsCount">0</b></div>
       </div>
 
-      <!-- QUESTION PHASE (ข้อความ + 4 ตัวเลือก) -->
-      <div id="questionStage" class="q-card">
+      <!-- QUESTION PHASE (ข้อความ + ช่องพิมพ์คำตอบ) -->
+      <div id="questionStage" class="q-card" aria-live="polite">
         <div class="prompt" id="prompt">กำลังโหลดคำถาม…</div>
-        <div class="choices" id="choices"></div>
+        <form id="answerForm" class="answer-form" autocomplete="off">
+          <div class="answer-row">
+            <input id="answerInput" class="answer-input" inputmode="numeric" type="number" placeholder="พิมพ์คำตอบที่นี่" required />
+            <button id="submitBtn" class="submit-btn" type="submit">ส่งคำตอบ ⏎</button>
+          </div>
+          <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
+        </form>
       </div>
 
       <!-- SUMMARY -->
       <div id="summary" class="summary">
         <h2>สรุปผล</h2>
-        <!-- ย้ายช่องแอนิเมชันขึ้นมาใต้หัวข้อ -->
+
+        <!-- ช่องแสดงรูป/แอนิเมชันสรุป (7 ระดับ) -->
         <div id="customAnimationSlot">
-          <div style="color:#7a8aa1">วาง GIF/ภาพแอนิเมชันของคุณที่นี่ตอนสรุปผล</div>
-          <!-- ตัวอย่าง: <img src="/assets/animations/celebrate.gif" alt="" /> -->
+          <div style="color:#7a8aa1">จะมีรูปสรุประดับฝีมือ 7 ระดับแสดงที่นี่</div>
         </div>
 
         <div class="card" style="margin-bottom:12px">
@@ -62,13 +80,13 @@
         </div>
 
         <div class="card">
-          <div>ดาวที่ได้รับ (รวมโบนัส)</div>
+          <div>ดาวที่ได้รับ (รวมโบนัสความไว)</div>
           <div class="big">⭐ <span id="sumStars">0</span></div>
         </div>
 
-        <div style="display:flex;gap:8px;margin-top:16px">
+        <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
           <a class="pill" href="/">← กลับหน้าหลัก</a>
-          <button id="playAgain" class="pill">เล่นอีกครั้ง</button>
+          <button id="playAgain" class="pill" type="button">เล่นอีกครั้ง</button>
         </div>
       </div>
     </section>
