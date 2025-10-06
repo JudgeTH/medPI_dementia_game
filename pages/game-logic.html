@@ -50,12 +50,14 @@
     /* Summary Modal */
     .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(2,6,23,.5)}
     .modal .card{background:#fff; border-radius:24px; padding:18px; width:min(640px, 92%); border:2px solid #0b1220; box-shadow:var(--shadow)}
-    .summary-head{display:flex; align-items:center; justify-content:center; background:#f1f5f9; border:2px dashed #cbd5e1; border-radius:16px; height:180px; margin-bottom:12px}
+    .summary-head{display:flex; align-items:center; justify-content:center; background:#f1f5f9; border:2px dashed #cbd5e1; border-radius:16px; height:min(220px, 40vh); margin-bottom:12px; overflow:hidden; padding:8px}
     .summary-head p{margin:0; color:#64748b}
     .summary{display:grid; gap:10px}
     .summary .item{display:flex; justify-content:space-between; border:2px solid #e2e8f0; border-radius:14px; padding:12px 14px; font-weight:900}
     .summary .ok{color:#166534}
     .summary .no{color:#b91c1c}
+    #customAnimationSlot{width:100%; height:100%; display:flex; align-items:center; justify-content:center}
+    #customAnimationSlot img{max-width:100%; max-height:100%; object-fit:contain; display:block}
   </style>
 </head>
 <body>
@@ -100,7 +102,12 @@
         <!-- ช่องว่างสำหรับรูป/แบนเนอร์สรุปผล -->
         <div id="customAnimationSlot"><p>พื้นที่สำหรับรูปประกาศคะแนน</p></div>
       </div>
-      <div class="summary" id="summaryBody"></div>
+      <div class="summary" id="summaryBody">
+        <div class="item"><span>ผลลัพธ์</span><span id="resultText"></span></div>
+        <div class="item"><span>คะแนนรอบนี้</span><span id="scoreText"></span></div>
+        <div class="item"><span>⭐ ดาวที่ได้</span><span id="starText"></span></div>
+        <div class="item"><span>เวลา</span><span id="timeText"></span></div>
+      </div>
       <div class="row" style="margin-top:12px; justify-content:flex-end">
         <button class="btn" id="closeSummary">เริ่มข้อถัดไป</button>
       </div>
@@ -171,11 +178,11 @@
     // ===== Summary (minimal fields) =====
     // เรียกแสดงรูปประกาศคะแนนด้านบน (ในรอบนี้ส่ง 1 ถ้าถูก, 0 ถ้าผิด)
     renderSummaryAnimation(correct?1:0);
-    els.summaryBody.innerHTML = ''+
-      `<div class="item"><span>ผลลัพธ์</span><span class="${correct? 'ok':'no'}">${correct? 'ถูกต้อง':'ผิด'}</span></div>`+
-      `<div class="item"><span>คะแนนรอบนี้</span><span>${score}</span></div>`+
-      `<div class="item"><span>⭐ ดาวที่ได้</span><span>${starsEarned}</span></div>`+
-      `<div class="item"><span>เวลา</span><span>${(rt/1000).toFixed(2)} วินาที</span></div>`;
+    document.getElementById('resultText').textContent = (correct? 'ถูกต้อง':'ผิด');
+    document.getElementById('resultText').className = (correct? 'ok':'no');
+    document.getElementById('scoreText').textContent = String(score);
+    document.getElementById('starText').textContent = String(starsEarned);
+    document.getElementById('timeText').textContent = (rt/1000).toFixed(2) + ' วินาที';
     els.summaryModal.style.display='flex'; els.btnNextRound.disabled=false;
   }
 
