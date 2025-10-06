@@ -3,13 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>เกมเปิดแผ่นป้าย 7 ใบ | Clue Flip Quiz</title>
+  <title>เกมคำใบ้ทีละคำ | Sequential Hint Quiz</title>
   <style>
     :root{
-      --bg:#ffffff; --fg:#111111; --muted:#6b7280; --accent:#111111;
-      --tile-cover:#e5e7eb; --tile-open:#f8fafc; --tile-border:#d1d5db;
+      --bg:#ffffff; --fg:#111111; --muted:#6b7280;
       --radius:20px; --shadow:0 6px 20px rgba(0,0,0,.08);
-      --tile-w:min(220px, 40vw); --tile-h:min(140px, 28vw);
       --maxw:980px;
     }
     html,body{height:100%}
@@ -20,23 +18,15 @@
     /* Senior-friendly type scale */
     h1{font-size: clamp(22px, 4vw, 34px); margin:0 0 8px 0; letter-spacing:.5px}
     h2{font-size: clamp(18px, 3.5vw, 26px); margin:0}
-    p,button,input,label{font-size: clamp(18px, 2.8vw, 20px)}
+    p,button,input,label,li{font-size: clamp(18px, 2.8vw, 20px)}
 
     .panel{background:#fff; border:2px solid #e5e7eb; border-radius:var(--radius); padding:16px; box-shadow:var(--shadow)}
     .row{display:flex; gap:12px; align-items:center; flex-wrap:wrap}
 
-    /* Board */
-    .board{margin-bottom:14px}
-    .grid{display:grid; gap:12px; grid-template-columns: repeat(3, var(--tile-w)); justify-content:center}
-    @media (max-width:700px){ .grid{grid-template-columns: repeat(2, 1fr)} }
-
-    .tile{position:relative; width:var(--tile-w); height:var(--tile-h); border-radius:18px; border:2px solid var(--tile-border);
-      background:var(--tile-cover); display:flex; align-items:center; justify-content:center; cursor:pointer; user-select:none; text-align:center;
-      padding:12px; transition: transform .12s ease, background .2s ease, border-color .2s ease; background-size:cover; background-position:center}
-    .tile:hover{transform: translateY(-2px)}
-    .tile .num{position:absolute; top:8px; left:10px; font-weight:700; color:#374151}
-    .tile .txt{font-weight:800; text-transform:uppercase; color:#111; letter-spacing:.6px}
-    .tile.open{background:var(--tile-open)}
+    /* Hint list */
+    .hints{display:block}
+    .hints li{padding:10px 12px; border-radius:14px; border:2px solid #e5e7eb; background:#f8fafc; margin-bottom:8px; font-weight:700}
+    .hint-count{color:var(--muted)}
 
     /* Q & Choices */
     .choices{display:grid; gap:12px}
@@ -63,22 +53,49 @@
 <body>
   <div class="container">
     <header class="row" style="justify-content:space-between">
-      <h1>เกมเปิดแผ่นป้าย 7 ใบ</h1>
-      <button class="btn" id="btnNew">ข้อต่อไป</button>
+      <h1>เกมคำใบ้ทีละคำ</h1>
+      <button class="btn" id="btnNextRound" disabled>ข้อต่อไป</button>
     </header>
 
-    <!-- 1) Hints board on top -->
-    <section class="panel board">
-      <h2 style="margin-bottom:8px">คำใบ้</h2>
-      <div class="grid" id="hintGrid" aria-label="กระดานคำใบ้ 7 ใบ"></div>
+    <!-- ตัวอย่างรูปแบบโจทย์ -->
+    <section class="panel" id="samplePanel" style="margin-top:10px">
+      <details open>
+        <summary style="font-weight:900; cursor:pointer">ตัวอย่างรูปแบบโจทย์ / วิธีใส่ข้อมูล</summary>
+        <div style="margin-top:10px">
+          <ul style="margin:0 0 10px 20px">
+            <li>โครงสร้างแต่ละข้อ: <code>{ id, prompt, hints[7], choices[4], answerIndex }</code></li>
+            <li><b>hints ต้องมี 7 ข้อ</b> (เรียงจากเบา → ชัดเจน) และ <b>choices ต้องมี 4 ข้อ</b></li>
+            <li><code>answerIndex</code> คือเลขตำแหน่งคำตอบที่ถูก (0 = ตัวเลือก A)</li>
+          </ul>
+          <div class="row" style="gap:20px; align-items:flex-start">
+            <div style="flex:1">
+              <div style="font-weight:800; margin-bottom:6px">ตัวอย่าง (รูปแบบที่ถูก)</div>
+              <pre id="exFormat" style="white-space:pre-wrap; background:#f8fafc; border:2px solid #e5e7eb; border-radius:12px; padding:12px; margin:0"></pre>
+            </div>
+            <div style="flex:1">
+              <div style="font-weight:800; margin-bottom:6px">ตัวอย่างที่โหลดจากคลัง (รายการแรก)</div>
+              <pre id="exLoaded" style="white-space:pre-wrap; background:#f8fafc; border:2px solid #e5e7eb; border-radius:12px; padding:12px; margin:0"></pre>
+            </div>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <!-- 1) Hints (sequential) on top -->
+    <section class="panel">
+      <div class="row" style="justify-content:space-between; align-items:center">
+        <h2 style="margin:0">คำใบ้ <span class="hint-count" id="hintCount">(0/7)</span></h2>
+        <button class="btn secondary" id="btnMoreHint">ขอคำใบ้เพิ่ม</button>
+      </div>
+      <ol id="hintList" class="hints" style="margin:12px 0 0 22px"></ol>
     </section>
 
     <!-- 2) Question & choices beneath -->
-    <section class="panel qa">
+    <section class="panel qa" style="margin-top:12px">
       <p id="qText" style="font-size: clamp(20px, 3.2vw, 24px); font-weight:900; text-transform:uppercase; margin:0 0 12px 0">–</p>
       <div class="choices" id="choices"></div>
       <div class="row" style="margin-top:12px; justify-content:space-between">
-        <div style="color:var(--muted)">คลิกเปิดคำใบ้ก่อน แล้วจึงตอบ</div>
+        <div style="color:var(--muted)">กด "ขอคำใบ้เพิ่ม" ได้เรื่อยๆ ก่อนตอบ</div>
         <button class="btn secondary" id="btnRevealAll" disabled>เปิดคำใบ้ทั้งหมด</button>
       </div>
     </section>
@@ -105,7 +122,6 @@
 
   <script>
   // ===== Dataset hook =====
-  // ถ้าไม่ได้โหลด questions-flip.js จะใช้ SAMPLE_DATA ชั่วคราว
   const SAMPLE_DATA = [
     { id:'animal-tiger', prompt:'สัตว์ดังกล่าวคืออะไร?',
       hints:['อยู่ในป่า','กินเนื้อ','มีสีส้ม','มีลายสีดำ','ปีนต้นไม้ได้','บินไม่ได้','เป็นสัตว์สงวน'],
@@ -116,13 +132,10 @@
     : (Array.isArray(window.QUESTION_BANK) && window.QUESTION_BANK.length ? window.QUESTION_BANK : SAMPLE_DATA);
   if(DATASET === SAMPLE_DATA){ console.warn('ใช้ SAMPLE_DATA ชั่วคราว: ยังไม่ได้เชื่อมไฟล์คลังคำถาม (questions-flip.js)'); }
 
-  // ===== Config: tile cover image URL =====
-  const TILE_COVER_URL = 'assets/images/logic/card.png';
-
   // ===== State =====
   const state = {
     question: null,
-    opened: new Set(),
+    revealed: 0, // จำนวนคำใบ้ที่แสดงแล้ว
     startTs: 0,
     answered: false,
     round: 1,
@@ -130,19 +143,9 @@
     scoreThisRound: 0
   };
 
-  const els = {
-    grid: document.getElementById('hintGrid'),
-    qText: document.getElementById('qText'),
-    choices: document.getElementById('choices'),
-    kUnopened: document.getElementById('kUnopened'),
-    kScore: document.getElementById('kScore'),
-    kStars: document.getElementById('kStars'),
-    timer: document.getElementById('timer'),
-    btnNew: document.getElementById('btnNew'),
-    btnRevealAll: document.getElementById('btnRevealAll'),
-    summaryModal: document.getElementById('summaryModal'),
-    summaryList: document.getElementById('summaryList'),
-    closeSummary: document.getElementById('closeSummary')
+  const els = {$1,
+    exFormat: document.getElementById('exFormat'),
+    exLoaded: document.getElementById('exLoaded')
   };
 
   let timerId = null;
@@ -158,42 +161,36 @@
   function stopTimer(){ if(timerId) clearInterval(timerId); timerId = null; }
 
   function pickRandomQuestion(){
-    if(!DATASET.length) return null;
     const idx = Math.floor(Math.random()*DATASET.length);
     return JSON.parse(JSON.stringify(DATASET[idx]));
   }
 
-  function setupBoard(){
-    els.grid.innerHTML = '';
-    state.opened = new Set();
-    state.answered = false;
-    state.scoreThisRound = 0;
-    els.kScore.textContent = '0';
-    els.kUnopened.textContent = '7';
-    els.btnRevealAll.disabled = false;
-
-    for(var i=0;i<7;i++){
-      var tile = document.createElement('button');
-      tile.className = 'tile';
-      tile.setAttribute('aria-label', 'แผ่นป้ายหมายเลข ' + (i+1));
-      tile.innerHTML = '<span class="num">#'+(i+1)+'</span><span class="txt">คลิกเพื่อดูคำใบ้</span>';
-      if(TILE_COVER_URL){ tile.style.backgroundImage = 'url('+TILE_COVER_URL+')'; }
-      (function(idx, el){ el.addEventListener('click', function(){ openHint(idx, el); }); })(i, tile);
-      els.grid.appendChild(tile);
-    }
+  function updateHintCount(){
+    els.hintCount.textContent = '('+state.revealed+'/7)';
+    els.kUnopened.textContent = String(7 - state.revealed);
+    els.btnMoreHint.disabled = state.revealed >= 7 || state.answered;
+    els.btnRevealAll.disabled = state.revealed >= 7 || state.answered;
   }
 
-  function openHint(index, tileEl){
-    if(state.answered) return;
-    if(state.opened.has(index)) return;
-    state.opened.add(index);
-    tileEl.classList.add('open');
-    tileEl.style.backgroundImage = '';
-    const hint = state.question.hints[index] || '(ไม่มีข้อมูล)';
-    tileEl.querySelector('.txt').textContent = hint;
-    tileEl.querySelector('.txt').style.textTransform = 'none';
-    tileEl.querySelector('.txt').style.fontSize = 'clamp(18px, 2.8vw, 22px)';
-    els.kUnopened.textContent = Math.max(0, 7 - state.opened.size);
+  function renderHintsInitial(){
+    els.hintList.innerHTML = '';
+    state.revealed = 0;
+    // เผยคำใบ้แรกทันที
+    revealNextHint();
+  }
+
+  function revealNextHint(){
+    if(state.revealed >= 7) return;
+    const i = state.revealed;
+    const li = document.createElement('li');
+    li.textContent = state.question.hints[i] || '(ไม่มีข้อมูล)';
+    els.hintList.appendChild(li);
+    state.revealed += 1;
+    updateHintCount();
+  }
+
+  function revealAllHints(){
+    while(state.revealed < 7){ revealNextHint(); }
   }
 
   function renderChoices(){
@@ -207,26 +204,14 @@
     });
   }
 
-  function revealAllHints(){
-    var tiles = els.grid.querySelectorAll('.tile');
-    tiles.forEach(function(tile, i){
-      tile.classList.add('open');
-      tile.style.backgroundImage = '';
-      const hint = state.question.hints[i] || '(ไม่มีข้อมูล)';
-      tile.querySelector('.txt').textContent = hint;
-      tile.querySelector('.txt').style.textTransform = 'none';
-    });
-    els.kUnopened.textContent = 0;
-  }
-
   function onAnswer(idx){
     if(state.answered) return;
     state.answered = true;
     stopTimer();
 
+    // ปิดปุ่มใบ้ และเปิดเผยใบ้ทั้งหมดเพื่อเฉลย
+    els.btnMoreHint.disabled = true;
     revealAllHints();
-    els.btnRevealAll.disabled = true;
-    els.grid.querySelectorAll('.tile').forEach(function(t){ t.style.pointerEvents='none'; });
 
     var nodes = Array.prototype.slice.call(document.querySelectorAll('.choice'));
     var correct = idx === state.question.answerIndex;
@@ -236,7 +221,7 @@
       n.disabled = true;
     });
 
-    var unopened = Math.max(0, 7 - state.opened.size);
+    var unopened = Math.max(0, 7 - (state.revealed)); // จำนวนใบ้ที่ยังไม่ได้ขอ
     var score = correct ? unopened : 0;
     var rt = performance.now() - state.startTs;
     var bonusStars = 0;
@@ -257,10 +242,25 @@
     els.summaryList.innerHTML = ''+
       '<li><b>ผลลัพธ์:</b> ' + (correct ? 'ตอบถูก' : 'ตอบผิด') + '</li>'+
       '<li><b>เวลา:</b> ' + (rt/1000).toFixed(2) + ' วินาที</li>'+
-      '<li><b>แผ่นป้ายที่ยังไม่เปิด:</b> ' + unopened + '</li>'+
+      '<li><b>คำใบ้ที่ยังไม่ได้ขอ:</b> ' + unopened + '</li>'+
       '<li><b>คะแนนรอบนี้:</b> ' + score + '</li>'+
       '<li><b>⭐ ดาวสะสม:</b> ' + state.starsTotal + ' (+' + starsEarned + ')</li>';
     els.summaryModal.style.display = 'flex';
+    els.btnNextRound.disabled = false;
+  }
+
+  function startNewQuestion(){
+    state.question = pickRandomQuestion();
+    state.answered = false;
+    state.revealed = 0;
+    els.qText.textContent = state.question.prompt;
+    els.kScore.textContent = '0';
+    els.kUnopened.textContent = '7';
+    els.btnNextRound.disabled = true;
+    renderHintsInitial();
+    renderChoices();
+    els.summaryModal.style.display = 'none';
+    startTimer();
   }
 
   function nextRound(){
@@ -268,35 +268,38 @@
     startNewQuestion();
   }
 
-  function startNewQuestion(){
-    state.question = pickRandomQuestion();
-    if(!state.question){
-      document.querySelector('.qa').innerHTML = '<p style="font-weight:800">ยังไม่มีคลังคำถาม</p>';
-      return;
-    }
-    state.opened.clear();
-    state.answered = false;
-    els.qText.textContent = state.question.prompt;
-    els.kStars.textContent = String(state.starsTotal);
-    els.kScore.textContent = '0';
-    els.kUnopened.textContent = '7';
-    els.btnRevealAll.disabled = false;
-    renderChoices();
-    setupBoard();
-    els.summaryModal.style.display = 'none';
-    startTimer();
-  }
-
   // Events
+  els.btnMoreHint.addEventListener('click', revealNextHint);
   els.btnRevealAll.addEventListener('click', revealAllHints);
-  els.btnNew.addEventListener('click', function(){
-    if(els.summaryModal.style.display !== 'flex') return;
-    nextRound();
-  });
+  els.btnNextRound.addEventListener('click', function(){ if(!els.btnNextRound.disabled) nextRound(); });
   els.closeSummary.addEventListener('click', nextRound);
 
+  function renderSamples(){
+    const example = {
+      id: 'topic-keyword',
+      prompt: 'คำถามคืออะไร?',
+      hints: [
+        'คำใบ้ #1 (ทั่วไป)',
+        'คำใบ้ #2',
+        'คำใบ้ #3',
+        'คำใบ้ #4',
+        'คำใบ้ #5',
+        'คำใบ้ #6',
+        'คำใบ้ #7 (ชัดเจนมากสุด)'
+      ],
+      choices: ['ตัวเลือก A','ตัวเลือก B','ตัวเลือก C','ตัวเลือก D'],
+      answerIndex: 0
+    };
+    els.exFormat.textContent = JSON.stringify(example, null, 2);
+    const loaded = DATASET && DATASET.length ? DATASET[0] : {note:'ยังไม่พบคลังคำถาม (กำลังใช้ SAMPLE_DATA)'};
+    els.exLoaded.textContent = JSON.stringify(loaded, null, 2);
+  }
+
   // Init
-  (function init(){ startNewQuestion(); })();
+  (function init(){
+    renderSamples();
+    startNewQuestion();
+  })();
   </script>
 </body>
 </html>
