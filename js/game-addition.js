@@ -1,185 +1,189 @@
-// ===== helpers =====
-const $ = (s, r=document)=>r.querySelector(s);
-const $$ = (s, r=document)=>[...r.querySelectorAll(s)];
-const sleep = (ms)=>new Promise(r=>setTimeout(r,ms));
-const now = ()=>performance.now();
-function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
-function pickUnique(a,n){return shuffle(a).slice(0,n)}
-function choiceWithNewAnswerIndex(choices,idx){
-  const pairs = choices.map((t,i)=>({t,ok:i===idx}));
-  const sh = shuffle(pairs);
-  return { items: sh.map(p=>p.t), correctIndex: sh.findIndex(p=>p.ok) };
+// PI Game — เกมบวกเลขเร็ว (พิมพ์คำตอบเอง)
+// โหมดเล่นรอบละ 7 ข้อ + คิดดาวจากความถูกต้องและความไว
+
+/***** ค่าปรับแต่งหลัก *****/
+const TOTAL_QUESTIONS = 7;             // เล่นรอบละ 7 ข้อ
+const MIN_A = 0, MAX_A = 99;           // ช่วงตัวตั้ง/ตัวบวก
+const FAST_BONUS_MS = 1800;            // ตอบถูก ≤ 1.8s ได้โบนัส 1 ดาว
+const NORMAL_MS = 3500;                // > 3.5s ถือว่าช้า (ไม่มีโบนัส)
+const BADGE_IMAGES = [
+  // กำหนดไฟล์รูปสรุประดับ 0–7 (ใส่เป็น path ของคุณเอง)
+  // ตัวอย่างโฟลเดอร์: /assets/summary/level-0.png ... /assets/summary/level-7.png
+  "/assets/summary/level-0.png",
+  "/assets/summary/level-1.png",
+  "/assets/summary/level-2.png",
+  "/assets/summary/level-3.png",
+  "/assets/summary/level-4.png",
+  "/assets/summary/level-5.png",
+  "/assets/summary/level-6.png",
+  "/assets/summary/level-7.png"
+];
+
+/***** ตัวช่วยสุ่มโจทย์บวก *****/
+function randInt(min, max){ return Math.floor(Math.random()*(max-min+1))+min; }
+function makeQuestion(){
+  const a = randInt(MIN_A, MAX_A);
+  const b = randInt(MIN_A, MAX_A);
+  return { a, b, ans: a + b, text: `${a} + ${b} = ?` };
 }
 
-// ===== config =====
-const LS={TIME_TO_ANSWER_MS:'game.timeToAnswerMs', DAILY_STAR_CAP:'game.dailyStarCap', BONUS_T1_MS:'game.bonusT1Ms', BONUS_T2_MS:'game.bonusT2Ms'};
-const readNum=(k,d)=>{const v=Number(localStorage.getItem(k));return Number.isFinite(v)&&v>0?v:d}
-const CONFIG={
-  QUESTIONS_PER_SESSION:7,
-  MOVE_ON_DELAY_MS:700,
-  REVEAL_REACTION_MS:400,
-  STAR_PER_CORRECT:1,
-  STAR_STREAK_BONUS:1,
-  TIME_TO_ANSWER_MS: readNum(LS.TIME_TO_ANSWER_MS, 15000), // ใช้จำกัดหลังบ้าน (ไม่โชว์บนจอ)
-  DAILY_STAR_CAP:    readNum(LS.DAILY_STAR_CAP, 50),
-  BONUS_T1_MS:       readNum(LS.BONUS_T1_MS, 1500),
-  BONUS_T2_MS:       readNum(LS.BONUS_T2_MS, 3000),
-};
-const qp=new URLSearchParams(location.search);
-if(qp.has('timeToAnswerSec')){const v=Math.max(1,Number(qp.get('timeToAnswerSec'))|0)*1000;localStorage.setItem(LS.TIME_TO_ANSWER_MS,String(v));CONFIG.TIME_TO_ANSWER_MS=v}
+/***** สถานะเกม *****/
+let questions = [];
+let index = 0;
+let correct = 0;
+let stars = 0;
+let qStartTime = 0; // ms
+let attempts = [];  // เก็บ {q, userAns, correct, rt}
 
-// ===== storage =====
-const UID = localStorage.getItem('ecg_current_uid') || 'guest';
-const K_STARS=`pi.stars_ledger.${UID}`, K_SESS=`pi.sessions.${UID}`, K_ATT=`pi.attempts.${UID}`;
-const jget=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch{return d}}
-const jset=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
-const addStars=(delta,reason)=>{if(!delta)return; const a=jget(K_STARS,[]); a.push({delta,reason,at:new Date().toISOString()}); jset(K_STARS,a)}
-const starsToday=()=>jget(K_STARS,[]).filter(x=>String(x.at||'').startsWith(new Date().toISOString().slice(0,10))).reduce((s,x)=>s+(x.delta||0),0)
-const addAttempt=(x)=>{const a=jget(K_ATT,[]); a.push(x); jset(K_ATT,a)}
-const addSession=(x)=>{const a=jget(K_SESS,[]); a.push(x); jset(K_SESS,a)}
+/***** อ้างอิง DOM *****/
+const phasePill     = document.getElementById('phasePill');
+const qIndexEl      = document.getElementById('qIndex');
+const qTotalEl      = document.getElementById('qTotal');
+const correctCount  = document.getElementById('correctCount');
+const starsCount    = document.getElementById('starsCount');
 
-// ===== UI refs =====
-const UI={
-  phasePill:$('#phasePill'), qIndex:$('#qIndex'), qTotal:$('#qTotal'),
-  correctCount:$('#correctCount'), starsCount:$('#starsCount'),
-  questionStage:$('#questionStage'), prompt:$('#prompt'), choices:$('#choices'),
-  summary:$('#summary'), sumCorrect:$('#sumCorrect'), sumTotal:$('#sumTotal'), sumStars:$('#sumStars'),
-  playAgain:$('#playAgain')
-};
-UI.qTotal.textContent=CONFIG.QUESTIONS_PER_SESSION;
+const questionStage = document.getElementById('questionStage');
+const promptEl      = document.getElementById('prompt');
+const formEl        = document.getElementById('answerForm');
+const inputEl       = document.getElementById('answerInput');
+const feedbackEl    = document.getElementById('feedback');
 
-// ===== dataset (ข้อความล้วน) =====
-const SAMPLE={ items:[
-  {id:'q-001', prompt:'ผลไม้ใดมีโพแทสเซียมสูงและสีเหลือง?', choices:['แอปเปิล','กล้วย','องุ่น','ส้ม'], answerIndex:1},
-  {id:'q-002', prompt:'รถชนิดใดมีสองล้อ?', choices:['รถบัส','จักรยาน','รถไฟ','เรือ'], answerIndex:1},
-  {id:'q-003', prompt:'สัตว์ใดบินได้?', choices:['ช้าง','ม้า','นก','สิงโต'], answerIndex:2},
-  {id:'q-004', prompt:'2 + 3 เท่ากับเท่าใด?', choices:['4','5','6','7'], answerIndex:1},
-  {id:'q-005', prompt:'กรุงเทพฯ เป็นเมืองหลวงของประเทศใด?', choices:['ไทย','ลาว','กัมพูชา','เมียนมา'], answerIndex:0},
-  {id:'q-006', prompt:'วันศุกร์อยู่ถัดจากวันใด?', choices:['พุธ','พฤหัสบดี','เสาร์','อาทิตย์'], answerIndex:1},
-  {id:'q-007', prompt:'สีของท้องฟ้าในวันที่อากาศแจ่มใสคือ?', choices:['เขียว','น้ำเงิน','แดง','เหลือง'], answerIndex:1},
-]};
-async function loadQuestions(){
-  try{
-    const res=await fetch('/data/questions/attention.json',{cache:'no-store'});
-    if(res.ok){ const d=await res.json(); if(d && Array.isArray(d.items) && d.items.length) return d; }
-  }catch{}
-  return SAMPLE;
+const summaryEl     = document.getElementById('summary');
+const sumCorrectEl  = document.getElementById('sumCorrect');
+const sumTotalEl    = document.getElementById('sumTotal');
+const sumStarsEl    = document.getElementById('sumStars');
+const animSlot      = document.getElementById('customAnimationSlot');
+const playAgainBtn  = document.getElementById('playAgain');
+
+/***** ฟังก์ชันหลักของเกม *****/
+function initGame(){
+  // เตรียมโจทย์ 7 ข้อ
+  questions = Array.from({length: TOTAL_QUESTIONS}, makeQuestion);
+  index = 0;
+  correct = 0;
+  stars = 0;
+  attempts = [];
+
+  qTotalEl.textContent = TOTAL_QUESTIONS;
+  correctCount.textContent = 0;
+  starsCount.textContent = 0;
+
+  phasePill.textContent = 'คำถาม';
+  summaryEl.classList.remove('active');
+  questionStage.style.display = '';
+
+  renderCurrentQuestion();
 }
 
-// ===== state =====
-const state={ sessionId:`s_${Date.now()}_${Math.random().toString(36).slice(2,8)}`, questions:[], current:-1, correct:0, stars:0, streak:0, questionShownAt:0, answering:false };
+function renderCurrentQuestion(){
+  const q = questions[index];
+  qIndexEl.textContent = index + 1;
 
-// ===== rendering =====
-function renderChoices(q){
-  UI.choices.innerHTML='';
-  const {items,correctIndex}=choiceWithNewAnswerIndex(q.choices,q.answerIndex);
-  items.forEach((label,idx)=>{
-    const btn=document.createElement('button');
-    btn.className='choice'; btn.type='button'; btn.textContent=label;
-    const em=document.createElement('span'); em.className='emoji'; btn.appendChild(em);
-    btn.addEventListener('click',()=>handleAnswer(q,idx,idx===correctIndex,btn));
-    UI.choices.appendChild(btn);
-  });
-}
-function showQuestion(q){
-  UI.prompt.textContent=q.prompt;
-  renderChoices(q);
-  state.questionShownAt = now();
-  state.answering = true;
+  promptEl.textContent = q.text;
+  inputEl.value = '';
+  inputEl.focus({ preventScroll: true });
+  feedbackEl.textContent = '';
 
-  // มี time limit หลังบ้าน (ถ้าต้องการหมดเวลาอัตโนมัติ) — ไม่โชว์บนจอ
-  const start = state.questionShownAt;
-  const limit = CONFIG.TIME_TO_ANSWER_MS;
-  (function tick(){
-    if(!state.answering) return;
-    const elapsed = now()-start;
-    if(elapsed >= limit){
-      state.answering=false;
-      afterAnswer(q,{isCorrect:false,choiceIndex:-1,responseMs:limit});
-    } else {
-      requestAnimationFrame(tick);
-    }
-  })();
+  qStartTime = performance.now();
 }
 
-// ===== answer flow =====
-async function handleAnswer(q,idx,isCorrect,btn){
-  if(!state.answering) return;
-  state.answering=false;
-  const rt=Math.round(now()-state.questionShownAt);
-
-  btn.classList.add(isCorrect?'correct':'wrong');
-  const em=btn.querySelector('.emoji'); em.textContent=isCorrect?'🙂':'😅';
-  btn.classList.add('show-emoji');
-  $$('.choice').forEach(b=>b.setAttribute('disabled',''));
-
-  await sleep(CONFIG.REVEAL_REACTION_MS);
-  await afterAnswer(q,{isCorrect,choiceIndex:idx,responseMs:rt});
-}
-async function afterAnswer(q,{isCorrect,choiceIndex,responseMs}){
-  // คิดคะแนน/ดาว (ยังมีโบนัสเวลา แต่ไม่โชว์ตัวจับเวลาบนจอ)
-  if(isCorrect){
-    state.correct += 1; state.streak += 1;
-    let bonus=0; if(responseMs<=CONFIG.BONUS_T1_MS) bonus=2; else if(responseMs<=CONFIG.BONUS_T2_MS) bonus=1;
-    let streakBonus=(state.streak>=3)?CONFIG.STAR_STREAK_BONUS:0;
-    state.stars += CONFIG.STAR_PER_CORRECT + bonus + streakBonus;
-  } else {
-    state.streak = 0;
+function handleSubmit(e){
+  e.preventDefault();
+  const raw = (inputEl.value ?? '').trim();
+  if (raw === '') {
+    inputEl.focus();
+    return;
   }
 
-  // log การตอบ (เก็บ responseMs ไว้วิเคราะห์ภายหลัง)
-  addAttempt({
-    id:`a_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
-    sessionId:state.sessionId,
-    questionId:q.id,
-    answeredAt:new Date().toISOString(),
-    isCorrect, responseMs, choiceIndex
+  const userAns = Number(raw);
+  const q = questions[index];
+  const rt = Math.max(0, Math.round(performance.now() - qStartTime)); // ms วัดความไว
+
+  let isCorrect = (userAns === q.ans);
+  let gainedStars = 0;
+
+  if (isCorrect){
+    correct += 1;
+    // ดาวฐาน 1 ต่อคำตอบที่ถูก
+    gainedStars += 1;
+
+    // โบนัสความไว (เฉพาะตอบถูก)
+    if (rt <= FAST_BONUS_MS) {
+      gainedStars += 1; // เร็วมาก
+      feedbackEl.textContent = `ถูกต้อง! +2⭐ (เร็วมาก ${rt} ms)`;
+      feedbackEl.className = 'feedback ok';
+    } else if (rt <= NORMAL_MS) {
+      // ไม่ได้โบนัส แต่ยังถือว่าปกติ
+      feedbackEl.textContent = `ถูกต้อง! +1⭐ (${rt} ms)`;
+      feedbackEl.className = 'feedback ok';
+    } else {
+      // ช้าไปหน่อย
+      feedbackEl.textContent = `ถูกต้อง! +1⭐ (ช้า ${rt} ms)`;
+      feedbackEl.className = 'feedback ok';
+    }
+  } else {
+    feedbackEl.textContent = `ยังไม่ถูก (ตอบ ${userAns}, เฉลย ${q.ans})`;
+    feedbackEl.className = 'feedback no';
+  }
+
+  stars += gainedStars;
+  correctCount.textContent = correct;
+  starsCount.textContent = stars;
+
+  // เก็บสถิติของข้อนี้
+  attempts.push({
+    index, question: q.text, userAns, isCorrect, rt, gainedStars
   });
 
-  // ต่อข้อถัดไป
-  UI.correctCount.textContent = state.correct;
-  UI.starsCount.textContent = state.stars;
-  await sleep(CONFIG.MOVE_ON_DELAY_MS);
-  nextQuestion();
+  // ไปข้อถัดไป (เว้นระยะให้เห็น feedback สั้นๆ)
+  setTimeout(nextStep, 450);
 }
 
-// ===== session end =====
-function endSession(){
-  // ซ่อน phase คำถามทั้งหมด เหลือแค่สรุปผล
-  UI.questionStage.hidden = true;
-
-  // กำหนดดาวรายวัน
-  const awarded=starsToday(); const remain=Math.max(0,CONFIG.DAILY_STAR_CAP - awarded);
-  const grant=Math.min(state.stars,remain); const cut=state.stars-grant;
-  if(grant>0) addStars(grant,`session:${state.sessionId}`);
-
-  addSession({
-    id: state.sessionId,
-    score: state.correct,
-    starsEarned: grant,
-    endedAt: new Date().toISOString()
-  });
-
-  UI.sumCorrect.textContent = state.correct;
-  UI.sumTotal.textContent = CONFIG.QUESTIONS_PER_SESSION;
-  UI.sumStars.textContent = `${grant}${cut>0?` (จำกัด – ตัด ${cut})`:''}`;
-
-  UI.summary.classList.add('active');
-  UI.playAgain.onclick=()=>location.reload();
+function nextStep(){
+  index += 1;
+  if (index >= TOTAL_QUESTIONS){
+    showSummary();
+  } else {
+    renderCurrentQuestion();
+  }
 }
 
-// ===== driver =====
-async function nextQuestion(){
-  state.current += 1;
-  $('#qIndex').textContent = Math.min(state.current+1, CONFIG.QUESTIONS_PER_SESSION);
-  if(state.current >= state.questions.length){ return endSession(); }
-  const q = state.questions[state.current];
-  showQuestion(q);
+function showSummary(){
+  // ซ่อนโซนคำถาม
+  questionStage.style.display = 'none';
+
+  // สรุป
+  sumCorrectEl.textContent = correct;
+  sumTotalEl.textContent   = TOTAL_QUESTIONS;
+  sumStarsEl.textContent   = stars;
+
+  // แสดงรูป/แอนิเมชัน 7 ระดับ (0..7) อิงจำนวนข้อที่ถูก
+  // หากไม่มีไฟล์จริง จะ fallback เป็นอีโมจิแทน
+  animSlot.innerHTML = ''; // ล้างของเดิม
+  const level = Math.max(0, Math.min(7, correct));
+  const src = BADGE_IMAGES[level];
+
+  if (src && typeof src === 'string') {
+    const img = new Image();
+    img.alt = `ระดับที่ได้: ${level}/7`;
+    img.src = src;
+    animSlot.appendChild(img);
+  } else {
+    // Fallback อีโมจิ 7 ระดับ
+    const EMOJI = ['😵‍💫','😕','🙂','😊','😄','🤩','🏆','👑'];
+    const div = document.createElement('div');
+    div.style.fontSize = '64px';
+    div.textContent = EMOJI[level] ?? '✨';
+    animSlot.appendChild(div);
+  }
+
+  phasePill.textContent = 'สรุป';
+  summaryEl.classList.add('active');
 }
 
-(async function start(){
-  const dataset=await loadQuestions(); const all=dataset.items||[];
-  if(all.length < CONFIG.QUESTIONS_PER_SESSION){ console.warn('คลังคำถามมีน้อยกว่า 7 ใช้เท่าที่มี'); }
-  state.questions = pickUnique(all, CONFIG.QUESTIONS_PER_SESSION);
-  nextQuestion();
-})();
+/***** อีเวนต์ *****/
+formEl.addEventListener('submit', handleSubmit);
+playAgainBtn.addEventListener('click', initGame);
+
+// เริ่มเกมทันทีเมื่อโหลด
+window.addEventListener('DOMContentLoaded', initGame);
