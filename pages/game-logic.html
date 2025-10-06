@@ -177,11 +177,13 @@
     // ปิดปุ่มขอใบ้เพิ่ม
     els.btnMoreHint.disabled=true;
 
-    // ✅ คิดคะแนนจากจำนวนใบ้ที่เปิด ณ ตอนตอบ (ยิ่งเปิดน้อยยิ่งได้มาก)
-    const unopenedBefore = Math.max(0, 7 - state.revealed);
-    const correct = idx===state.question.answerIndex;
-    const score = correct ? unopenedBefore : 0;
-    const rt = performance.now()-state.startTs; // เก็บเป็นสถิติหลังบ้าน
+  // ✅ คิดคะแนนจากจำนวนใบ้ที่เปิด ณ ตอนตอบ (ยิ่งเปิดน้อยยิ่งได้มาก)
+  // สูตรใหม่: เปิด 1 -> 7 คะแนน ... เปิด 7 -> 1 คะแนน (ตอบผิด = 0)
+  const revealedNow   = Math.min(7, Math.max(1, state.revealed)); // 1..7
+  const unopenedBefore = Math.max(0, 7 - revealedNow);             // เก็บไว้เป็นสถิติ (ถ้าต้องใช้)
+  const correct       = idx === state.question.answerIndex;
+  const score         = correct ? (8 - revealedNow) : 0;           // 8 - จำนวนใบ้ที่เปิด
+  const rt            = performance.now() - state.startTs;         // เก็บเป็นสถิติหลังบ้าน
 
     // แล้วค่อยเปิดใบ้ทั้งหมดเพื่อเฉลย
     revealAllHints();
