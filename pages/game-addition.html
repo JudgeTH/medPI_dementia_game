@@ -40,6 +40,29 @@
     }
     #customAnimationSlot img{max-width:100%;height:auto;display:block}
     @media (max-width:640px){.answer-row{flex-direction:column;align-items:stretch}}
+    <style>
+    /* ...สไตล์อื่นคงเดิม... */
+
+    /* เดิมมีพื้นหลังฟ้า + เส้นประ ตรงนี้ปรับให้โปร่งใสและไม่มีกรอบ */
+    #customAnimationSlot{
+      display:grid;
+      place-items:center;
+      min-height:0;            /* เอาพื้นที่บังคับออก ให้สูงตามรูปจริง */
+      background:transparent;  /* พื้นหลังโปร่งใส */
+      border:none;             /* ไม่มีเส้นประ */
+      border-radius:0;         /* ไม่ต้องโค้งมุม */
+      margin:12px 0 20px;
+      overflow:visible;        /* ให้รูปยื่นได้ ถ้าจำเป็น */
+      padding:0;
+    }
+    #customAnimationSlot img{
+      max-width:100%;
+      height:auto;
+      display:block;
+    }
+
+
+    
   </style>
 </head>
 <body>
