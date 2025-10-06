@@ -6,48 +6,56 @@
   <title>เกมคำใบ้ทีละคำ | Sequential Hint Quiz</title>
   <style>
     :root{
-      --bg:#ffffff; --fg:#111111; --muted:#6b7280;
-      --radius:20px; --shadow:0 6px 20px rgba(0,0,0,.08);
-      --maxw:980px;
+      --bg:#ffffff; --fg:#0b1220; --muted:#5b677a;
+      --brand:#16a34a; --brand-2:#06b6d4; --danger:#dc2626;
+      --panel:#ffffff; --panel-br:#e5e7eb; --shadow:0 8px 28px rgba(2,6,23,.05);
+      --radius:22px; --maxw:980px;
+      --font-lg: clamp(18px, 2.8vw, 20px);
+      --font-xl: clamp(22px, 4vw, 36px);
+      --font-xxl: clamp(26px, 5vw, 44px);
     }
     html,body{height:100%}
     body{margin:0; font-family: ui-sans-serif, system-ui, "Noto Sans Thai", sans-serif; background:var(--bg); color:var(--fg)}
 
     .container{max-width:var(--maxw); margin:0 auto; padding:16px}
 
-    /* Senior-friendly type scale */
-    h1{font-size: clamp(22px, 4vw, 34px); margin:0 0 8px 0; letter-spacing:.5px}
-    h2{font-size: clamp(18px, 3.5vw, 26px); margin:0}
-    p,button,input,label,li{font-size: clamp(18px, 2.8vw, 20px)}
+    /* Big, friendly type */
+    h1{font-size:var(--font-xxl); margin:0 0 10px 0; letter-spacing:.2px}
+    h2{font-size:var(--font-xl); margin:0}
+    p,button,input,label,li{font-size:var(--font-lg)}
 
-    .panel{background:#fff; border:2px solid #e5e7eb; border-radius:var(--radius); padding:16px; box-shadow:var(--shadow)}
+    .panel{background:var(--panel); border:2px solid var(--panel-br); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow)}
     .row{display:flex; gap:12px; align-items:center; flex-wrap:wrap}
 
     /* Hint list */
-    .hints{display:block}
-    .hints li{padding:10px 12px; border-radius:14px; border:2px solid #e5e7eb; background:#f8fafc; margin-bottom:8px; font-weight:700}
+    .hints{display:block; margin:12px 0 0 26px}
+    .hints li{padding:12px 14px; border-radius:16px; border:2px dashed #cbd5e1; background:#f8fafc; margin-bottom:10px; font-weight:800}
     .hint-count{color:var(--muted)}
 
     /* Q & Choices */
     .choices{display:grid; gap:12px}
-    .choice{padding:16px 18px; border-radius:16px; border:2px solid #d1d5db; background:#fff; text-align:left; font-weight:800;
-      text-transform:uppercase; letter-spacing:.6px; cursor:pointer}
+    .choice{padding:18px 20px; border-radius:16px; border:2px solid #d1d5db; background:#fff; text-align:left; font-weight:900;
+      letter-spacing:.6px; cursor:pointer}
     .choice:focus{outline:4px solid #111; outline-offset:2px}
-    .choice.correct{background:#e7f9ed; border-color:#34d399}
-    .choice.wrong{background:#fee2e2; border-color:#ef4444}
+    .choice.correct{background:rgba(22,163,74,.12); border-color:#16a34a}
+    .choice.wrong{background:rgba(220,38,38,.12); border-color:#dc2626}
 
-    .btn{border:2px solid #111; background:#111; color:#fff; border-radius:12px; padding:12px 16px; cursor:pointer; font-weight:800; text-transform:uppercase}
-    .btn.secondary{background:#fff; color:#111}
-    .btn:disabled{opacity:.6; cursor:not-allowed}
+    .btn{border:2px solid #0b1220; background:linear-gradient(90deg, var(--brand), var(--brand-2)); color:#fff; border-radius:14px; padding:14px 18px; cursor:pointer; font-weight:900}
+    .btn.secondary{background:#fff; color:#0b1220; border-color:#0b1220}
+    .btn:disabled{opacity:.55; cursor:not-allowed}
 
-    /* KPIs hidden; shown only in summary */
+    /* KPI hidden in play */
     .kpi{display:none}
 
     /* Summary Modal */
-    .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.4)}
-    .modal .card{background:#fff; border-radius:20px; padding:18px; max-width:560px; width:92%; border:2px solid #111}
-    .summary-list{list-style:none; padding:0; margin:8px 0 0 0}
-    .summary-list li{padding:8px 0; font-size: clamp(18px, 2.8vw, 20px)}
+    .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(2,6,23,.5)}
+    .modal .card{background:#fff; border-radius:24px; padding:18px; width:min(640px, 92%); border:2px solid #0b1220; box-shadow:var(--shadow)}
+    .summary-head{display:flex; align-items:center; justify-content:center; background:#f1f5f9; border:2px dashed #cbd5e1; border-radius:16px; height:180px; margin-bottom:12px}
+    .summary-head p{margin:0; color:#64748b}
+    .summary{display:grid; gap:10px}
+    .summary .item{display:flex; justify-content:space-between; border:2px solid #e2e8f0; border-radius:14px; padding:12px 14px; font-weight:900}
+    .summary .ok{color:#166534}
+    .summary .no{color:#b91c1c}
   </style>
 </head>
 <body>
@@ -57,20 +65,18 @@
       <button class="btn" id="btnNextRound" disabled>ข้อต่อไป</button>
     </header>
 
-    </section>
-
-    <!-- 1) Hints (sequential) on top -->
+    <!-- 1) Hints sequential -->
     <section class="panel">
       <div class="row" style="justify-content:space-between; align-items:center">
         <h2 style="margin:0">คำใบ้ <span class="hint-count" id="hintCount">(0/7)</span></h2>
         <button class="btn secondary" id="btnMoreHint">ขอคำใบ้เพิ่ม</button>
       </div>
-      <ol id="hintList" class="hints" style="margin:12px 0 0 22px"></ol>
+      <ol id="hintList" class="hints"></ol>
     </section>
 
-    <!-- 2) Question & choices beneath -->
+    <!-- 2) Question & choices -->
     <section class="panel qa" style="margin-top:12px">
-      <p id="qText" style="font-size: clamp(20px, 3.2vw, 24px); font-weight:900; text-transform:uppercase; margin:0 0 12px 0">–</p>
+      <p id="qText" style="font-size: clamp(22px, 3.2vw, 26px); font-weight:900; margin:0 0 12px 0">–</p>
       <div class="choices" id="choices"></div>
       <div class="row" style="margin-top:12px; justify-content:space-between">
         <div style="color:var(--muted)">กด "ขอคำใบ้เพิ่ม" ได้เรื่อยๆ ก่อนตอบ</div>
@@ -78,7 +84,7 @@
       </div>
     </section>
 
-    <!-- Hidden runtime KPIs (kept for JS but not shown) -->
+    <!-- Hidden runtime KPIs -->
     <div class="kpi" aria-hidden="true">
       <span id="timer">0.00s</span>
       <span id="kUnopened">7</span>
@@ -87,16 +93,43 @@
     </div>
   </div>
 
-  <!-- End-of-round Summary Modal -->
+  <!-- Summary Modal: minimal fields + animation slot on top -->
   <div class="modal" id="summaryModal" role="dialog" aria-modal="true">
     <div class="card">
-      <h2 style="margin:0 0 6px 0">สรุปรอบนี้</h2>
-      <ul class="summary-list" id="summaryList"></ul>
+      <div class="summary-head">
+        <!-- ช่องว่างสำหรับรูป/แบนเนอร์สรุปผล -->
+        <div id="customAnimationSlot"><p>พื้นที่สำหรับรูปประกาศคะแนน</p></div>
+      </div>
+      <div class="summary" id="summaryBody"></div>
       <div class="row" style="margin-top:12px; justify-content:flex-end">
         <button class="btn" id="closeSummary">เริ่มข้อถัดไป</button>
       </div>
     </div>
   </div>
+
+  <!-- โมดูลของคุณ (ถ้ามี) -->
+  <script type="module" src="/js/game-memory.js"></script>
+  <script>
+    // ฟังก์ชันสำหรับแสดงรูปประกาศคะแนน (เวอร์ชันตามที่คุณให้มา)
+    function renderSummaryAnimation(correctCount) {
+      const slot = document.getElementById('customAnimationSlot');
+      if (!slot) return;
+      slot.innerHTML = "";
+      let imgSrc = null;
+      if (correctCount <= 1) imgSrc = "/assets/animations/celebrate1.png";
+      else if (correctCount === 2) imgSrc = "/assets/animations/celebrate2.png";
+      else if (correctCount === 3) imgSrc = "/assets/animations/celebrate3.png";
+      else if (correctCount === 4) imgSrc = "/assets/animations/celebrate4.png";
+      else if (correctCount === 5) imgSrc = "/assets/animations/celebrate5.png";
+      else if (correctCount === 6) imgSrc = "/assets/animations/celebrate6.png";
+      else if (correctCount === 7) imgSrc = "/assets/animations/celebrate7.png";
+      if (imgSrc) {
+        const img = document.createElement("img");
+        img.src = imgSrc; img.alt = "สรุปผล"; img.style.maxWidth = "100%"; img.style.height = "auto";
+        slot.appendChild(img);
+      }
+    }
+  </script>
 
   <script>
   // ===== Dataset hook =====
@@ -108,190 +141,55 @@
   const DATASET = (window.FLIP_QUESTIONS && Array.isArray(window.FLIP_QUESTIONS.items) && window.FLIP_QUESTIONS.items.length)
     ? window.FLIP_QUESTIONS.items
     : (Array.isArray(window.QUESTION_BANK) && window.QUESTION_BANK.length ? window.QUESTION_BANK : SAMPLE_DATA);
-  if(DATASET === SAMPLE_DATA){ console.warn('ใช้ SAMPLE_DATA ชั่วคราว: ยังไม่ได้เชื่อมไฟล์คลังคำถาม (questions-flip.js)'); }
 
   // ===== State =====
-  const state = {
-    question: null,
-    revealed: 0, // จำนวนคำใบ้ที่แสดงแล้ว
-    startTs: 0,
-    answered: false,
-    round: 1,
-    starsTotal: Number(localStorage.getItem('flipq_stars')||0),
-    scoreThisRound: 0
-  };
-
+  const state = { question:null, revealed:0, startTs:0, answered:false, round:1, starsTotal:Number(localStorage.getItem('flipq_stars')||0), scoreThisRound:0 };
   const els = {
-    hintList: document.getElementById('hintList'),
-    hintCount: document.getElementById('hintCount'),
-    qText: document.getElementById('qText'),
-    choices: document.getElementById('choices'),
-    kUnopened: document.getElementById('kUnopened'),
-    kScore: document.getElementById('kScore'),
-    kStars: document.getElementById('kStars'),
-    timer: document.getElementById('timer'),
-    btnRevealAll: document.getElementById('btnRevealAll'),
-    btnMoreHint: document.getElementById('btnMoreHint'),
-    btnNextRound: document.getElementById('btnNextRound'),
-    summaryModal: document.getElementById('summaryModal'),
-    summaryList: document.getElementById('summaryList'),
-    closeSummary: document.getElementById('closeSummary'),
-    exFormat: document.getElementById('exFormat'),
-    exLoaded: document.getElementById('exLoaded')
+    hintList: document.getElementById('hintList'), hintCount: document.getElementById('hintCount'), qText: document.getElementById('qText'),
+    choices: document.getElementById('choices'), kUnopened: document.getElementById('kUnopened'), kScore: document.getElementById('kScore'), kStars: document.getElementById('kStars'),
+    timer: document.getElementById('timer'), btnRevealAll: document.getElementById('btnRevealAll'), btnMoreHint: document.getElementById('btnMoreHint'), btnNextRound: document.getElementById('btnNextRound'),
+    summaryModal: document.getElementById('summaryModal'), summaryBody: document.getElementById('summaryBody'), closeSummary: document.getElementById('closeSummary')
   };
-
   let timerId = null;
 
-  function startTimer(){
-    state.startTs = performance.now();
-    stopTimer();
-    timerId = setInterval(function(){
-      const elapsed = performance.now()-state.startTs;
-      els.timer.textContent = (elapsed/1000).toFixed(2)+'s';
-    }, 120);
-  }
+  function startTimer(){ state.startTs = performance.now(); stopTimer(); timerId = setInterval(()=>{ const e = performance.now()-state.startTs; els.timer.textContent = (e/1000).toFixed(2)+'s'; }, 120); }
   function stopTimer(){ if(timerId) clearInterval(timerId); timerId = null; }
-
-  function pickRandomQuestion(){
-    const idx = Math.floor(Math.random()*DATASET.length);
-    return JSON.parse(JSON.stringify(DATASET[idx]));
-  }
-
-  function updateHintCount(){
-    els.hintCount.textContent = '('+state.revealed+'/7)';
-    els.kUnopened.textContent = String(7 - state.revealed);
-    els.btnMoreHint.disabled = state.revealed >= 7 || state.answered;
-    els.btnRevealAll.disabled = state.revealed >= 7 || state.answered;
-  }
-
-  function renderHintsInitial(){
-    els.hintList.innerHTML = '';
-    state.revealed = 0;
-    // เผยคำใบ้แรกทันที
-    revealNextHint();
-  }
-
-  function revealNextHint(){
-    if(state.revealed >= 7) return;
-    const i = state.revealed;
-    const li = document.createElement('li');
-    li.textContent = state.question.hints[i] || '(ไม่มีข้อมูล)';
-    els.hintList.appendChild(li);
-    state.revealed += 1;
-    updateHintCount();
-  }
-
-  function revealAllHints(){
-    while(state.revealed < 7){ revealNextHint(); }
-  }
-
-  function renderChoices(){
-    els.choices.innerHTML = '';
-    state.question.choices.forEach(function(choice, idx){
-      var btn = document.createElement('button');
-      btn.className = 'choice';
-      btn.textContent = String.fromCharCode(65+idx) + '. ' + choice;
-      btn.addEventListener('click', function(){ onAnswer(idx); });
-      els.choices.appendChild(btn);
-    });
-  }
+  function pickRandomQuestion(){ const idx = Math.floor(Math.random()*DATASET.length); return JSON.parse(JSON.stringify(DATASET[idx])); }
+  function updateHintCount(){ els.hintCount.textContent = '('+state.revealed+'/7)'; els.kUnopened.textContent = String(7 - state.revealed); els.btnMoreHint.disabled = state.revealed>=7||state.answered; els.btnRevealAll.disabled = state.revealed>=7||state.answered; }
+  function renderHintsInitial(){ els.hintList.innerHTML=''; state.revealed=0; revealNextHint(); }
+  function revealNextHint(){ if(state.revealed>=7) return; const i=state.revealed; const li=document.createElement('li'); li.textContent = state.question.hints[i]||'(ไม่มีข้อมูล)'; els.hintList.appendChild(li); state.revealed+=1; updateHintCount(); }
+  function revealAllHints(){ while(state.revealed<7){ revealNextHint(); } }
+  function renderChoices(){ els.choices.innerHTML=''; state.question.choices.forEach((choice,idx)=>{ const b=document.createElement('button'); b.className='choice'; b.textContent=String.fromCharCode(65+idx)+'. '+choice; b.addEventListener('click',()=>onAnswer(idx)); els.choices.appendChild(b); }); }
 
   function onAnswer(idx){
-    if(state.answered) return;
-    state.answered = true;
-    stopTimer();
+    if(state.answered) return; state.answered=true; stopTimer(); els.btnMoreHint.disabled=true; revealAllHints();
+    const nodes=[...document.querySelectorAll('.choice')]; const correct = idx===state.question.answerIndex; nodes.forEach((n,i)=>{ if(i===state.question.answerIndex) n.classList.add('correct'); if(i===idx && i!==state.question.answerIndex) n.classList.add('wrong'); n.disabled=true; });
+    const unopened = Math.max(0,7-state.revealed); const score = correct? unopened: 0; const rt = performance.now()-state.startTs; let bonusStars=0; if(correct){ if(rt<5000) bonusStars=1; else if(rt<10000) bonusStars=0.5; } const starsEarned=(correct?1:0)+bonusStars;
+    state.scoreThisRound=score; els.kScore.textContent=String(score); state.starsTotal+=starsEarned; localStorage.setItem('flipq_stars', state.starsTotal); els.kStars.textContent=String(state.starsTotal);
+    const log = JSON.parse(localStorage.getItem('flipq_logs')||'[]'); log.push({at:new Date().toISOString(), qid:state.question.id, correct, responseMs:Math.round(rt), unopened, starsEarned, score, round:state.round}); localStorage.setItem('flipq_logs', JSON.stringify(log));
 
-    // ปิดปุ่มใบ้ และเปิดเผยใบ้ทั้งหมดเพื่อเฉลย
-    els.btnMoreHint.disabled = true;
-    revealAllHints();
-
-    var nodes = Array.prototype.slice.call(document.querySelectorAll('.choice'));
-    var correct = idx === state.question.answerIndex;
-    nodes.forEach(function(n,i){
-      if(i === state.question.answerIndex) n.classList.add('correct');
-      if(i === idx && i !== state.question.answerIndex) n.classList.add('wrong');
-      n.disabled = true;
-    });
-
-    var unopened = Math.max(0, 7 - (state.revealed)); // จำนวนใบ้ที่ยังไม่ได้ขอ
-    var score = correct ? unopened : 0;
-    var rt = performance.now() - state.startTs;
-    var bonusStars = 0;
-    if(correct){ if(rt < 5000) bonusStars = 1; else if(rt < 10000) bonusStars = 0.5; }
-    var starsEarned = (correct ? 1 : 0) + bonusStars;
-
-    state.scoreThisRound = score;
-    els.kScore.textContent = String(score);
-    state.starsTotal += starsEarned;
-    localStorage.setItem('flipq_stars', state.starsTotal);
-    els.kStars.textContent = String(state.starsTotal);
-
-    var log = JSON.parse(localStorage.getItem('flipq_logs')||'[]');
-    log.push({ at: new Date().toISOString(), qid: state.question.id, correct: correct,
-      responseMs: Math.round(rt), unopened: unopened, starsEarned: starsEarned, score: score, round: state.round });
-    localStorage.setItem('flipq_logs', JSON.stringify(log));
-
-    els.summaryList.innerHTML = ''+
-      '<li><b>ผลลัพธ์:</b> ' + (correct ? 'ตอบถูก' : 'ตอบผิด') + '</li>'+
-      '<li><b>เวลา:</b> ' + (rt/1000).toFixed(2) + ' วินาที</li>'+
-      '<li><b>คำใบ้ที่ยังไม่ได้ขอ:</b> ' + unopened + '</li>'+
-      '<li><b>คะแนนรอบนี้:</b> ' + score + '</li>'+
-      '<li><b>⭐ ดาวสะสม:</b> ' + state.starsTotal + ' (+' + starsEarned + ')</li>';
-    els.summaryModal.style.display = 'flex';
-    els.btnNextRound.disabled = false;
+    // ===== Summary (minimal fields) =====
+    // เรียกแสดงรูปประกาศคะแนนด้านบน (ในรอบนี้ส่ง 1 ถ้าถูก, 0 ถ้าผิด)
+    renderSummaryAnimation(correct?1:0);
+    els.summaryBody.innerHTML = ''+
+      `<div class="item"><span>ผลลัพธ์</span><span class="${correct? 'ok':'no'}">${correct? 'ถูกต้อง':'ผิด'}</span></div>`+
+      `<div class="item"><span>คะแนนรอบนี้</span><span>${score}</span></div>`+
+      `<div class="item"><span>⭐ ดาวที่ได้</span><span>${starsEarned}</span></div>`+
+      `<div class="item"><span>เวลา</span><span>${(rt/1000).toFixed(2)} วินาที</span></div>`;
+    els.summaryModal.style.display='flex'; els.btnNextRound.disabled=false;
   }
 
-  function startNewQuestion(){
-    state.question = pickRandomQuestion();
-    state.answered = false;
-    state.revealed = 0;
-    els.qText.textContent = state.question.prompt;
-    els.kScore.textContent = '0';
-    els.kUnopened.textContent = '7';
-    els.btnNextRound.disabled = true;
-    renderHintsInitial();
-    renderChoices();
-    els.summaryModal.style.display = 'none';
-    startTimer();
-  }
-
-  function nextRound(){
-    state.round += 1;
-    startNewQuestion();
-  }
+  function startNewQuestion(){ state.question=pickRandomQuestion(); state.answered=false; state.revealed=0; els.qText.textContent=state.question.prompt; els.kScore.textContent='0'; els.kUnopened.textContent='7'; els.btnNextRound.disabled=true; renderHintsInitial(); renderChoices(); els.summaryModal.style.display='none'; startTimer(); }
+  function nextRound(){ state.round+=1; startNewQuestion(); }
 
   // Events
   els.btnMoreHint.addEventListener('click', revealNextHint);
   els.btnRevealAll.addEventListener('click', revealAllHints);
-  els.btnNextRound.addEventListener('click', function(){ if(!els.btnNextRound.disabled) nextRound(); });
+  els.btnNextRound.addEventListener('click', ()=>{ if(!els.btnNextRound.disabled) nextRound(); });
   els.closeSummary.addEventListener('click', nextRound);
 
-  function renderSamples(){
-    const example = {
-      id: 'topic-keyword',
-      prompt: 'คำถามคืออะไร?',
-      hints: [
-        'คำใบ้ #1 (ทั่วไป)',
-        'คำใบ้ #2',
-        'คำใบ้ #3',
-        'คำใบ้ #4',
-        'คำใบ้ #5',
-        'คำใบ้ #6',
-        'คำใบ้ #7 (ชัดเจนมากสุด)'
-      ],
-      choices: ['ตัวเลือก A','ตัวเลือก B','ตัวเลือก C','ตัวเลือก D'],
-      answerIndex: 0
-    };
-    els.exFormat.textContent = JSON.stringify(example, null, 2);
-    const loaded = DATASET && DATASET.length ? DATASET[0] : {note:'ยังไม่พบคลังคำถาม (กำลังใช้ SAMPLE_DATA)'};
-    els.exLoaded.textContent = JSON.stringify(loaded, null, 2);
-  }
-
   // Init
-  (function init(){
-    renderSamples();
-    startNewQuestion();
-  })();
+  (function init(){ startNewQuestion(); })();
   </script>
 </body>
 </html>
