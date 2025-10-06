@@ -34,35 +34,24 @@
     .summary{display:none}
     .summary.active{display:block}
     .big{font-size:48px;font-weight:800}
-    #customAnimationSlot{
-      display:grid;place-items:center;min-height:160px;background:#f2f7ff;
-      border:2px dashed #c9ddff;border-radius:16px;margin:12px 0 20px;overflow:hidden
-    }
-    #customAnimationSlot img{max-width:100%;height:auto;display:block}
-    @media (max-width:640px){.answer-row{flex-direction:column;align-items:stretch}}
-    <style>
-    /* ...สไตล์อื่นคงเดิม... */
 
-    /* เดิมมีพื้นหลังฟ้า + เส้นประ ตรงนี้ปรับให้โปร่งใสและไม่มีกรอบ */
+    /* ช่องรูปสรุปผล: โปร่งใส ไม่มีกรอบ โชว์เฉพาะรูป */
     #customAnimationSlot{
       display:grid;
       place-items:center;
-      min-height:0;            /* เอาพื้นที่บังคับออก ให้สูงตามรูปจริง */
-      background:transparent;  /* พื้นหลังโปร่งใส */
-      border:none;             /* ไม่มีเส้นประ */
-      border-radius:0;         /* ไม่ต้องโค้งมุม */
+      min-height:0;           /* ให้สูงตามรูปจริง */
+      background:transparent; /* พื้นหลังโปร่งใส */
+      border:none;            /* ไม่มีเส้นกรอบ */
+      border-radius:0;        /* ไม่ต้องโค้งมุม */
       margin:12px 0 20px;
-      overflow:visible;        /* ให้รูปยื่นได้ ถ้าจำเป็น */
+      overflow:visible;       /* อนุญาตให้รูปยื่นได้ถ้าจำเป็น */
       padding:0;
     }
-    #customAnimationSlot img{
-      max-width:100%;
-      height:auto;
-      display:block;
+    #customAnimationSlot img{max-width:100%;height:auto;display:block}
+
+    @media (max-width:640px){
+      .answer-row{flex-direction:column;align-items:stretch}
     }
-
-
-    
   </style>
 </head>
 <body>
@@ -91,10 +80,8 @@
       <div id="summary" class="summary">
         <h2>สรุปผล</h2>
 
-        <!-- ช่องแสดงรูป/แอนิเมชันสรุป (7 ระดับ) -->
-        <div id="customAnimationSlot">
-          <div style="color:#7a8aa1">จะมีรูปสรุประดับฝีมือ 7 ระดับแสดงที่นี่</div>
-        </div>
+        <!-- ช่องแสดงรูป/แอนิเมชันสรุป -->
+        <div id="customAnimationSlot"></div>
 
         <div class="card" style="margin-bottom:12px">
           <div>คะแนนถูกต้อง</div>
@@ -115,6 +102,7 @@
     </section>
   </main>
 
+  <!-- ใช้งานร่วมกับไฟล์ JS ที่คุณแก้ renderSummaryAnimation แล้ว -->
   <script type="module" src="/js/game-addition.js"></script>
 </body>
 </html>
