@@ -1,225 +1,177 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="th">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>เกมคำใบ้ทีละคำ | Sequential Hint Quiz</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>เกมคำใบ้ทีละคำ – ตรรกะ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root{
-      --bg:#ffffff; --fg:#0b1220; --muted:#5b677a;
-      --brand:#16a34a; --brand-2:#06b6d4; --danger:#dc2626;
-      --panel:#ffffff; --panel-br:#e5e7eb; --shadow:0 8px 28px rgba(2,6,23,.05);
-      --radius:22px; --maxw:980px;
-      --font-lg: clamp(22px, 3.6vw, 24px);
-      --font-xl: clamp(28px, 5vw, 42px);
-      --font-xxl: clamp(34px, 6vw, 54px);
-    }
-    html,body{height:100%}
-    body{margin:0; font-family: ui-sans-serif, system-ui, "Noto Sans Thai", sans-serif; background:var(--bg); color:var(--fg)}
-    .container{max-width:var(--maxw); margin:0 auto; padding:16px}
-
-    /* Big, friendly type */
-    h1{font-size:var(--font-xxl); margin:0 0 10px 0; letter-spacing:.2px}
-    h2{font-size:var(--font-xl); margin:0}
-    p,button,input,label,li{font-size:var(--font-lg)}
-
-    .panel{background:var(--panel); border:2px solid var(--panel-br); border-radius:var(--radius); padding:16px; box-shadow:var(--shadow)}
-    .row{display:flex; gap:12px; align-items:center; flex-wrap:wrap}
-
-    /* Hint list */
-    .hints{display:block; margin:12px 0 0 26px}
-    .hints li{padding:16px 18px; border-radius:20px; border:2px solid #e2e8f0; background:#ffffff; margin-bottom:12px; font-weight:900}
-    .hint-count{color:var(--muted)}
-
-    /* Q & Choices */
-    .choices{display:grid; gap:12px}
-    .choice{padding:18px 20px; border-radius:16px; border:2px solid #d1d5db; background:#fff; text-align:left; font-weight:900; letter-spacing:.6px; cursor:pointer}
-    .choice:focus{outline:4px solid #111; outline-offset:2px}
-    .choice.correct{background:rgba(22,163,74,.12); border-color:#16a34a}
-    .choice.wrong{background:rgba(220,38,38,.12); border-color:#dc2626}
-
-    .btn{border:2px solid #0b1220; background:linear-gradient(90deg, var(--brand), var(--brand-2)); color:#fff; border-radius:14px; padding:14px 18px; cursor:pointer; font-weight:900}
-    .btn.secondary{background:#fff; color:#0b1220; border-color:#0b1220}
-    .btn:disabled{opacity:.55; cursor:not-allowed}
-
-    /* KPI hidden in play */
-    .kpi{display:none}
-
-    /* Summary Modal */
-    .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(2,6,23,.5)}
-    .modal .card{background:#fff; border-radius:24px; padding:18px; width:min(720px, 92%); border:2px solid #0b1220; box-shadow:var(--shadow)}
-    .summary-head{display:flex; align-items:center; justify-content:center; background:transparent; border:none; border-radius:18px; height:min(260px, 46vh); margin-bottom:16px; overflow:hidden; padding:0}
-    .summary{display:grid; gap:10px}
-    .summary .item{display:flex; justify-content:space-between; border:2px solid #e2e8f0; border-radius:14px; padding:12px 14px; font-weight:900}
-    .summary .ok{color:#166534}
-    .summary .no{color:#b91c1c}
-    #customAnimationSlot{width:100%; height:100%; display:flex; align-items:center; justify-content:center}
-    #customAnimationSlot img{max-width:100%; max-height:100%; object-fit:contain; display:block; border-radius:16px}
+    :root{ --shadow:0 8px 20px rgba(15,23,42,.08); --muted:#64748b; }
+    body{ margin:0; font-family:"Noto Sans Thai",system-ui,sans-serif; background:#f6fbff; color:#0f172a; }
+    .container{ max-width:980px; margin:18px auto 60px; padding:0 16px; }
+    h1{ margin:0 0 10px; font-size:36px; }
+    .toolbar{ display:flex; gap:10px; align-items:center; justify-content:flex-end; margin-bottom:10px; }
+    .btn{ display:inline-flex; align-items:center; gap:6px; padding:10px 14px; border-radius:999px; border:2px solid #c7e1ff; background:#fff; box-shadow:var(--shadow); cursor:pointer; font-weight:700; }
+    .btn:active{ transform:scale(.97); }
+    .card{ background:#fff; border-radius:18px; box-shadow:var(--shadow); padding:16px; }
+    .muted{ color:var(--muted); font-size:14px; }
+    .q-header{ display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+    .q-title{ font-size:22px; font-weight:700; }
+    .choices{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+    .choice{ padding:14px; background:#eef6ff; border-radius:12px; cursor:pointer; text-align:center; border:2px solid transparent; }
+    .choice:hover{ border-color:#b7d6ff; }
+    .hint{ margin-top:12px; padding:10px 12px; background:#f7fbef; border-radius:12px; font-size:15px; display:none; }
+    .footer{ display:flex; justify-content:space-between; align-items:center; margin-top:12px; }
+    .back-home{ position:fixed; right:20px; bottom:20px; z-index:50; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <header class="row" style="justify-content:space-between">
-      <h1>เกมคำใบ้ทีละคำ</h1>
-      <button class="btn" id="btnNextRound" disabled>ข้อต่อไป</button>
-    </header>
+  <main class="container">
+    <h1>เกมคำใบ้ทีละคำ</h1>
 
-    <!-- 1) Hints sequential -->
-    <section class="panel">
-      <div class="row" style="justify-content:space-between; align-items:center">
-        <h2 style="margin:0">คำใบ้ <span class="hint-count" id="hintCount">(0/7)</span></h2>
-        <button class="btn secondary" id="btnMoreHint">ขอคำใบ้เพิ่ม</button>
-      </div>
-      <ol id="hintList" class="hints"></ol>
-    </section>
-
-    <!-- 2) Question & choices -->
-    <section class="panel qa" style="margin-top:12px">
-      <p id="qText" style="font-size: clamp(24px, 3.6vw, 28px); font-weight:900; margin:0 0 12px 0">–</p>
-      <div class="choices" id="choices"></div>
-      <div class="row" style="margin-top:12px; justify-content:space-between">
-        <div style="color:var(--muted)">กด "ขอคำใบ้เพิ่ม" ได้เรื่อยๆ ก่อนตอบ</div>
-        <button class="btn secondary" id="btnRevealAll" disabled>เปิดคำใบ้ทั้งหมด</button>
-      </div>
-    </section>
-
-    <!-- Hidden runtime KPIs -->
-    <div class="kpi" aria-hidden="true">
-      <span id="timer">0.00s</span>
-      <span id="kUnopened">7</span>
-      <span id="kScore">0</span>
-      <span id="kStars">0</span>
+    <div class="toolbar">
+      <button id="nextBtn" class="btn">⬆️ ข้อต่อไป</button>
+      <button id="moreHintBtn" class="btn">🪄 ขอตัวใบ้เพิ่ม</button>
+      <button id="revealAllHintsBtn" class="btn">🔓 เปิดคำใบ้ทั้งหมด</button>
     </div>
-  </div>
 
-  <!-- Summary Modal -->
-  <div class="modal" id="summaryModal" role="dialog" aria-modal="true">
-    <div class="card">
-      <div class="summary-head">
-        <div id="customAnimationSlot"><!-- ภาพประกาศคะแนน --></div>
+    <section id="quizCard" class="card">
+      <div class="q-header">
+        <div class="q-title"><span id="progress">คำใบ้ (0/7)</span></div>
+        <button id="moreChoiceBtn" class="btn">🎲 ขอตัวเลือกเพิ่ม</button>
       </div>
-      <div class="summary" id="summaryBody">
-        <div class="item"><span>ผลลัพธ์</span><span id="resultText"></span></div>
-        <div class="item"><span>คะแนนรอบนี้</span><span id="scoreText"></span></div>
-        <div class="item"><span>⭐ ดาวที่ได้</span><span id="starText"></span></div>
-        <!-- ซ่อนเวลาใน UI แต่ยังอัปเดตค่า -->
-        <div class="item" id="timeRow" style="display:none"><span>เวลา</span><span id="timeText"></span></div>
-      </div>
-      <div class="row" style="margin-top:12px; justify-content:space-between">
-        <button class="btn secondary" id="btnHome">กลับสู่หน้าหลัก</button>
-        <button class="btn" id="closeSummary">เริ่มข้อถัดไป</button>
-      </div>
-    </div>
-  </div>
 
-  <!-- ===== Data / Config ===== -->
+      <div id="prompt" class="muted">-</div>
+
+      <div id="choices" class="choices" aria-live="polite"></div>
+
+      <div id="hintBox" class="hint"></div>
+
+      <div class="footer">
+        <small class="muted">กด “ขอตัวใบ้เพิ่ม” ได้เรื่อยๆ ก่อนตอบ</small>
+        <div></div>
+      </div>
+    </section>
+  </main>
+
+  <a class="btn back-home" href="/index-11.html">🏠 กลับสู่หน้าหลัก</a>
+
   <script>
-    // ตั้งปลายทางปุ่มกลับหน้าหลัก
-    const HOME_URL = "/"; // เปลี่ยนเป็นหน้าที่ต้องการได้ เช่น "/index.html"
-    // ตัวอย่างคลัง (fallback)
-    const SAMPLE_DATA = [
-      { id:'animal-tiger', prompt:'สัตว์ดังกล่าวคืออะไร?',
-        hints:['อยู่ในป่า','กินเนื้อ','มีสีส้ม','มีลายสีดำ','ปีนต้นไม้ได้','บินไม่ได้','เป็นสัตว์สงวน'],
-        choices:['เสือโคร่ง','หมีหมา','หมูป่า','กวางป่า'], answerIndex:0 }
-    ];
-    const DATASET = (window.FLIP_QUESTIONS && Array.isArray(window.FLIP_QUESTIONS.items) && window.FLIP_QUESTIONS.items.length)
-      ? window.FLIP_QUESTIONS.items
-      : (Array.isArray(window.QUESTION_BANK) && window.QUESTION_BANK.length ? window.QUESTION_BANK : SAMPLE_DATA);
-  </script>
-
-  <!-- ===== Logic ===== -->
-  <script>
-    const state = { question:null, revealed:0, startTs:0, answered:false, round:1, starsTotal:Number(localStorage.getItem('flipq_stars')||0), scoreThisRound:0 };
-    const els = {
-      hintList: document.getElementById('hintList'), hintCount: document.getElementById('hintCount'), qText: document.getElementById('qText'),
-      choices: document.getElementById('choices'), kUnopened: document.getElementById('kUnopened'), kScore: document.getElementById('kScore'), kStars: document.getElementById('kStars'),
-      timer: document.getElementById('timer'), btnRevealAll: document.getElementById('btnRevealAll'), btnMoreHint: document.getElementById('btnMoreHint'), btnNextRound: document.getElementById('btnNextRound'),
-      summaryModal: document.getElementById('summaryModal'), summaryBody: document.getElementById('summaryBody'), closeSummary: document.getElementById('closeSummary'),
-      btnHome: document.getElementById('btnHome')
-    };
-    let timerId = null;
-
-    function startTimer(){ state.startTs = performance.now(); stopTimer(); timerId = setInterval(()=>{ const e = performance.now()-state.startTs; els.timer.textContent = (e/1000).toFixed(2)+'s'; }, 120); }
-    function stopTimer(){ if(timerId) clearInterval(timerId); timerId = null; }
-    function pickRandomQuestion(){ const idx = Math.floor(Math.random()*DATASET.length); return JSON.parse(JSON.stringify(DATASET[idx])); }
-    function updateHintCount(){ els.hintCount.textContent = '('+state.revealed+'/7)'; els.kUnopened.textContent = String(7 - state.revealed); els.btnMoreHint.disabled = state.revealed>=7||state.answered; els.btnRevealAll.disabled = state.revealed>=7||state.answered; }
-    function renderHintsInitial(){ els.hintList.innerHTML=''; state.revealed=0; revealNextHint(); }
-    function revealNextHint(){ if(state.revealed>=7) return; const i=state.revealed; const li=document.createElement('li'); li.textContent = state.question.hints[i]||'(ไม่มีข้อมูล)'; els.hintList.appendChild(li); state.revealed+=1; updateHintCount(); }
-    function revealAllHints(){ while(state.revealed<7){ revealNextHint(); } }
-    function renderChoices(){ els.choices.innerHTML=''; state.question.choices.forEach((choice,idx)=>{ const b=document.createElement('button'); b.className='choice'; b.textContent=String.fromCharCode(65+idx)+'. '+choice; b.addEventListener('click',()=>onAnswer(idx)); els.choices.appendChild(b); }); }
-
-    // แสดงรูป/แบนเนอร์สรุปผล (ตามที่คุณส่งมา)
-    function renderSummaryAnimation(correctCount) {
-      const slot = document.getElementById('customAnimationSlot');
-      if (!slot) return;
-      slot.innerHTML = "";
-      let imgSrc = null;
-      if (correctCount <= 1) imgSrc = "/assets/animations/celebrate1.png";
-      else if (correctCount === 2) imgSrc = "/assets/animations/celebrate2.png";
-      else if (correctCount === 3) imgSrc = "/assets/animations/celebrate3.png";
-      else if (correctCount === 4) imgSrc = "/assets/animations/celebrate4.png";
-      else if (correctCount === 5) imgSrc = "/assets/animations/celebrate5.png";
-      else if (correctCount === 6) imgSrc = "/assets/animations/celebrate6.png";
-      else if (correctCount === 7) imgSrc = "/assets/animations/celebrate7.png";
-      if (imgSrc) {
-        const img = document.createElement("img");
-        img.src = imgSrc; img.alt = "สรุปผล"; img.style.maxWidth = "100%"; img.style.height = "auto";
-        slot.appendChild(img);
+    // ===== Data loader (ป้องกัน error HTML 404 กลายเป็น '<') =====
+    async function loadQuestions() {
+      try {
+        const res = await fetch('/data/questions/logic.json', { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP '+res.status);
+        const data = await res.json();
+        if (!data || !Array.isArray(data.items)) throw new Error('Invalid payload');
+        return data.items;
+      } catch (e) {
+        console.warn('⚠️ โหลดคำถามจาก /data/questions/logic.json ไม่ได้:', e);
+        // Fallback: ตัวอย่างคำถามในตัว
+        return [
+          { id:'lg-001', prompt:'ในภาพ "ช้อน" ใช้ทำอะไร?', choices:['ตักอาหาร','ตัดกระดาษ'], answerIndex:0, hints:['เป็นอุปกรณ์บนโต๊ะอาหาร','ใช้คู่กับจานหรือชาม'] },
+          { id:'lg-002', prompt:'กลางวันกับกลางคืน สิ่งใดสว่างกว่า?', choices:['กลางวัน','กลางคืน'], answerIndex:0, hints:['เกี่ยวกับดวงอาทิตย์'] },
+          { id:'lg-003', prompt:'ร่ม ใช้ในสภาพอากาศแบบใด?', choices:['ฝนตก','แดดร้อนอย่างเดียว'], answerIndex:0, hints:['กันน้ำได้'] }
+        ];
       }
     }
 
-    function onAnswer(idx){
-      if(state.answered) return; state.answered=true; stopTimer();
-      els.btnMoreHint.disabled=true;
+    // ===== Quiz state & logic =====
+    const ui = {
+      progress: document.getElementById('progress'),
+      prompt: document.getElementById('prompt'),
+      choices: document.getElementById('choices'),
+      hintBox: document.getElementById('hintBox'),
+      nextBtn: document.getElementById('nextBtn'),
+      moreChoiceBtn: document.getElementById('moreChoiceBtn'),
+      moreHintBtn: document.getElementById('moreHintBtn'),
+      revealAllHintsBtn: document.getElementById('revealAllHintsBtn'),
+      card: document.getElementById('quizCard'),
+    };
 
-      // สูตรคะแนนใหม่: เปิด 1 -> 7 คะแนน ... เปิด 7 -> 1 คะแนน (ตอบผิด = 0)
-      const revealedNow    = Math.min(7, Math.max(1, state.revealed)); // 1..7
-      const unopenedBefore = Math.max(0, 7 - revealedNow);             // เก็บเป็นสถิติหลังบ้าน
-      const correct        = idx === state.question.answerIndex;
-      const score          = correct ? (8 - revealedNow) : 0;           // 8 - จำนวนใบ้ที่เปิด
-      const rt             = performance.now() - state.startTs;         // เก็บเวลาเป็นสถิติ
+    let questions = [];
+    let idx = 0;
+    let hintsShown = 0;
 
-      revealAllHints();
-
-      const nodes=[...document.querySelectorAll('.choice')];
-      nodes.forEach((n,i)=>{ if(i===state.question.answerIndex) n.classList.add('correct'); if(i===idx && i!==state.question.answerIndex) n.classList.add('wrong'); n.disabled=true; });
-
-      let bonusStars=0; if(correct){ if(rt<5000) bonusStars=1; else if(rt<10000) bonusStars=0.5; }
-      const starsEarned=(correct?1:0)+bonusStars;
-
-      state.scoreThisRound=score; els.kScore.textContent=String(score);
-      state.starsTotal+=starsEarned; localStorage.setItem('flipq_stars', state.starsTotal); els.kStars.textContent=String(state.starsTotal);
-
-      const log = JSON.parse(localStorage.getItem('flipq_logs')||'[]');
-      log.push({at:new Date().toISOString(), qid:state.question.id, correct, responseMs:Math.round(rt), unopened:unopenedBefore, starsEarned, score, round:state.round});
-      localStorage.setItem('flipq_logs', JSON.stringify(log));
-
-      // Summary UI
-      renderSummaryAnimation(correct?1:0);
-      document.getElementById('resultText').textContent = (correct? 'ถูกต้อง':'ผิด');
-      document.getElementById('resultText').className = (correct? 'ok':'no');
-      document.getElementById('scoreText').textContent = String(score);
-      document.getElementById('starText').textContent  = String(starsEarned);
-      document.getElementById('timeText').textContent  = (rt/1000).toFixed(2) + ' วินาที'; // ซ่อนไว้
-
-      els.summaryModal.style.display='flex'; els.btnNextRound.disabled=false;
+    function renderQuestion(q) {
+      ui.progress.textContent = `คำใบ้ (${hintsShown}/7)`;
+      ui.prompt.textContent = q.prompt || '-';
+      ui.choices.innerHTML = '';
+      (q.choices || []).forEach((c, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'choice';
+        btn.textContent = c;
+        btn.onclick = () => handleAnswer(i === q.answerIndex);
+        ui.choices.appendChild(btn);
+      });
+      ui.hintBox.style.display = 'none';
+      ui.hintBox.textContent = '';
     }
 
-    function startNewQuestion(){ state.question=pickRandomQuestion(); state.answered=false; state.revealed=0; els.qText.textContent=state.question.prompt; els.kScore.textContent='0'; els.kUnopened.textContent='7'; els.btnNextRound.disabled=true; renderHintsInitial(); renderChoices(); els.summaryModal.style.display='none'; startTimer(); }
-    function nextRound(){ state.round+=1; startNewQuestion(); }
+    function handleAnswer(correct) {
+      ui.card.style.boxShadow = correct
+        ? '0 8px 24px rgba(46,125,50,.35)'
+        : '0 8px 24px rgba(198,40,40,.35)';
+      setTimeout(() => {
+        ui.card.style.boxShadow = 'var(--shadow)';
+        next();
+      }, 600);
+    }
 
-    // Events
-    els.btnMoreHint.addEventListener('click', revealNextHint);
-    els.btnRevealAll.addEventListener('click', revealAllHints);
-    els.btnNextRound.addEventListener('click', ()=>{ if(!els.btnNextRound.disabled) nextRound(); });
-    els.closeSummary.addEventListener('click', nextRound);
-    els.btnHome.addEventListener('click', ()=>{ if (HOME_URL) window.location.assign(HOME_URL); else window.history.back(); });
+    function next() {
+      hintsShown = 0;
+      idx = (idx + 1) % questions.length;
+      renderQuestion(questions[idx]);
+    }
 
-    // Init
-    (function init(){ startNewQuestion(); })();
+    function addChoiceOption() {
+      // ตัวอย่าง: หากมีตัวเลือกซ่อนอยู่ สามารถต่อยอดได้
+      // ที่นี่เราจะสุ่มแทรก "ผ่าน" เพื่อให้ผู้สูงอายุไปต่อได้
+      const btn = document.createElement('button');
+      btn.className = 'choice';
+      btn.textContent = 'ขอผ่านข้อนี้';
+      btn.onclick = () => next();
+      ui.choices.appendChild(btn);
+    }
+
+    function showOneHint() {
+      const q = questions[idx];
+      if (!q.hints || !q.hints.length) return;
+      hintsShown = Math.min(7, hintsShown + 1);
+      ui.progress.textContent = `คำใบ้ (${hintsShown}/7)`;
+      const hint = q.hints[Math.min(q.hints.length - 1, hintsShown - 1)];
+      ui.hintBox.textContent = hint ?? '—';
+      ui.hintBox.style.display = 'block';
+    }
+
+    function revealAllHints() {
+      const q = questions[idx];
+      if (!q.hints || !q.hints.length) return;
+      hintsShown = Math.min(7, q.hints.length);
+      ui.progress.textContent = `คำใบ้ (${hintsShown}/7)`;
+      ui.hintBox.textContent = q.hints.join(' • ');
+      ui.hintBox.style.display = 'block';
+    }
+
+    // ===== Wire events =====
+    ui.nextBtn.addEventListener('click', next);
+    ui.moreChoiceBtn.addEventListener('click', addChoiceOption);
+    ui.moreHintBtn.addEventListener('click', showOneHint);
+    ui.revealAllHintsBtn.addEventListener('click', revealAllHints);
+
+    // ===== Boot =====
+    (async function init(){
+      questions = await loadQuestions();
+      if (!questions.length) {
+        ui.prompt.textContent = 'ไม่พบคำถาม';
+        return;
+      }
+      idx = 0;
+      hintsShown = 0;
+      renderQuestion(questions[idx]);
+    })();
   </script>
-
-  <!-- โมดูลอื่นของคุณ (ถ้ามี) -->
-  <script type="module" src="/js/game-memory.js"></script>
 </body>
 </html>
