@@ -118,30 +118,6 @@
     </div>
   </div>
 
-  <!-- โมดูลของคุณ (ถ้ามี) -->
-  <script type="module" src="/js/game-memory.js"></script>
-  <script>
-    // ฟังก์ชันสำหรับแสดงรูปประกาศคะแนน (เวอร์ชันตามที่คุณให้มา)
-    function renderSummaryAnimation(correctCount) {
-      const slot = document.getElementById('customAnimationSlot');
-      if (!slot) return;
-      slot.innerHTML = "";
-      let imgSrc = null;
-      if (correctCount <= 1) imgSrc = "/assets/animations/celebrate1.png";
-      else if (correctCount === 2) imgSrc = "/assets/animations/celebrate2.png";
-      else if (correctCount === 3) imgSrc = "/assets/animations/celebrate3.png";
-      else if (correctCount === 4) imgSrc = "/assets/animations/celebrate4.png";
-      else if (correctCount === 5) imgSrc = "/assets/animations/celebrate5.png";
-      else if (correctCount === 6) imgSrc = "/assets/animations/celebrate6.png";
-      else if (correctCount === 7) imgSrc = "/assets/animations/celebrate7.png";
-      if (imgSrc) {
-        const img = document.createElement("img");
-        img.src = imgSrc; img.alt = "สรุปผล"; img.style.maxWidth = "100%"; img.style.height = "auto";
-        slot.appendChild(img);
-      }
-    }
-  </script>
-
   <script>
   // ===== Dataset hook =====
   const SAMPLE_DATA = [
@@ -225,6 +201,30 @@
 
   // Init
   (function init(){ startNewQuestion(); })();
+
+    <!-- โมดูลของคุณ (ถ้ามี) -->
+  <script type="module" src="/js/game-memory.js"></script>
+  <script>
+    // ฟังก์ชันสำหรับแสดงรูปประกาศคะแนน (เวอร์ชันตามที่คุณให้มา)
+    function renderSummaryAnimation(correctCount) {
+      const slot = document.getElementById('customAnimationSlot');
+      if (!slot) return;
+      slot.innerHTML = "";
+      let imgSrc = null;
+      if (correctCount <= 1) imgSrc = "/assets/animations/celebrate1.png";
+      else if (correctCount === 2) imgSrc = "/assets/animations/celebrate2.png";
+      else if (correctCount === 3) imgSrc = "/assets/animations/celebrate3.png";
+      else if (correctCount === 4) imgSrc = "/assets/animations/celebrate4.png";
+      else if (correctCount === 5) imgSrc = "/assets/animations/celebrate5.png";
+      else if (correctCount === 6) imgSrc = "/assets/animations/celebrate6.png";
+      else if (correctCount === 7) imgSrc = "/assets/animations/celebrate7.png";
+      if (imgSrc) {
+        const img = document.createElement("img");
+        img.src = imgSrc; img.alt = "สรุปผล"; img.style.maxWidth = "100%"; img.style.height = "auto";
+        slot.appendChild(img);
+      }
+    }
+
   </script>
 </body>
 </html>
